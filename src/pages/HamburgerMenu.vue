@@ -2,7 +2,7 @@
 
 <template>
   <router-link to="/">홈</router-link><br />
-  <router-link to="/goal/GoalPage">목표 페이지로 이동</router-link><br />
+  <router-link to="/goal">목표 페이지로 이동</router-link><br />
   <router-link to="/policySearch/PolicySearchPage"
     >정책 탐색 페이지로 이동</router-link
   ><br />

@@ -13,7 +13,7 @@
       ><i class="fas fa-user"></i>
       <div>마이페이지</div>
     </router-link>
-    <router-link :to="{ name: 'goalPage' }"
+    <router-link :to="{ name: 'goalMain' }"
       ><i class="fas fa-flag"></i>
       <div>목표</div></router-link
     >
