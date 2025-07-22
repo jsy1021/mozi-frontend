@@ -24,8 +24,8 @@ const route = useRoute();
 
 <style scoped>
 .iphone-frame {
-  width: 375px;
-  height: 700px;
+  width: 393px;
+  height: 852px;
   background-color: white;
   margin: 0 auto;
   position: relative;
