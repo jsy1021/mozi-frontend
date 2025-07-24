@@ -122,12 +122,23 @@ const confirmDelete = () => {
 
 // 금액 포맷팅 함수
 const formatCurrency = (amount) => {
-  if (amount >= 100000000) {
-    return `${(amount / 100000000).toFixed(1)}억원`;
-  } else if (amount >= 10000) {
-    return `${(amount / 10000).toFixed(0)}만원`;
+  // amount가 undefined나 null인 경우 처리
+  if (amount == null || amount === undefined) {
+    return '0원';
+  }
+
+  // 숫자가 아닌 경우 처리
+  const numAmount = Number(amount);
+  if (isNaN(numAmount)) {
+    return '0원';
+  }
+
+  if (numAmount >= 100000000) {
+    return `${(numAmount / 100000000).toFixed(1)}억원`;
+  } else if (numAmount >= 10000) {
+    return `${(numAmount / 10000).toFixed(0)}만원`;
   } else {
-    return `${amount.toLocaleString()}원`;
+    return `${numAmount.toLocaleString()}원`;
   }
 };
 </script>

@@ -49,14 +49,28 @@ const props = defineProps({
 
 // 실제 진행률 계산
 const actualProgress = computed(() => {
-  if (props.progress !== null) {
-    return Math.min(props.progress, 100);
+  // props.progress가 있고 유효한 숫자인 경우 우선 사용
+  if (
+    props.progress !== null &&
+    props.progress !== undefined &&
+    !isNaN(props.progress)
+  ) {
+    return Math.min(Math.max(props.progress, 0), 100);
   }
 
-  if (props.target === 0) return 0;
+  // current와 target을 안전하게 숫자로 변환
+  const current = Number(props.current) || 0;
+  const target = Number(props.target) || 1;
 
-  const calculated = (props.current / props.target) * 100;
-  return Math.min(calculated, 100);
+  // target이 0이면 진행률 0%
+  if (target === 0) return 0;
+
+  // 진행률 계산
+  const calculated = (current / target) * 100;
+
+  // NaN 체크 및 범위 제한 (0-100%)
+  if (isNaN(calculated)) return 0;
+  return Math.min(Math.max(calculated, 0), 100);
 });
 
 // 진행률에 따른 색상 클래스
