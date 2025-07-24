@@ -1,17 +1,31 @@
 <template>
   <GoalForm
     :is-edit="false"
+    :preset-data="presetData"
     @submit="handleCreateGoal"
     @cancel="handleCancel"
   />
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import GoalForm from '../../components/goal/GoalForm.vue';
 import mockData from '../../data/db.json';
 
 const router = useRouter();
+const route = useRoute();
+
+// 1억 모으기 프리셋 데이터
+const presetData = computed(() => {
+  if (route.query.preset === 'billion') {
+    return {
+      goalName: '1억 모으기',
+      targetAmount: 100000000,
+    };
+  }
+  return null;
+});
 
 // 목표 생성 처리
 const handleCreateGoal = (formData) => {

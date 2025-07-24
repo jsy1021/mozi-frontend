@@ -1,9 +1,15 @@
 <template>
-  <div class="goal-card" @click="handleCardClick">
+  <div
+    :class="['goal-card', { 'billion-goal': isBillionGoal }]"
+    @click="handleCardClick"
+  >
     <!-- 목표 이름과 버튼 -->
     <div class="card-header">
       <div class="goal-info">
-        <h3 class="goal-name">{{ goal.name }}</h3>
+        <h3 class="goal-name">
+          <i v-if="isBillionGoal" class="fas fa-star billion-star"></i>
+          {{ goal.name }}
+        </h3>
       </div>
       <div class="action-buttons">
         <button class="edit-btn" @click.stop="goToEdit" aria-label="목표 수정">
@@ -25,6 +31,7 @@
         :current="goal.currentAmount"
         :target="goal.targetAmount"
         :progress="goal.progress"
+        :is-billion-goal="isBillionGoal"
       />
     </div>
 
@@ -35,6 +42,12 @@
       }}</span>
       <span class="divider">/</span>
       <span class="target-amount">{{ formatCurrency(goal.targetAmount) }}</span>
+    </div>
+
+    <!-- 1억 모으기 특별 메시지 -->
+    <div v-if="isBillionGoal" class="billion-message">
+      <i class="fas fa-medal"></i>
+      <span>1억 모으기 도전 중!</span>
     </div>
   </div>
 
@@ -63,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import ProgressBar from './ProgressBar.vue';
 
@@ -80,6 +93,13 @@ const props = defineProps({
 
 // Emits 정의
 const emit = defineEmits(['delete', 'click']);
+
+// 1억 모으기 목표인지 확인
+const isBillionGoal = computed(() => {
+  return (
+    props.goal.name === '1억 모으기' && props.goal.targetAmount === 100000000
+  );
+});
 
 // 카드 클릭 핸들러
 const handleCardClick = () => {
@@ -121,11 +141,35 @@ const formatCurrency = (amount) => {
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid #e9ecef;
+  position: relative;
 }
 
 .goal-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
+}
+
+/* 1억 모으기 특별 스타일 */
+.billion-goal {
+  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+  border: 2px solid #ffd700;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.2);
+}
+
+.billion-goal:hover {
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+  transform: translateY(-3px);
+}
+
+.billion-goal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+  border-radius: 12px 12px 0 0;
 }
 
 .card-header {
@@ -145,6 +189,25 @@ const formatCurrency = (amount) => {
   font-weight: 600;
   color: #333;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.billion-star {
+  color: #ffd700;
+  animation: sparkle 2s ease-in-out infinite alternate;
+}
+
+@keyframes sparkle {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 
 .action-buttons {
@@ -189,12 +252,34 @@ const formatCurrency = (amount) => {
   color: #333;
 }
 
+.billion-goal .current-amount {
+  color: #b8860b;
+}
+
 .divider {
   color: #999;
 }
 
 .target-amount {
   color: #666;
+}
+
+.billion-message {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #ffd700, #ffed4e);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b8860b;
+  justify-content: center;
+}
+
+.billion-message .fas {
+  color: #b8860b;
 }
 
 /* 모달 스타일 */
