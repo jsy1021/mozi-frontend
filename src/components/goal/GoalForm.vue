@@ -1,7 +1,23 @@
 <template>
   <div class="goal-form-container">
     <div class="page-header">
-      <h1 class="page-title">나의 목표</h1>
+      <h1 class="page-title">
+        {{ presetData?.goalName ? `${presetData.goalName} 설정` : '나의 목표' }}
+      </h1>
+      <!-- 1억 모으기 프리셋일 때 특별한 아이콘 표시 -->
+      <div v-if="presetData?.goalName === '1억 모으기'" class="billion-icon">
+        <i class="fas fa-star"></i>
+      </div>
+    </div>
+
+    <!-- 1억 모으기 안내 메시지 -->
+    <div v-if="presetData?.goalName === '1억 모으기'" class="preset-notice">
+      <div class="notice-content">
+        <i class="fas fa-info-circle"></i>
+        <span
+          >1억 모으기 도전에 참가하시는군요! 목표를 향해 함께 달려봐요 🎯</span
+        >
+      </div>
     </div>
 
     <form @submit.prevent="handleSubmit" class="goal-form">
@@ -13,6 +29,8 @@
           type="text"
           v-model="form.goalName"
           placeholder="목표명을 입력하세요"
+          :readonly="!!presetData?.goalName"
+          :class="{ 'preset-input': !!presetData?.goalName }"
           required
         />
       </div>
@@ -27,9 +45,15 @@
             v-model="form.targetAmount"
             placeholder="0"
             min="0"
+            :readonly="!!presetData?.targetAmount"
+            :class="{ 'preset-input': !!presetData?.targetAmount }"
             required
           />
           <span class="currency">원</span>
+        </div>
+        <div v-if="presetData?.targetAmount" class="preset-info">
+          <i class="fas fa-lock"></i>
+          <span>프리셋으로 설정된 금액입니다</span>
         </div>
       </div>
 
@@ -62,11 +86,25 @@
             type="button"
             v-for="keyword in keywords"
             :key="keyword"
-            :class="['keyword-btn', { active: form.keyword === keyword }]"
+            :class="[
+              'keyword-btn',
+              {
+                active: form.keyword === keyword,
+                preset:
+                  presetData?.keyword === keyword && form.keyword === keyword,
+              },
+            ]"
             @click="form.keyword = keyword"
           >
             # {{ keyword }}
           </button>
+        </div>
+        <div
+          v-if="presetData?.keyword && form.keyword === presetData.keyword"
+          class="preset-info"
+        >
+          <i class="fas fa-star"></i>
+          <span>추천 키워드가 선택되었습니다</span>
         </div>
       </div>
 
@@ -77,7 +115,11 @@
           id="memo"
           v-model="form.memo"
           :placeholder="
-            isEdit ? form.memo || 'ex. 꼭 집을 사겠어' : 'ex. 꼭 집을 사겠어'
+            presetData?.goalName === '1억 모으기'
+              ? 'ex. 1억을 모아서 꿈을 이루겠어!'
+              : isEdit
+              ? form.memo || 'ex. 꼭 집을 사겠어'
+              : 'ex. 꼭 집을 사겠어'
           "
           rows="3"
           maxlength="50"
@@ -119,7 +161,13 @@
         <button type="button" class="cancel-btn" @click="handleCancel">
           취소
         </button>
-        <button type="submit" class="submit-btn">
+        <button
+          type="submit"
+          :class="[
+            'submit-btn',
+            { 'billion-submit': presetData?.goalName === '1억 모으기' },
+          ]"
+        >
           {{ isEdit ? '수정' : '등록' }}
         </button>
       </div>
@@ -128,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 
 // Props 정의
 const props = defineProps({
@@ -139,6 +187,10 @@ const props = defineProps({
   goalData: {
     type: Object,
     default: () => ({}),
+  },
+  presetData: {
+    type: Object,
+    default: null,
   },
 });
 
@@ -159,8 +211,17 @@ const form = reactive({
   selectedAccounts: [],
 });
 
-// 폼 초기화 (수정 모드일 때)
+// 폼 초기화 (수정 모드일 때 또는 프리셋 데이터가 있을 때)
 const initializeForm = () => {
+  // 프리셋 데이터가 있는 경우 (1억 모으기 등)
+  if (props.presetData) {
+    form.goalName = props.presetData.goalName || '';
+    form.targetAmount = props.presetData.targetAmount || '';
+    form.keyword = props.presetData.keyword || '';
+    form.memo = props.presetData.memo || '';
+  }
+
+  // 수정 모드인 경우 (기존 데이터 우선)
   if (props.isEdit && props.goalData) {
     form.goalName = props.goalData.name || '';
     form.targetAmount = props.goalData.targetAmount || '';
@@ -215,6 +276,15 @@ const validateForm = () => {
   return true;
 };
 
+// props 변경 감지
+watch(
+  () => props.presetData,
+  () => {
+    initializeForm();
+  },
+  { immediate: true }
+);
+
 // 컴포넌트 마운트 시 폼 초기화
 onMounted(() => {
   initializeForm();
@@ -230,6 +300,9 @@ onMounted(() => {
 
 .page-header {
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .page-title {
@@ -237,6 +310,44 @@ onMounted(() => {
   font-weight: 600;
   color: #333;
   margin: 0;
+}
+
+.billion-icon {
+  color: #ffd700;
+  font-size: 20px;
+  animation: sparkle 2s ease-in-out infinite alternate;
+}
+
+@keyframes sparkle {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+.preset-notice {
+  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+  border: 1px solid #ffd700;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.notice-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b8860b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.notice-content i {
+  color: #ffd700;
 }
 
 .goal-form {
@@ -272,6 +383,25 @@ onMounted(() => {
 .form-group textarea:focus {
   outline: none;
   border-color: #007bff;
+}
+
+.preset-input {
+  background-color: #f8f9fa !important;
+  border-color: #ffd700 !important;
+  color: #666 !important;
+}
+
+.preset-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #b8860b;
+}
+
+.preset-info i {
+  color: #ffd700;
 }
 
 .amount-input {
@@ -313,6 +443,13 @@ onMounted(() => {
   background: #007bff;
   border-color: #007bff;
   color: white;
+}
+
+.keyword-btn.preset {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  border-color: #ffd700;
+  color: #b8860b;
+  font-weight: 600;
 }
 
 .char-count {
@@ -402,6 +539,18 @@ onMounted(() => {
 
 .submit-btn:hover {
   background: #555;
+}
+
+.billion-submit {
+  background: linear-gradient(135deg, #ffd700, #ffed4e) !important;
+  color: #b8860b !important;
+  font-weight: 600 !important;
+}
+
+.billion-submit:hover {
+  background: linear-gradient(135deg, #ffed4e, #ffd700) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
 }
 
 /* 반응형 디자인 */
