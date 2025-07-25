@@ -12,7 +12,6 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-
   server: {
     proxy: {
       '/api': {
@@ -22,9 +21,8 @@ export default defineConfig({
       },
     },
   },
-
   build: {
     outDir:
-      'C:/KB_fullstack/final_project/backend/0724_git/mozi-backend/src/main/webapp/resources',
+      'D:/KB_6th/final_project/Mozi/mozi-backend/src/main/webapp/resources',
   },
-});
+})
