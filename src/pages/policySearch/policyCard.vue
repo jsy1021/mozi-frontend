@@ -1,17 +1,62 @@
-<!-- policyCard.vue -->
 <template>
   <div class="card shadow-sm mb-3 policy-card">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-start">
-        <!--정책명 -->
-        <div class="d-flex align-items-center">
-          <h6 class="fw-bold mb-0">{{ policy.plcyNm }}</h6>
+        <!-- 정책 이미지 + 정책명 + 중간 정보 -->
+        <div class="d-flex">
+          <!-- 이미지 -->
+          <img
+            src="/images/goal/policy.png"
+            alt="정책 이미지"
+            style="width: 25px; height: 25px; margin-right: 8px"
+          />
+
+          <!-- 정책명 + 중간정보 수직 정렬 -->
+          <div>
+            <!-- 정책명 -->
+            <h6 class="fw-bold mb-2">{{ policy.plcyNm }}</h6>
+
+            <!-- 분야, 연령, 기간 -->
+            <div class="small text-muted" style="margin-left: 2px">
+              <div>
+                분야
+                <span class="text-dark fw-semibold">{{
+                  policy.mclsfNm || '-'
+                }}</span>
+                <!-- {{ policy.zipCd }} -->
+              </div>
+              <div>
+                연령
+                <span
+                  class="text-dark fw-semibold"
+                  v-if="policy.sprtTrgtMinAge || policy.sprtTrgtMaxAge"
+                >
+                  만 {{ policy.sprtTrgtMinAge || '?' }}세 ~ 만
+                  {{ policy.sprtTrgtMaxAge || '?' }}세
+                </span>
+                <span class="text-dark fw-semibold" v-else>누구나</span>
+              </div>
+              <div>
+                기간
+                <span class="text-dark fw-semibold">
+                  <template
+                    v-if="!policy.bizPrdBgngYmd && !policy.bizPrdEndYmd"
+                  >
+                    상시
+                  </template>
+                  <template v-else>
+                    {{ policy.bizPrdBgngYmd }} ~ {{ policy.bizPrdEndYmd }}
+                  </template>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 북마크 -->
         <div class="text-end">
           <i
-            class="fa-bookmark ms-2"
+            class="fa-bookmark ms-4"
             :class="
               policy.bookmarked
                 ? 'fa-solid text-primary'
@@ -22,39 +67,8 @@
         </div>
       </div>
 
-      <!-- 중간 정보 -->
-      <div class="mt-2 small text-muted">
-        <div>
-          정책분야
-          <span class="text-dark fw-semibold">{{ policy.mclsfNm || '-' }}</span>
-        </div>
-        <div>
-          연령
-          <span
-            class="text-dark fw-semibold"
-            v-if="policy.sprtTrgtMinAge || policy.sprtTrgtMaxAge"
-          >
-            만 {{ policy.sprtTrgtMinAge || '?' }}세 ~ 만
-            {{ policy.sprtTrgtMaxAge || '?' }}세
-          </span>
-          <span class="text-dark fw-semibold" v-else>누구나</span>
-        </div>
-        <div>
-          기간
-          <span class="text-dark fw-semibold">
-            <template v-if="!policy.bizPrdBgngYmd && !policy.bizPrdEndYmd"
-              >상시</template
-            >
-            <template v-else
-              >{{ policy.bizPrdBgngYmd }} ~ {{ policy.bizPrdEndYmd }}</template
-            >
-          </span>
-        </div>
-      </div>
-
       <!-- 키워드 태그 + 상세 버튼 -->
       <div class="mt-2 d-flex justify-content-between align-items-center">
-        <!-- 키워드 -->
         <div class="d-flex flex-wrap gap-1">
           <span
             class="badge bg-light text-dark"
@@ -65,7 +79,7 @@
           </span>
         </div>
 
-        <!-- 상세 버튼 -->
+        <!--  상세 버튼 -->
         <RouterLink
           :to="{ name: 'policyDetail', params: { id: policy.policyId } }"
           class="btn btn-outline-primary btn-sm"
@@ -83,7 +97,24 @@ defineProps({ policy: Object });
 
 <style scoped>
 .policy-card {
-  border-left: 5px solid #28a745; /* 초록 포인트 */
+  position: relative;
   border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* 그라디언트 왼쪽 바 - 투명도 70% */
+.policy-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, #ff0000 0%, #000dff 55%);
+  opacity: 0.7; /* 🔹 투명도 설정 */
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
 }
 </style>
