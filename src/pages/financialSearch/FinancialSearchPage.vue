@@ -52,16 +52,17 @@
       </li>
     </ul>
 
-    <!-- :white_check_mark: 정책 카드 리스트 반복 -->
+    <!-- :white_check_mark:  카드 리스트 반복 -->
     <FinancialCard
-      v-for="(deposit, index) in depositList"
+      v-for="(item, index) in currentProductList"
       :key="index"
-      :deposit="deposit"
+      :deposit="item"
+      :productType="currentCategory"
     />
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios'; // axios 추가
 import FinancialCard from './financialCard.vue';
 
@@ -72,6 +73,16 @@ const showSearch = ref(false);
 
 const categories = ['예금', '적금'];
 const depositList = ref([]);
+const savingList = ref([]);
+
+// 현재 선택된 카테고리에 따라 적절한 리스트 반환
+const currentProductList = computed(() => {
+  if (currentCategory.value === '적금') {
+    return savingList.value;
+  } else {
+    return depositList.value;
+  }
+});
 
 const bankLogoMap = {
   '0010001': 'wooribank.png',
@@ -117,6 +128,20 @@ const fetchDeposits = async () => {
   }
 };
 
+// 적금 데이터 불러오기 함수
+const fetchSavings = async () => {
+  try {
+    const res = await axios.get('/api/savings');
+    savingList.value = res.data.map(s => ({
+      ...s,
+      logoUrl: getBankLogoUrl(s.bankCode)
+    }));
+    console.log(savingList.value);
+  } catch (e) {
+    console.error('적금 데이터 불러오기 실패:', e);
+  }
+};
+
 const toggleFilterPanel = () => {
   showFilter.value = !showFilter.value;
 };
@@ -127,8 +152,11 @@ const selectCategory = (tab) => {
   currentCategory.value = tab;
   if (tab === '예금') {
     fetchDeposits();
+  } else if (tab === '적금') {
+    fetchSavings();
   } else {
     depositList.value = [];
+    savingList.value = [];
   }
 };
 

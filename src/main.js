@@ -1,6 +1,6 @@
-import './assets/main.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'vue-awesome-paginate/dist/style.css'; // 페이지네이션
+import './assets/main.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
