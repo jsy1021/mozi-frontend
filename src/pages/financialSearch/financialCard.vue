@@ -17,7 +17,9 @@
         <span style="color: #444;">{{ deposit.target || deposit.joinMember || '정보 없음' }}</span>
       </div>
     </div>
-    <button class="detail-btn" @click="goToDetail">자세히보기</button>
+    <div class="button-container">
+      <button class="detail-btn" @click="goToDetail">자세히보기</button>
+    </div>
   </div>
 </template>
 
@@ -26,7 +28,8 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const props = defineProps({
-  deposit: Object
+  deposit: Object,
+  productType: String
 });
 const defaultLogo = '/default-bank-logo.png';
 const router = useRouter();
@@ -39,7 +42,20 @@ const bestOption = computed(() => {
 });
 
 const goToDetail = () => {
-  router.push(`/financialSearch/${props.deposit.depositId}`);
+  console.log('Product Type:', props.productType);
+  console.log('Deposit Data:', props.deposit);
+  
+  if (props.productType === '적금') {
+    // 적금 상품의 경우 savingId 사용
+    const savingId = props.deposit.savingId;
+    console.log('Navigating to saving detail:', `/financialSearch/saving/${savingId}`);
+    router.push(`/financialSearch/saving/${savingId}`);
+  } else {
+    // 예금 상품의 경우 depositId 사용
+    const depositId = props.deposit.depositId;
+    console.log('Navigating to deposit detail:', `/financialSearch/deposit/${depositId}`);
+    router.push(`/financialSearch/deposit/${depositId}`);
+  }
 };
 </script>
 
@@ -86,6 +102,12 @@ const goToDetail = () => {
 .rate .max-rate {
   margin-left: 4px;
 }
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 .detail-btn {
   background: #f5f5f5;
   color: #aaa;
@@ -95,9 +117,6 @@ const goToDetail = () => {
   font-size: 0.85rem;
   min-height: 24px;
   cursor: pointer;
-  position: absolute;
-  right: 16px;
-  bottom: 10px;
 }
 .rate.small-text span,
 .target.small-text span:first-child {
