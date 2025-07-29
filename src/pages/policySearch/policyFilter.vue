@@ -17,13 +17,30 @@
       </label>
     </div>
 
-    <!-- 관심 지역 -->
-    <FilterLayout
-      label="관심 지역"
-      :items="regions"
-      category="region"
-      :filterState="filterState"
-      :toggleFilter="toggleFilter"
+    <div class="mb-3">
+      <label class="fw-bold small d-block mb-1">지역</label>
+      <div class="d-flex align-items-center gap-2">
+        <input
+          class="form-control form-control-sm"
+          type="text"
+          :value="regionSummaryText"
+          readonly
+          style="max-width: 250px"
+        />
+        <button
+          class="btn btn-sm btn-outline-dark"
+          @click="showRegionModal = true"
+        >
+          선택
+        </button>
+      </div>
+    </div>
+
+    <!-- 지역 모달 연결 -->
+    <RegionSelectModal
+      v-if="showRegionModal"
+      @close="showRegionModal = false"
+      @apply="handleRegionApply"
     />
 
     <!-- 연령 -->
@@ -70,8 +87,6 @@
       :filterState="filterState"
       :toggleFilter="toggleFilter"
     />
-
-    <!-- 전공 분야 -->
     <FilterLayout
       label="전공 분야"
       :items="major"
@@ -94,39 +109,48 @@
 <script setup>
 import { defineProps } from 'vue';
 import FilterLayout from './FilterLayout.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import RegionSelectModal from './RegionSelectModal.vue';
 
 const usePersonalInfo = ref(true); //체크 상태
 
+// props
 const props = defineProps({
   filterState: Object,
   toggleFilter: Function,
   exactAge: Number,
 });
 
-const regions = [
-  '서울',
-  '부산',
-  '대구',
-  '인천',
-  '광주',
-  '대전',
-  '울산',
-  '세종',
-  '경기',
-  '강원',
-  '충북',
-  '충남',
-  '전북',
-  '전남',
-  '경북',
-  '경남',
-  '제주',
-];
+// 지역 선택 상태
+const showRegionModal = ref(false);
+const selectedRegions = ref([]);
+
+// apply 함수 정의
+const handleRegionApply = ({ zipCodes, regionNames }) => {
+  console.log('받은 지역명:', regionNames);
+  props.filterState.region = zipCodes;
+  selectedRegions.value = regionNames;
+};
+
+// 지역명 요약 텍스트
+const regionSummaryText = computed(() => {
+  const regions = selectedRegions.value;
+  const count = regions.length;
+
+  if (count === 0) return '선택된 지역 없음';
+  if (count === 1) return regions[0];
+  return `${regions[0]} 외 ${count - 1}개`;
+});
 
 const ages = ['10대', '20대', '30대', '40대'];
 
-const maritalStatus = ['제한없음', '기혼', '미혼'];
+// 혼인 여부 코드 매핑
+const maritalStatus = [
+  { label: '제한없음', value: '0055003' },
+  { label: '미혼', value: '0055002' },
+  { label: '기혼', value: '0055001' },
+];
+
 const income = [
   '제한없음',
   '1000만원 이하',
@@ -136,49 +160,51 @@ const income = [
   '5000이하',
 ];
 const education = [
-  '제한없음',
-  '고졸미만',
-  '고교재학',
-  '고졸예정',
-  '대학재학',
-  '대졸예정',
-  '대학졸업',
-  '석/박사',
-  '기타',
+  { label: '제한없음', value: '0049010' },
+  { label: '고졸미만', value: '0049001' },
+  { label: '고교재학', value: '0049002' },
+  { label: '고졸예정', value: '0049003' },
+  { label: '고교졸업', value: '0049004' },
+  { label: '대학재학', value: '0049005' },
+  { label: '대졸예정', value: '0049006' },
+  { label: '대학졸업', value: '0049007' },
+  { label: '석/박사', value: '0049008' },
+  { label: '기타', value: '0049009' },
 ];
 const employment = [
-  '제한없음',
-  '재직자',
-  '자영업자',
-  '미취업자',
-  '프리랜서',
-  '일용근로자',
-  '(예비)창업자',
-  '단기근로자',
-  '영농종사자',
-  '기타',
+  { label: '제한없음', value: '0013010' },
+  { label: '재직자', value: '0013001' },
+  { label: '자영업자', value: '0013002' },
+  { label: '미취업자', value: '0013003' },
+  { label: '프리랜서', value: '0013004' },
+  { label: '일용근로자', value: '0013005' },
+  { label: '(예비)창업자', value: '0013006' },
+  { label: '단기근로자', value: '0013007' },
+  { label: '영농종사자', value: '0013008' },
+  { label: '기타', value: '0013009' },
 ];
 const major = [
-  '제한없음',
-  '인문계열',
-  '사회계열',
-  '상경계열',
-  '어학계열',
-  '공학계열',
-  '예체능계열',
-  '농산업계열',
-  '기타',
+  { label: '제한없음', value: '0011009' },
+  { label: '인문계열', value: '0011001' },
+  { label: '사회계열', value: '0011002' },
+  { label: '상경계열', value: '0011003' },
+  { label: '어학계열', value: '0011004' },
+  { label: '공학계열', value: '0011005' },
+  { label: '예체능계열', value: '0011006' },
+  { label: '농산업계열', value: '0011007' },
+  { label: '기타', value: '0011008' },
 ];
+
 const special = [
-  '제한없음',
-  '중소기업',
-  '여성',
-  '기초생활수급자',
-  '한부모가정',
-  '장애인',
-  '농업인',
-  '군인',
-  '지역인재',
-  '기타',
+  { label: '제한없음', value: '0014010' },
+  { label: '중소기업', value: '0014001' },
+  { label: '여성', value: '0014002' },
+  { label: '기초생활수급자', value: '0014003' },
+  { label: '한부모가정', value: '0014004' },
+  { label: '장애인', value: '0014005' },
+  { label: '농업인', value: '0014006' },
+  { label: '군인', value: '0014007' },
+  { label: '지역인재', value: '0014008' },
+  { label: '기타', value: '0014009' },
 ];
 </script>

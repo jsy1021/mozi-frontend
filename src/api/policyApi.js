@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 10000,
+  timeout: 20000,
 });
 
 const POLICY_BASE_URL = 'policy';
@@ -20,6 +20,11 @@ export default {
   async get(id) {
     const { data } = await api.get(`${POLICY_BASE_URL}/${id}`);
     console.log('POLICY GET DETAIL:', data);
+    return data;
+  },
+
+  async filterPolicies(filterData) {
+    const { data } = await api.post(`/policy/filter`, filterData);
     return data;
   },
 };
