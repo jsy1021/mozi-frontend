@@ -5,18 +5,13 @@ import RecommendSection from '@/components/goal/RecommendSection.vue';
 import GoalCompletePopup from '@/components/goal/GoalCompletePopup.vue';
 import ProgressBar from '@/components/goal/ProgressBar.vue';
 
-// import db from '@/data/db.json';
 import { useGoalStore } from '@/stores/goalStore';
 import goalApi from '@/api/goalApi';
 
 const route = useRoute();
 const router = useRouter();         //
 
-/*
-// props로 goalId 받기
-const props = defineProps({
-  goalId: [String, Number],
-});*/
+
 const goalId = route.params.goalId;
 
 const userId = 1;                   // 실제 로그인 사용자 ID로 교체해야 함
@@ -24,9 +19,6 @@ const userId = 1;                   // 실제 로그인 사용자 ID로 교체�
 // - pinia store
 const goalStore = useGoalStore()
 
-/*
-const goal = ref(null);
-*/
 // - store의 selectedGoal을 computed로 가져옴
 const goal = computed(() => goalStore.selectedGoal)
 
@@ -43,20 +35,6 @@ const goalAchieved = computed(() => goal.value?.goalStatus === false);
 // - 예상 달성일
 const expectedDate = ref(null);
 
-
-/*
-// goalId가 변경될 때마다 데이터 갱신
-const loadGoal = (id) => {
-  const numericId = Number(id);
-  // goal.value = db.goals.find(g => g.goal_id === numericId) || null
-  const foundGoal = db.goals.find((g) => g.goal_id === numericId) || null;
-  goal.value = foundGoal;
-
-  //달성 여부에 따라 팝업 띄우기 (goal_status === false → 달성됨)
-  if (foundGoal && foundGoal.goal_status === false) {
-    showCompletePopup.value = true;
-  }
-};*/
 
 // - goalId가 변경될 때마다 API에서 goal 가져오기
 const loadGoal = async (id) => {
@@ -82,13 +60,6 @@ const loadGoal = async (id) => {
 }
 
 // - 날짜
-/*
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}
-    -${String(d.getMonth() + 1).padStart(2,'0')}
-    -${String(d.getDate()).padStart(2, '0')}`;
-}*/
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const clean = dateStr.split('T')[0] // "yyyy-mm-dd"
