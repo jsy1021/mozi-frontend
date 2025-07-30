@@ -23,6 +23,7 @@ export default defineConfig({
   },
   build: {
     outDir:
-      'D:/KB_6th/final_project/Mozi/mozi-backend/src/main/webapp/resources',
+      // 'D:/KB_6th/final_project/Mozi/mozi-backend/src/main/webapp/resources',
+      'C:/KB-PJT/goal/mozi-backend/src/main/webapp/resources',
   },
 })

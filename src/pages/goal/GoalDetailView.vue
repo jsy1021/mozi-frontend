@@ -1,23 +1,50 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import RecommendSection from '@/components/goal/RecommendSection.vue';
 import GoalCompletePopup from '@/components/goal/GoalCompletePopup.vue';
 import ProgressBar from '@/components/goal/ProgressBar.vue';
 
-import db from '@/data/db.json';
-
-import { useRoute } from 'vue-router';
+// import db from '@/data/db.json';
+import { useGoalStore } from '@/stores/goalStore';
+import goalApi from '@/api/goalApi';
 
 const route = useRoute();
-const goalId = route.params.goalId;
+const router = useRouter();         //
 
+/*
 // props로 goalId 받기
 const props = defineProps({
   goalId: [String, Number],
-});
+});*/
+const goalId = route.params.goalId;
 
+const userId = 1;                   // 실제 로그인 사용자 ID로 교체해야 함
+
+// - pinia store
+const goalStore = useGoalStore()
+
+/*
 const goal = ref(null);
+*/
+// - store의 selectedGoal을 computed로 가져옴
+const goal = computed(() => goalStore.selectedGoal)
 
+
+// - 삭제 모달
+const showDeleteModal = ref(false);
+
+// - 목표 달성시 팝업
+const showCompletePopup = ref(false);
+
+// - 목표 달성 여부 (goal_status === false가 '달성 완료')
+const goalAchieved = computed(() => goal.value?.goalStatus === false);
+
+// - 예상 달성일
+const expectedDate = ref(null);
+
+
+/*
 // goalId가 변경될 때마다 데이터 갱신
 const loadGoal = (id) => {
   const numericId = Number(id);
@@ -29,51 +56,89 @@ const loadGoal = (id) => {
   if (foundGoal && foundGoal.goal_status === false) {
     showCompletePopup.value = true;
   }
+};*/
+
+// - goalId가 변경될 때마다 API에서 goal 가져오기
+const loadGoal = async (id) => {
+  const numericId = Number(id)
+
+  // 목표 상세 조회
+  await goalStore.getGoal(userId, numericId)
+
+  // 예상 달성일 
+  const monthlyAmount = 1000000
+  const data = await goalApi.getExpectedDate(userId, numericId, monthlyAmount)
+
+  console.log('예상 달성일 API 응답:', data)
+
+  //
+  // expectedDate.value = data?.expectedDate || null
+  expectedDate.value = typeof data === 'string' ? data : data?.expectedDate || null
+
+  // 목표 달성 상태 확인
+  if(goal.value && goal.value.goalStatus === false){
+    showCompletePopup.value = true
+  }
+}
+
+// - 날짜
+/*
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}
+    -${String(d.getMonth() + 1).padStart(2,'0')}
+    -${String(d.getDate()).padStart(2, '0')}`;
+}*/
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const clean = dateStr.split('T')[0] // "yyyy-mm-dd"
+  const d = new Date(clean)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
+
+// - 토글
+const isExpanded = ref(false);
+const toggleExpand = () => {
+  isExpanded.value = !isExpanded.value;
 };
 
-// 초기 로드와 goalId 변경 감지
+// - 삭제 확정
+/*
+const confirmDelete = () => {
+  // 실제 삭제 로직은 이 안에 구현 (예: emit 이벤트 or API 호출 등)
+  console.log(`Deleting goal with id: ${goal.value?.goal_id}`);
+  showDeleteModal.value = false;
+};*/
+const confirmDelete = async () => {
+  if(!goal.value) return
+  await goalStore.deleteGoal(userId, goal.value.goalId)
+  showDeleteModal.value = false
+  router.push('/goal')
+}
+
+// - 팝업 닫기
+const closePopup = () => {
+  showCompletePopup.value = false;
+};
+
+// - 초기 로드와 goalId 변경 감지
+/*
 onMounted(() => loadGoal(props.goalId));
 watch(
   () => props.goalId,
   (newId) => {
     loadGoal(newId);
   }
-);
+);*/
+onMounted(() => loadGoal(goalId))
+watch(
+  () => route.params.goalId,
+  (newId) => {
+    loadGoal(newId)
+  }
+)
 
-// 날짜
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-// 토글
-const isExpanded = ref(false);
-const toggleExpand = () => {
-  isExpanded.value = !isExpanded.value;
-};
-
-// 삭제 버튼
-const showDeleteModal = ref(false);
-
-const confirmDelete = () => {
-  // 실제 삭제 로직은 이 안에 구현 (예: emit 이벤트 or API 호출 등)
-  console.log(`Deleting goal with id: ${goal.value?.goal_id}`);
-  showDeleteModal.value = false;
-};
-
-// 목표 달성시 팝업
-const showCompletePopup = ref(false);
-
-// 팝업 닫기
-const closePopup = () => {
-  showCompletePopup.value = false;
-};
-
-// 목표 달성 여부 (goal_status === false가 '달성 완료')
-const goalAchieved = computed(() => goal.value?.goal_status === false);
 
 </script>
 
@@ -101,7 +166,7 @@ const goalAchieved = computed(() => goal.value?.goal_status === false);
       <div class="goal-top">
 
         <div class="mygoal">
-          <h3>나의 목표 : {{ goal.goal_name }}</h3>
+          <h3>나의 목표 : {{ goal.goalName }}</h3>
         </div>
 
         <div class="icon">
@@ -132,7 +197,7 @@ const goalAchieved = computed(() => goal.value?.goal_status === false);
               </div>
 
               <div class="modal-body">
-                <p>'{{ goal.goal_name }}' 목표를 정말 삭제하시겠습니까?</p>
+                <p>'{{ goal.goalName }}' 목표를 정말 삭제하시겠습니까?</p>
                 <p class="warning-text">삭제된 목표는 복구할 수 없습니다.</p>
               </div>
 
@@ -151,8 +216,6 @@ const goalAchieved = computed(() => goal.value?.goal_status === false);
       <!-- end goal-top -->
 
       <!-- 진행률 바 -->
-      <!-- <ProgressBar/> -->
-      <!-- 진행률 바 삽입 -->
       <ProgressBar
         style="width: 270px;"
         :current="goal.current_amount"
@@ -199,11 +262,14 @@ const goalAchieved = computed(() => goal.value?.goal_status === false);
         <div class="goal-date">
           <div class="goal-date-target">
             <p><span class="label">목표 달성일</span></p>
-            <p>{{ formatDate(goal.goal_date) }}</p>
+            <p>{{ formatDate(goal.goalDate) }}</p>
           </div>
           <div class="goal-date-expect">
             <p><span class="label">예상 달성일</span></p>
-            <p>2030-12-31</p>
+            <!-- <p>2030-12-31</p> -->
+             <p>
+              {{ expectedDate ? formatDate(expectedDate) : '계산 중...' }}
+             </p>
           </div>
         </div>
 
