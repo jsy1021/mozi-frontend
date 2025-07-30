@@ -1,25 +1,25 @@
-<!-- FilterLayout.vue -->
 <template>
   <div class="mb-1" style="margin-bottom: 0.4rem">
     <label
       class="form-label small fw-semibold"
       style="font-size: 0.7rem; margin-bottom: 0.1rem"
-      >{{ label }}</label
     >
+      {{ label }}
+    </label>
     <div class="d-flex flex-wrap gap-1">
       <button
         v-for="item in items"
-        :key="item"
-        @click="toggleFilter(category, item)"
+        :key="item.value"
+        @click="toggleFilter(category, item.value)"
         :class="[
           'btn btn-sm py-1 px-2',
-          filterState[category]?.includes(item)
+          filterState[category]?.includes(item.value)
             ? 'btn-secondary'
             : 'btn-outline-secondary',
         ]"
         style="font-size: 0.65rem; line-height: 1.1; white-space: nowrap"
       >
-        {{ item }}
+        {{ item.label }}
       </button>
     </div>
   </div>
@@ -34,5 +34,6 @@ const props = defineProps({
   category: String,
   filterState: Object,
   toggleFilter: Function,
+  radioMode: Boolean,
 });
 </script>
