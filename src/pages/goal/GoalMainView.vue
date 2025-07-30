@@ -8,116 +8,121 @@
       </router-link>
     </div>
 
-    <!-- 1억 모으기 배너 (1억 모으기 목표가 없을 때만 표시) -->
-    <div
-      v-if="!hasBillionGoal"
-      class="banner-section"
-      @click="goToBillionGoalCreate"
-    >
-      <div class="banner-content">
-        <div class="banner-icon">
-          <i class="fas fa-star"></i>
-        </div>
-        <div class="banner-text">
-          <div class="banner-title">'1억 모으기'에 참가하시겠습니까?</div>
-          <div class="banner-subtitle">지금 시작해서 목표를 달성해보세요!</div>
-        </div>
-        <div class="banner-arrow">
-          <i class="fas fa-chevron-right"></i>
-        </div>
-      </div>
+    <!-- 로딩 상태 -->
+    <div v-if="goalStore.loading" class="loading-container">
+      <div class="loading-spinner">목표를 불러오는 중...</div>
     </div>
 
-    <!-- 목표 카드 리스트 -->
-    <div class="goals-container">
-      <div v-if="goals.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <i class="fas fa-flag"></i>
+    <!-- 에러 상태 -->
+    <div v-else-if="goalStore.error" class="error-container">
+      <div class="error-message">목표를 불러오는데 실패했습니다.</div>
+      <button @click="loadGoals" class="retry-button">다시 시도</button>
+    </div>
+
+    <template v-else>
+      <!-- 1억 모으기 배너 (1억 모으기 목표가 없을 때만 표시) -->
+      <div
+        v-if="!hasBillionGoal"
+        class="banner-section"
+        @click="goToBillionGoalCreate"
+      >
+        <div class="banner-content">
+          <div class="banner-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="banner-text">
+            <div class="banner-title">'1억 모으기'에 참가하시겠습니까?</div>
+            <div class="banner-subtitle">
+              지금 시작해서 목표를 달성해보세요!
+            </div>
+          </div>
+          <div class="banner-arrow">
+            <i class="fas fa-chevron-right"></i>
+          </div>
         </div>
-        <p>아직 설정된 목표가 없습니다.</p>
-        <p>첫 번째 목표를 설정해보세요!</p>
       </div>
 
-      <div v-else class="goals-list">
-        <GoalCard
-          v-for="goal in sortedGoals"
-          :key="goal.goal_id"
-          :goal="transformGoal(goal)"
-          @click="goToGoalDetail(goal.goal_id)"
-          @delete="handleDeleteGoal"
-        />
+      <!-- 목표 카드 리스트 -->
+      <div class="goals-container">
+        <div v-if="goalStore.goals.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-flag"></i>
+          </div>
+          <p>아직 설정된 목표가 없습니다.</p>
+          <p>첫 번째 목표를 설정해보세요!</p>
+        </div>
+
+        <div v-else class="goals-list">
+          <GoalCard
+            v-for="goal in sortedGoals"
+            :key="goal.goalId"
+            :goal="transformGoal(goal)"
+            @click="goToGoalDetail(goal.goalId)"
+            @delete="handleDeleteGoal"
+          />
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useGoalStore } from '@/stores/goalStore';
 import GoalCard from '../../components/goal/GoalCard.vue';
-import mockData from '../../data/db.json';
 
 const router = useRouter();
+const goalStore = useGoalStore();
 
-// 목표 데이터
-const goals = ref([]);
+// 현재 사용자 ID (실제로는 인증 스토어에서 가져와야 함)
+const currentUserId = 1; // TODO: 실제 사용자 ID로 변경
 
 // 1억 모으기 목표가 있는지 확인
 const hasBillionGoal = computed(() => {
-  return goals.value.some(
-    (goal) =>
-      goal.goal_name === '1억 모으기' && goal.target_amount === 100000000
-  );
-});
-
-// 1억 모으기 목표들을 찾기
-const billionGoals = computed(() => {
-  return goals.value.filter(
-    (goal) =>
-      goal.goal_name === '1억 모으기' && goal.target_amount === 100000000
+  return goalStore.goals.some(
+    (goal) => goal.goalName === '1억 모으기' && goal.targetAmount === 100000000
   );
 });
 
 // 목표 정렬 (1억 모으기 목표를 최상단에 배치)
 const sortedGoals = computed(() => {
-  return [...goals.value].sort((a, b) => {
+  return [...goalStore.goals].sort((a, b) => {
     const aIsBillion =
-      a.goal_name === '1억 모으기' && a.target_amount === 100000000;
+      a.goalName === '1억 모으기' && a.targetAmount === 100000000;
     const bIsBillion =
-      b.goal_name === '1억 모으기' && b.target_amount === 100000000;
+      b.goalName === '1억 모으기' && b.targetAmount === 100000000;
 
     // 1억 모으기 목표를 최상단에 배치
     if (aIsBillion && !bIsBillion) return -1;
     if (!aIsBillion && bIsBillion) return 1;
 
     // 나머지는 생성일 순으로 정렬
-    return new Date(b.created_at) - new Date(a.created_at);
+    return new Date(b.createdAt) - new Date(a.createdAt);
   });
 });
 
-// 목표 데이터 로드
-const loadGoals = () => {
-  // 로컬 스토리지에서 먼저 확인
-  const storedData = localStorage.getItem('moziGoals');
-
-  if (storedData) {
-    goals.value = JSON.parse(storedData);
-  } else {
-    // 로컬 스토리지가 없으면 mockData로 초기화
-    goals.value = mockData.goals;
-    localStorage.setItem('moziGoals', JSON.stringify(mockData.goals));
+// 목표 데이터 로드 - goalStore 사용
+const loadGoals = async () => {
+  try {
+    await goalStore.getGoalsByUserId(currentUserId);
+  } catch (error) {
+    console.error('목표 로딩 실패:', error);
   }
 };
 
 // 목표 데이터 변환 (GoalCard 컴포넌트 형식에 맞게)
 const transformGoal = (goal) => {
   return {
-    id: goal.goal_id,
-    name: goal.goal_name,
-    currentAmount: goal.current_amount,
-    targetAmount: goal.target_amount,
-    progress: (goal.current_amount / goal.target_amount) * 100,
-    targetDate: goal.goal_date,
+    id: goal.goalId,
+    name: goal.goalName,
+    currentAmount: goal.currentAmount || 0,
+    targetAmount: goal.targetAmount,
+    progress:
+      goal.currentAmount && goal.targetAmount
+        ? (goal.currentAmount / goal.targetAmount) * 100
+        : 0,
+    targetDate: goal.goalDate,
     memo: goal.memo,
   };
 };
@@ -130,13 +135,18 @@ const goToBillionGoalCreate = () => {
   });
 };
 
-// 목표 삭제 처리
-const handleDeleteGoal = (goalId) => {
-  const index = goals.value.findIndex((g) => g.goal_id === goalId);
-  if (index > -1) {
-    goals.value.splice(index, 1);
-    // 로컬 스토리지 업데이트
-    localStorage.setItem('moziGoals', JSON.stringify(goals.value));
+// 목표 삭제 처리 - goalStore 사용
+const handleDeleteGoal = async (goalId) => {
+  if (!confirm('정말로 이 목표를 삭제하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    await goalStore.deleteGoal(currentUserId, goalId);
+    console.log('목표가 성공적으로 삭제되었습니다.');
+  } catch (error) {
+    console.error('목표 삭제 실패:', error);
+    alert('목표 삭제에 실패했습니다.');
   }
 };
 
@@ -150,7 +160,7 @@ onMounted(() => {
   loadGoals();
 });
 
-// 페이지 포커스 시 데이터 새로고침 (다른 페이지에서 수정 후 돌아왔을 때)
+// 페이지 포커스 시 데이터 새로고침
 window.addEventListener('focus', loadGoals);
 </script>
 
@@ -181,6 +191,40 @@ window.addEventListener('focus', loadGoals);
   font-size: 18px;
   text-decoration: none;
   padding: 8px;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  font-size: 16px;
+  color: #666;
+}
+
+.error-message {
+  font-size: 16px;
+  color: #dc3545;
+}
+
+.retry-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.retry-button:hover {
+  background-color: #0056b3;
 }
 
 .banner-section {
