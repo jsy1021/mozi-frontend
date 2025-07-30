@@ -1,5 +1,10 @@
 <template>
+  <div v-if="loading" class="loading-container">
+    <div class="loading-spinner">목표를 생성하는 중...</div>
+  </div>
+
   <GoalForm
+    v-else
     :is-edit="false"
     :preset-data="presetData"
     @submit="handleCreateGoal"
@@ -8,13 +13,19 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useGoalStore } from '@/stores/goalStore';
 import GoalForm from '../../components/goal/GoalForm.vue';
-import mockData from '../../data/db.json';
 
 const router = useRouter();
 const route = useRoute();
+const goalStore = useGoalStore();
+
+const loading = ref(false);
+
+// 현재 사용자 ID (실제로는 인증 스토어에서 가져와야 함)
+const currentUserId = 1; // TODO: 실제 사용자 ID로 변경
 
 // 1억 모으기 프리셋 데이터
 const presetData = computed(() => {
@@ -27,36 +38,27 @@ const presetData = computed(() => {
   return null;
 });
 
-// 목표 생성 처리
-const handleCreateGoal = (formData) => {
+// 목표 생성 처리 - goalStore 사용
+const handleCreateGoal = async (formData) => {
   try {
-    // 새 목표 생성
-    const newGoal = {
-      goal_id: Date.now(), // 임시 ID
-      user_id: mockData.currentUser.user_id,
-      goal_name: formData.goalName,
-      keyword: formData.keyword,
-      target_amount: formData.targetAmount,
-      current_amount: 0,
-      goal_date: formData.targetDate,
-      memo: formData.memo,
-      created_at: new Date().toISOString().split('T')[0],
-      goalStatus: true,
-    };
+    loading.value = true;
 
-    // 로컬 스토리지에 저장 (백연결시 추후 여기서 API 호출)
-    const storedData = localStorage.getItem('moziGoals');
-    const goals = storedData ? JSON.parse(storedData) : mockData.goals;
-    goals.push(newGoal);
-    localStorage.setItem('moziGoals', JSON.stringify(goals));
+    // goalStore의 createGoal 메서드 사용
+    await goalStore.createGoal(currentUserId, formData);
 
-    console.log('Goal created:', newGoal);
+    console.log('Goal created successfully');
 
     // 목표 메인 페이지로 이동
     router.push({ name: 'goalMain' });
   } catch (error) {
     console.error('Error creating goal:', error);
-    alert('목표 생성 중 오류가 발생했습니다.');
+
+    // goalStore의 에러 처리
+    if (goalStore.error) {
+      alert('목표 생성 중 오류가 발생했습니다.');
+    }
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -66,4 +68,16 @@ const handleCancel = () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+}
+
+.loading-spinner {
+  font-size: 16px;
+  color: #666;
+}
+</style>
