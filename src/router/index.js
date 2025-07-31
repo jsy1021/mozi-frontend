@@ -1,27 +1,30 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from "vue-router";
 
-import HomePage from '../pages/HomePage.vue';
-import HamburgerMenu from '../pages/HamburgerMenu.vue';
-import authRoutes from './auth';
-import userRoutes from './user';
-import financialSearchRoutes from './financialSearch';
-import policySearchRoutes from './policySearch';
-import goalRoutes from './goal';
-import scrapRoutes from './scrap';
+import MainPage from "../pages/MainPage.vue";
+import HamburgerMenu from "../pages/HamburgerMenu.vue";
+import authRoutes from "./auth";
+import userRoutes from "./user";
+import financialSearchRoutes from "./financialSearch";
+import policySearchRoutes from "./policySearch";
+import goalRoutes from "./goal";
+import scrapRoutes from "./scrap";
+import searchRoutes from "./search";
+import recommendRoutes from "./recommend";
+import accountRoutes from "./account";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'homePage',
-      component: HomePage,
+      path: "/",
+      name: "mainPage",
+      component: MainPage,
       meta: { isHeader: true, isFooter: true },
     },
 
     {
-      path: '/HamburgerMenu',
-      name: 'hamburgerMenu',
+      path: "/HamburgerMenu",
+      name: "hamburgerMenu",
       component: HamburgerMenu,
       meta: { isHeader: false, isFooter: false },
     },
@@ -31,6 +34,9 @@ const router = createRouter({
     ...policySearchRoutes,
     ...goalRoutes,
     ...scrapRoutes,
+    ...searchRoutes,
+    ...recommendRoutes,
+    ...accountRoutes,
   ],
 });
 
