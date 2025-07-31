@@ -14,8 +14,7 @@ const route = useRoute();
       :style="{
         top: route.meta.isHeader ? '60px' : '0px',
         bottom: route.meta.isFooter ? '60px' : '0px',
-      }"
-    >
+      }">
       <slot></slot>
     </div>
     <Footer v-if="route.meta.isFooter" />
