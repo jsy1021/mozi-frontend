@@ -1,9 +1,9 @@
 <script setup>
-import IconScrap from '../icons/IconScrap.vue';
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router'
+import IconScrap from '../icons/IconScrap.vue'
 
-const route = useRoute();
-const isActive = (tabName) => route.name === tabName;
+const route = useRoute()
+const isActive = (tabName) => route.name === tabName
 </script>
 
 <template>
@@ -25,13 +25,17 @@ const isActive = (tabName) => route.name === tabName;
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
 .header {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 56px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 56px;
   padding: 0 12px;
   border-bottom: 1px solid #eee;
-  background: white; /* 개별 컴포넌트에서 배경 관리 */
+  background: white;
+  box-sizing: border-box;
 }
 
 .logo {

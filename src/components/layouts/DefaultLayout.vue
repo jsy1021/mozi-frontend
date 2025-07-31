@@ -12,9 +12,10 @@ const route = useRoute();
     <div
       class="content"
       :style="{
-        top: route.meta.isHeader ? '60px' : '0px',
-        bottom: route.meta.isFooter ? '60px' : '0px',
-      }">
+        top: route.meta.isHeader ? '56px' : '0px',
+        bottom: route.meta.isFooter ? '64px' : '0px',
+      }"
+    >
       <slot></slot>
     </div>
     <Footer v-if="route.meta.isFooter" />
@@ -28,6 +29,7 @@ const route = useRoute();
   background-color: white;
   margin: 0 auto;
   position: relative;
+  border: 1px solid #eee;
 }
 
 .content {
@@ -36,4 +38,5 @@ const route = useRoute();
   width: 100%;
   box-sizing: border-box;
 }
+
 </style>
