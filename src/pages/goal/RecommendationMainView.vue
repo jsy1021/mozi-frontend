@@ -42,7 +42,7 @@ function selectTab(tab) {
         </router-link>
       </div>
       <div class="top-title">
-        <h3>추천 결과</h3>
+        <p>추천 결과</p>
       </div>
     </div>
 
@@ -79,8 +79,8 @@ function selectTab(tab) {
 .recommendation-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  /* gap: 20px; */
+  /* padding: 20px; */
   max-width: 350px;
   margin: 0 auto;
 }
@@ -88,16 +88,25 @@ function selectTab(tab) {
 /* 상단 */
 .top{
   display: flex;
+  text-align: center;
+  height: 40px;
+  margin-top: 1rem;
 }
 .top-backbtn{
-  margin-top: 20px; 
-  margin-left: 15px;
+  /* margin-top: 20px;  */
+  /* margin-left: 15px; */
+  margin-top: 2px;
 }
 .top-title{
-  margin-left: 110px;
+  align-items: center;
+  margin-left: 125px;
 }
 .top-title>h3{
   text-align: center
+}
+.top-title>p{
+  font-size: 20px;
+  font-weight: 500; 
 }
 
 /* 탭 */
@@ -105,6 +114,7 @@ function selectTab(tab) {
   display: flex; 
   justify-content: center; 
   margin: 0;
+  margin-bottom: 10px;
 }
 
 

@@ -23,93 +23,83 @@ const props = defineProps({
     <!-- 정책 카드(policy) -->
     <template v-if="type === 'policy' && policy">
     
-      <div class="card">
-        <!-- 북마크 아이콘 -->
-        <i class="fa-regular fa-bookmark bookmark-icon"></i>
-        <!-- <i class="fa-solid fa-bookmark bookmark-icon"></i> -->
-
-        <!-- 왼(이미지) -->
-        <div class="card-image">
-          <img src="/images/goal/policy.png" alt="정책 이미지" style="width: 30px; height: 30px;"/>
-          <div class="grade">90점</div>
+      <div class="card-info">
+        
+        <div class="card-left">
+          <div>
+            <img src="/images/goal/policy.png" alt="정책 이미지" style="width: 30px; height: 30px;"/>
+            <p class="grade">Top 1</p>
+          </div>
         </div>
 
-        <!-- 오(내용) -->
-        <div class="card-body">
-          <div class="card-body-div">
+        <div class="card-right">
+          <div>
             <p class="title"><strong>{{ policy.plcyNm }}</strong></p>
-
-            <div style="">
-              <!-- <i class="fa-solid fa-bookmark" style="color: #569FFF;"></i> -->
-              <!-- <i class="fa-regular fa-bookmark" style="color: #757575;"></i> -->
-              <!-- <p style="font-size: 14px;">90점</p> -->
-            </div>
           </div>
-
-          <p class="txt">{{ policy.plcyExplnCn }}</p>
-
+          
           <p class="category">
-            <span class="label">분류</span> {{ policy.lclsfNm }}
+            <span class="label">분야</span> {{ policy.lclsfNm }}
           </p>
-          <p class="age">
+          <p class="category">
             <span class="label">연령</span> {{ policy.sprtTrgtMinAge }} ~ {{ policy.sprtTrgtMaxAge }}세
           </p>
-          <p class="period">
+          <p class="category">
             <span class="label">기간</span> {{ policy.bizPrdBgngYmd }} ~ {{ policy.bizPrdEndYmd }}
           </p>
-          <div class="keyword">
+
+          <div class="keyword" style="display: flex;">
             <div class="tag">
               <p>{{ policy.lclsfNm }}</p>
               <p>{{ policy.mclsfNm }}</p>
             </div>
+
+            <!-- <div class="url">
+              <p>
+                <a :href="policy.aplyUrlAddr" target="_blank" rel="noopener noreferrer">자세히보기</a>
+              </p>
+            </div> -->
           </div>
-          <div class="url">
-            <p>
-              <a :href="policy.aplyUrlAddr" target="_blank" rel="noopener noreferrer">자세히보기</a>
-            </p>
-          </div>
-        </div><!-- end card-body -->
-      </div><!-- end card-->
+
+        </div>
+
+      </div>
     </template>
 
     <!-- 금융 상품 카드(product) -->
     <template v-else-if="type === 'product' && product">
 
-      <div class="card">
-        <!-- 북마크 아이콘 -->
-        <i class="fa-regular fa-bookmark bookmark-icon"></i>
-        <!-- <i class="fa-solid fa-bookmark bookmark-icon"></i> -->
+      <div class="card-info">
 
-        <!-- 왼(이미지) -->
-        <div class="card-image">
+        <div class="card-left">
           <img src="/images/goal/kb.png" alt="정책 이미지" style="width: 30px; height: 30px;"/>
-          <div class="grade">90점</div>
+          <div class="grade">Top1</div>
         </div>
 
-        <!-- 오(내용) -->
-        <div class="card-body">
-
-          <p class="title"><strong>{{ product.fin_prdt_nm }}</strong></p>
-          <p class="txt">기본 금리: {{ product.intr_rate }}%</p>
-          <p class="txt">최고 우대 금리: {{ product.intr_rate2 }}%</p>
+        <div class="card-right">
+          <div>
+            <p class="title"><strong>{{ product.fin_prdt_nm }}</strong></p>
+          </div>
+        
           <p class="category">
             <span class="label">대상</span> {{ product.join_member }}
           </p>
-          <p class="age">
+          <p class="category">
             <span class="label">최고한도</span> {{ product.max_limit.toLocaleString() }}원
           </p>
-          <p class="period">
+          <p class="category">
             <span class="label">공시 기간</span> {{ product.dcls_start_day }} ~ {{ product.dcls_end_day }}
           </p>
+
           <div class="keyword">
             <div class="tag">
               <p>{{ product.kor_co_nm }}</p>
               <p>{{ product.join_way }}</p>
             </div>
           </div>
+        
+        </div>
 
-        </div><!-- end card-body-->
-      </div><!-- end card-->
+      </div>
     </template>
 
     <!-- 데이터 없을 때 -->
@@ -123,8 +113,9 @@ const props = defineProps({
 <style scoped>
 
 .recommend-card {
-  margin-left: 10px;
-  margin-right: 10px;
+  position: relative;
+  /* margin-left: 5px; */
+  margin-right: 5px;
   border: 1px solid #d9d9d9;
   border-radius: 5px;
   padding: 12px 1rem;
@@ -133,20 +124,39 @@ const props = defineProps({
   background-color: #fff;
   margin-bottom: 1rem;
 
+  /* width: 300px; */
+  width: 100%;
+
   /* 기본(왼쪽): 색 x */
-  border-left: 7px solid transparent;
+  /* border-left: 7px solid transparent; */
 }
 
-/* 정책: 초록 */
-.recommend-card.policy {
-  border-left-color: #20B825;
+/* 왼쪽 그라데이션 전용 */
+/* 정책 */
+.recommend-card.policy::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, #ff0000 0%, #000dff 55%);
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
-/* 금융: 노란색 */
-.recommend-card.product {
-  border-left-color: #FCC659;
+/* 금융 */
+.recommend-card.product::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, #FF9D00 0%, #83FFF1 100%);
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
-
 
 .recommend-card p,
 .recommend-card .keyword,
@@ -163,53 +173,35 @@ const props = defineProps({
 }
 
 /* 카드 */
-.card{
-  display: flex; 
-  position: relative;
-}
-
-/* 북마크 */
-.bookmark-icon {
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-size: 18px;
-  /* color: #569FFF; */
-  color: #757575;
-  cursor: pointer;
-  z-index: 10;
-}
-
-/* 왼(이미지) */
-.card-image{
-  margin-right: 7px; 
-  margin-top: 2px;
-}
-.grade{
-  font-size: 12px;
-  margin-top: 5px;
-}
-
-/* 오(내용) */
-.card-body{}
-
-.card-body-div{
+.card-info{
   display: flex;
 }
 
+/* 왼(이미지) */
+.card-left{
+  margin-right: 14px;
+}
+
+.grade{
+  font-size: 12px;
+}
+
+
+/* 오(내용) */
+.card-right{}
+
+
+/*  */
 .title{
   font-size: 14px;
 }
 
-.txt,
-.category,
-.age,
-.period{
+.category{
   font-size: 12px;
 }
 
 .label{
-  color: #c6c6c6;
+  color: #959595;
 }
 
 /* 키워드 */
@@ -240,6 +232,18 @@ const props = defineProps({
   border-radius: 5px;
   color: #757575;
   font-size: 12px;
+}
+
+/* 북마크 */
+.bookmark-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 18px;
+  /* color: #569FFF; */
+  color: #757575;
+  cursor: pointer;
+  z-index: 10;
 }
 
 </style>

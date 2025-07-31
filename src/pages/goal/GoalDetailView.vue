@@ -74,13 +74,7 @@ const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
 };
 
-// - 삭제 확정
-/*
-const confirmDelete = () => {
-  // 실제 삭제 로직은 이 안에 구현 (예: emit 이벤트 or API 호출 등)
-  console.log(`Deleting goal with id: ${goal.value?.goal_id}`);
-  showDeleteModal.value = false;
-};*/
+// - 삭제 
 const confirmDelete = async () => {
   if(!goal.value) return
   await goalStore.deleteGoal(userId, goal.value.goalId)
@@ -94,14 +88,6 @@ const closePopup = () => {
 };
 
 // - 초기 로드와 goalId 변경 감지
-/*
-onMounted(() => loadGoal(props.goalId));
-watch(
-  () => props.goalId,
-  (newId) => {
-    loadGoal(newId);
-  }
-);*/
 onMounted(() => loadGoal(goalId))
 watch(
   () => route.params.goalId,
@@ -114,8 +100,6 @@ watch(
 </script>
 
 <template>
-  <!-- <h1>목표 상세 페이지</h1> -->
-
   <!-- 상단-->
   <div class="top">
     <!-- 뒤로가기 -->
@@ -126,7 +110,7 @@ watch(
     </div>
     <!-- 제목 -->
     <div class="top-title">
-      <h3 style="text-align: center">목표 상세보기</h3>
+      <p>목표 상세보기</p>
     </div>
   </div>
 
@@ -134,10 +118,10 @@ watch(
   <div v-if="goal" class="goal-detail">
     <!-- 목표 정보 영역 -->
     <div class="goal-info">
-      <div class="goal-top">
 
+      <div class="goal-top">
         <div class="mygoal">
-          <h3>나의 목표 : {{ goal.goalName }}</h3>
+          <p class="goalName">나의 목표 : {{ goal.goalName }}</p>
         </div>
 
         <div class="icon">
@@ -147,7 +131,6 @@ watch(
           </router-link>
 
           <!-- 삭제 -->
-          <!-- <i class="fa-solid fa-trash"></i> -->
           <button
             class="delete-btn"
             @click.stop="showDeleteModal = true"
@@ -305,15 +288,23 @@ watch(
 /* 상단 */
 .top{
   display: flex; 
-  text-align: center
+  text-align: center;
+
+  height: 40px;
+  margin-top: 1rem;
 }
 .top-backbtn{
-  margin-top: 20px; 
-  margin-left: 20px
+  margin-left: 23px;
+  margin-top: 2px;
 }
+
 .top-title{
   align-items: center; 
-  margin-left: 110px
+  margin-left: 100px;
+}
+.top-title>p{
+  font-size: 20px;
+  font-weight: 500; 
 }
 
 /* 내용 시작 */
@@ -335,20 +326,24 @@ watch(
 }
 
 .goal-top{
-  display: flex
+  display: flex;
+  height: 30px;
+  margin-top: 10px;
 }
 
 .mygoal{
   align-items: center; 
-  margin-left: 50px
+  margin-left: 50px;
+}
+.goalName{
+  font-size: 16px;
 }
 
 .icon{
-  margin-top: 20px; 
-  margin-left: 30px
+  margin-left: 30px;
 }
 .update{
-  margin-right: 10px
+  margin-right: 10px;
 }
 
 /* 삭제버튼(모달) -> 아래쪽에 */
@@ -382,7 +377,6 @@ watch(
 .goal-keyword > p {
   display: inline-block;
   padding: 7px;
-  /* border: 1px solid gray; */
   background-color: lightgray;
   color: gray;
   border-radius: 5px;
