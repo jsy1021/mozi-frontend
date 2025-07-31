@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <!-- 현재 금액 (수정 모드일 때만 표시) 진행률 바 테스트용 추후 계좌 연결시 삭제 -->
+      <!-- 현재 금액 (수정 모드일 때만 표시) -->
       <div v-if="isEdit" class="form-group">
         <label for="currentAmount">현재 금액</label>
         <div class="amount-input">
@@ -85,18 +85,19 @@
           <button
             type="button"
             v-for="keyword in keywords"
-            :key="keyword"
+            :key="keyword.key"
             :class="[
               'keyword-btn',
               {
-                active: form.keyword === keyword,
+                active: form.keyword === keyword.key,
                 preset:
-                  presetData?.keyword === keyword && form.keyword === keyword,
+                  presetData?.keyword === keyword.key &&
+                  form.keyword === keyword.key,
               },
             ]"
-            @click="form.keyword = keyword"
+            @click="form.keyword = keyword.key"
           >
-            # {{ keyword }}
+            # {{ keyword.label }}
           </button>
         </div>
         <div
@@ -127,7 +128,7 @@
         <div class="char-count">{{ form.memo.length }}/50</div>
       </div>
 
-      <!-- 포함된 계좌 (간단한 체크박스로 표시) 현재는 그냥 예시용 더미 추후 계좌 연결시 추가예정-->
+      <!-- 포함된 계좌 -->
       <div class="form-group">
         <label>포함된 계좌</label>
         <div class="account-list">
@@ -197,8 +198,18 @@ const props = defineProps({
 // Emits 정의
 const emit = defineEmits(['submit', 'cancel']);
 
-// 키워드 목록
-const keywords = ['결혼', '취업', '내집마련', '여행', '학자금', '취미'];
+// goalApi 임포트
+import goalApi from '@/api/goalApi';
+
+// 키워드 목록 - goalApi의 getKeywordLabel 메서드와 매칭
+const keywords = [
+  { key: 'MARRIAGE', label: '결혼' },
+  { key: 'EMPLOYMENT', label: '취업' },
+  { key: 'HOME_PURCHASE', label: '내집마련' },
+  { key: 'TRAVEL', label: '여행' },
+  { key: 'EDUCATION_FUND', label: '학자금' },
+  { key: 'HOBBY', label: '취미' },
+];
 
 // 폼 데이터
 const form = reactive({
@@ -237,15 +248,16 @@ const initializeForm = () => {
 const handleSubmit = () => {
   if (!validateForm()) return;
 
-  const formData = {
+  // goalApi의 formatGoalData 사용하여 데이터 포맷팅
+  const formData = goalApi.formatGoalData({
     goalName: form.goalName,
     targetAmount: parseInt(form.targetAmount),
     currentAmount: props.isEdit ? parseInt(form.currentAmount || 0) : 0,
-    targetDate: form.targetDate,
+    goalDate: form.targetDate,
     keyword: form.keyword,
     memo: form.memo,
     selectedAccounts: form.selectedAccounts,
-  };
+  });
 
   emit('submit', formData);
 };
@@ -284,6 +296,16 @@ watch(
   },
   { immediate: true }
 );
+
+// goalApi의 금액 포맷팅 사용
+const formatAmount = (amount) => {
+  return goalApi.formatAmount(amount);
+};
+
+// 키워드 한글 라벨 가져오기
+const getKeywordLabel = (keywordKey) => {
+  return goalApi.getKeywordLabel(keywordKey);
+};
 
 // 컴포넌트 마운트 시 폼 초기화
 onMounted(() => {

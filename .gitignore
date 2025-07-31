@@ -28,5 +28,5 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-# Vite 설정 파일 무시
+
 vite.config.js
