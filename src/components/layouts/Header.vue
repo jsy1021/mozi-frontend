@@ -1,12 +1,14 @@
-<script setup></script>
+<script setup>
+import IconScrap from '../icons/IconScrap.vue';
+</script>
 <template>
   <div class="header">
     <div class="logo">MoZi</div>
 
     <div class="buttons">
-      <router-link :to="{ name: 'homePage' }"
-        ><i class="fa-solid fa-house"></i
-      ></router-link>
+      <router-link :to="{name: 'scrapPage'}">
+        <IconScrap :active="isActive"/>
+      </router-link>
       <router-link :to="{ name: 'hamburgerMenu' }"
         ><i class="fa-solid fa-bars"></i
       ></router-link>
