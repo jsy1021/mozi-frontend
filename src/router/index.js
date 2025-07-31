@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import HomePage from '../pages/HomePage.vue';
+import MainPage from '../pages/MainPage.vue';
 import HamburgerMenu from '../pages/HamburgerMenu.vue';
 import authRoutes from './auth';
 import userRoutes from './user';
@@ -14,8 +14,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'homePage',
-      component: HomePage,
+      name: 'mainPage',
+      component: MainPage,
       meta: { isHeader: true, isFooter: true },
     },
 
