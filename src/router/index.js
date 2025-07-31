@@ -8,6 +8,7 @@ import financialSearchRoutes from './financialSearch';
 import policySearchRoutes from './policySearch';
 import goalRoutes from './goal';
 import scrapRoutes from './scrap';
+import accountRoutes from './account';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,6 +32,7 @@ const router = createRouter({
     ...policySearchRoutes,
     ...goalRoutes,
     ...scrapRoutes,
+    ...accountRoutes,
   ],
 });
 
