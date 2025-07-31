@@ -8,7 +8,7 @@ const route = useRoute();
 
 <template>
   <div class="iphone-frame">
-    <Header class="header" v-if="route.meta.isHeader" />
+    <Header v-if="route.meta.isHeader" />
     <div
       class="content"
       :style="{
@@ -18,7 +18,7 @@ const route = useRoute();
     >
       <slot></slot>
     </div>
-    <Footer class="footer" v-if="route.meta.isFooter" />
+    <Footer v-if="route.meta.isFooter" />
   </div>
 </template>
 
@@ -29,26 +29,6 @@ const route = useRoute();
   background-color: white;
   margin: 0 auto;
   position: relative;
-}
-
-.header {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  height: 60px; /*수정필요*/
-  z-index: 10;
-  background-color: #f2f2f2;
-  box-sizing: border-box;
-}
-
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 60px; /*수정필요*/
-  z-index: 10;
-  background-color: #f2f2f2;
-  box-sizing: border-box;
 }
 
 .content {
