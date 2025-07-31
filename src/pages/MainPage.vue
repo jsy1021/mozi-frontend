@@ -46,4 +46,5 @@
   <div>MainPage</div>
   <div>MainPage</div>
   <div>MainPage</div>
+  <div>MainPage</div>
 </template>
