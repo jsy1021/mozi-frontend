@@ -58,11 +58,10 @@
           <i
             class="fa-bookmark ms-4"
             :class="
-              policy.bookmarked
-                ? 'fa-solid text-primary'
-                : 'fa-regular text-secondary'
+              bookmarked ? 'fa-solid text-primary' : 'fa-regular text-secondary'
             "
             style="cursor: pointer"
+            @click="toggleBookmark"
           ></i>
         </div>
       </div>
@@ -92,7 +91,45 @@
 </template>
 
 <script setup>
-defineProps({ policy: Object });
+//defineProps({ policy: Object });
+import { ref } from 'vue';
+import { scrapPolicy, cancelScrap } from '@/api/scrapApi'; // 💡 scrapApi.js에 만들어놨다고 가정
+
+const props = defineProps({
+  policy: Object,
+  isScrapped: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const bookmarked = ref(props.isScrapped);
+
+// 하드코딩된 유저 ID
+const userId = 1; // TODO: 로그인 연동 시 교체
+
+const toggleBookmark = async () => {
+  try {
+    console.log('📌 북마크 클릭됨:', {
+      현재상태: bookmarked.value,
+      정책ID: props.policy.policyId,
+      유저ID: userId,
+    });
+
+    if (bookmarked.value) {
+      await cancelScrap(userId, props.policy.policyId);
+      console.log('❌ 스크랩 해제 요청 보냄');
+    } else {
+      await scrapPolicy(userId, props.policy.policyId);
+      console.log('✅ 스크랩 등록 요청 보냄');
+    }
+
+    bookmarked.value = !bookmarked.value;
+    console.log('🔄 북마크 상태 변경 →', bookmarked.value);
+  } catch (err) {
+    console.error('⚠️ 스크랩 처리 오류:', err);
+  }
+};
 </script>
 
 <style scoped>
