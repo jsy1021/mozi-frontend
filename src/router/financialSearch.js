@@ -2,19 +2,19 @@ export default [
   {
     path: '/financialSearch/FinancialSearchPage',
     name: 'financialSearchPage',
-    component: () => import('../pages/financialSearch/FinancialSearchPage.vue'),
+    component: () => import('../pages/search/financialSearch/FinancialSearchPage.vue'),
     meta: { isHeader: true, isFooter: true },
   },
   {
     path: '/financialSearch/deposit/:id', // 예금 상세 페이지용 경로
     name: 'depositDetail',
-    component: () => import('../pages/financialSearch/DepositDetailPage.vue'),
+    component: () => import('../pages/search/financialSearch/DepositDetailPage.vue'),
     meta: { isHeader: true, isFooter: true },
   },
   {
     path: '/financialSearch/saving/:id', // 적금 상세 페이지용 경로
     name: 'savingDetail',
-    component: () => import('../pages/financialSearch/SavingDetailPage.vue'),
+    component: () => import('../pages/search/financialSearch/SavingDetailPage.vue'),
     meta: { isHeader: true, isFooter: true },
   },
   {
