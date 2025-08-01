@@ -73,7 +73,7 @@ export const useBankStore = defineStore('bank', {
       {
         name: '제주은행',
         code: '0035',
-        logo: '/resources/images/financial/jejubank.png',
+        logo: '/resources/images/financial/shinhanbank.png',
         connected: false,
       },
       {

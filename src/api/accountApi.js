@@ -94,3 +94,14 @@ export const getAccountsByBank = async (bankCode) => {
   });
   return result.data;
 };
+
+//목표 포함계좌 수정
+export const updateAccountsByGoal = async (data) => {
+  try {
+    const response = await axios.post('/api/account/update-by-goal', data);
+    return response.data;
+  } catch (error) {
+    console.error('계좌 목표 업데이트 실패:', error);
+    throw error;
+  }
+};
