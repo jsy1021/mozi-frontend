@@ -21,8 +21,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useGoalStore } from '@/stores/goalStore';
-import goalApi from '@/api/goalApi';
-import { getAccountsByGoal } from '@/api/accountApi';
+import { getAccountsByGoal, updateAccountsByGoal } from '@/api/accountApi';
 import GoalForm from '../../components/goal/GoalForm.vue';
 
 const router = useRouter();
@@ -74,7 +73,10 @@ const loadGoalData = async () => {
       targetDate: goal.goalDate,
       keyword: goal.keyword,
       memo: goal.memo,
-      selectedAccounts: linkedAccounts.map((account) => account.accountId), // 연결된 계좌 ID 배열
+      //수정: accountNumber 배열로 전달
+      selectedAccountNumbers: linkedAccounts.map(
+        (account) => account.accountNumber
+      ),
     };
   } catch (error) {
     console.error('Error loading goal:', error);
@@ -90,15 +92,28 @@ const loadGoalData = async () => {
 // 목표 수정 처리 - goalStore 사용
 const handleUpdateGoal = async (formData) => {
   try {
-    // 1. 목표 정보 수정
-    await goalStore.updateGoal(goalId, formData);
+    // 1. 목표 정보 수정 (계좌 데이터 제외)
+    const goalPayload = {
+      goalName: formData.goalName,
+      targetAmount: formData.targetAmount,
+      goalDate: formData.goalDate,
+      keyword: formData.keyword,
+      memo: formData.memo,
+    };
+
+    await goalStore.updateGoal(goalId, goalPayload);
     console.log('Goal updated successfully');
 
-    // 2. 계좌 연결 업데이트
-    if (formData.selectedAccounts) {
+    // 2. 계좌 연결 업데이트 (계좌팀 요청 형식)
+    if (formData.accountData && formData.accountData.accountNumberList) {
       try {
-        // 선택된 계좌들을 목표에 연결 (기존 연결은 자동으로 해제되고 새로 연결됨)
-        await goalApi.linkAccountsToGoal(goalId, formData.selectedAccounts);
+        // 계좌팀 요청 형식: { goalId: 5, accountNumberList: ['111-222-333', '444-555-666'] }
+        const accountLinkData = {
+          goalId: goalId,
+          accountNumberList: formData.accountData.accountNumberList,
+        };
+
+        await updateAccountsByGoal(accountLinkData);
         console.log('Accounts updated successfully');
       } catch (accountError) {
         console.error('계좌 연결 업데이트 실패:', accountError);
