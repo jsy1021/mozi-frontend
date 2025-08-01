@@ -9,87 +9,79 @@ const api = axios.create({
 const GOAL_BASE_URL = 'goal';
 
 export default {
-  // 1. 사용자별 목표 목록 조회
-  // GET /api/goal/{userId}
-  async getGoalsByUserId(userId) {
-    const { data } = await api.get(`${GOAL_BASE_URL}/${userId}`);
-    console.log('GOAL GET LIST BY USER:', data);
+  // 1. 현재 사용자의 목표 목록 조회
+  // GET /api/goal
+  async getGoals() {
+    const { data } = await api.get(`${GOAL_BASE_URL}`);
+    console.log('GOAL GET LIST:', data);
     return data;
   },
 
   // 2. 특정 목표 조회
-  // GET /api/goal/{userId}/{goalId}
-  async getGoal(userId, goalId) {
-    const { data } = await api.get(`${GOAL_BASE_URL}/${userId}/${goalId}`);
+  // GET /api/goal/{goalId}
+  async getGoal(goalId) {
+    const { data } = await api.get(`${GOAL_BASE_URL}/${goalId}`);
     console.log('GOAL GET DETAIL:', data);
     return data;
   },
 
   // 3. 새 목표 생성
-  // POST /api/goal/{userId}
-  async createGoal(userId, goalData) {
-    const { data } = await api.post(`${GOAL_BASE_URL}/${userId}`, goalData);
+  // POST /api/goal
+  async createGoal(goalData) {
+    const { data } = await api.post(`${GOAL_BASE_URL}`, goalData);
     console.log('GOAL CREATE:', data);
     return data;
   },
 
   // 4. 목표 수정
-  // PUT /api/goal/{userId}/{goalId}
-  async updateGoal(userId, goalId, goalData) {
-    const { data } = await api.put(
-      `${GOAL_BASE_URL}/${userId}/${goalId}`,
-      goalData
-    );
+  // PUT /api/goal/{goalId}
+  async updateGoal(goalId, goalData) {
+    const { data } = await api.put(`${GOAL_BASE_URL}/${goalId}`, goalData);
     console.log('GOAL UPDATE:', data);
     return data;
   },
 
   // 5. 목표 삭제
-  // DELETE /api/goal/{userId}/{goalId}
-  async deleteGoal(userId, goalId) {
-    const { data } = await api.delete(`${GOAL_BASE_URL}/${userId}/${goalId}`);
+  // DELETE /api/goal/{goalId}
+  async deleteGoal(goalId) {
+    const { data } = await api.delete(`${GOAL_BASE_URL}/${goalId}`);
     console.log('GOAL DELETE:', data);
     return data;
   },
 
   // 6. 목표 달성률 조회
-  // GET /api/goal/{userId}/{goalId}/achievement-rate
-  async getAchievementRate(userId, goalId) {
+  // GET /api/goal/{goalId}/achievement-rate
+  async getAchievementRate(goalId) {
     const { data } = await api.get(
-      `${GOAL_BASE_URL}/${userId}/${goalId}/achievement-rate`
+      `${GOAL_BASE_URL}/${goalId}/achievement-rate`
     );
     console.log('GOAL ACHIEVEMENT RATE:', data);
     return data;
   },
 
   // 7. 목표 달성 예상 날짜 조회
-  // GET /api/goal/{userId}/{goalId}/expected-date?monthlyAmount={amount}
-  async getExpectedDate(userId, goalId, monthlyAmount) {
-    const { data } = await api.get(
-      `${GOAL_BASE_URL}/${userId}/${goalId}/expected-date`,
-      {
-        params: { monthlyAmount },
-      }
-    );
+  // GET /api/goal/{goalId}/expected-date?monthlyAmount={amount}
+  async getExpectedDate(goalId, monthlyAmount) {
+    const { data } = await api.get(`${GOAL_BASE_URL}/${goalId}/expected-date`, {
+      params: { monthlyAmount },
+    });
     console.log('GOAL EXPECTED DATE:', data);
     return data;
   },
 
   // 8. 목표 달성 여부 확인
-  // GET /api/goal/{userId}/{goalId}/is-achieved
-  async isGoalAchieved(userId, goalId) {
-    const { data } = await api.get(
-      `${GOAL_BASE_URL}/${userId}/${goalId}/is-achieved`
-    );
+  // GET /api/goal/{goalId}/is-achieved
+  async isGoalAchieved(goalId) {
+    const { data } = await api.get(`${GOAL_BASE_URL}/${goalId}/is-achieved`);
     console.log('GOAL IS ACHIEVED:', data);
     return data;
   },
 
   // 9. 목표 상태 업데이트
-  // PATCH /api/goal/{userId}/{goalId}/status
-  async updateGoalStatus(userId, goalId, status) {
+  // PATCH /api/goal/{goalId}/status
+  async updateGoalStatus(goalId, status) {
     const { data } = await api.patch(
-      `${GOAL_BASE_URL}/${userId}/${goalId}/status`,
+      `${GOAL_BASE_URL}/${goalId}/status`,
       status
     );
     console.log('GOAL STATUS UPDATE:', data);
@@ -97,39 +89,35 @@ export default {
   },
 
   // 10. 1억 모으기 목표 조회
-  // GET /api/goal/{userId}/billion
-  async getBillionGoal(userId) {
-    const { data } = await api.get(`${GOAL_BASE_URL}/${userId}/billion`);
+  // GET /api/goal/billion
+  async getBillionGoal() {
+    const { data } = await api.get(`${GOAL_BASE_URL}/billion`);
     console.log('BILLION GOAL:', data);
     return data;
   },
 
   // 11. 남은 금액 계산
-  // GET /api/goal/{userId}/{goalId}/remaining-amount
-  async getRemainingAmount(userId, goalId) {
+  // GET /api/goal/{goalId}/remaining-amount
+  async getRemainingAmount(goalId) {
     const { data } = await api.get(
-      `${GOAL_BASE_URL}/${userId}/${goalId}/remaining-amount`
+      `${GOAL_BASE_URL}/${goalId}/remaining-amount`
     );
     console.log('REMAINING AMOUNT:', data);
     return data;
   },
 
   // 12. 남은 기간 계산 (일 단위)
-  // GET /api/goal/{userId}/{goalId}/remaining-days
-  async getRemainingDays(userId, goalId) {
-    const { data } = await api.get(
-      `${GOAL_BASE_URL}/${userId}/${goalId}/remaining-days`
-    );
+  // GET /api/goal/{goalId}/remaining-days
+  async getRemainingDays(goalId) {
+    const { data } = await api.get(`${GOAL_BASE_URL}/${goalId}/remaining-days`);
     console.log('REMAINING DAYS:', data);
     return data;
   },
 
   // 13. 목표 키워드 조회
-  // GET /api/goal/{userId}/{goalId}/keyword
-  async getGoalKeyword(userId, goalId) {
-    const { data } = await api.get(
-      `${GOAL_BASE_URL}/${userId}/${goalId}/keyword`
-    );
+  // GET /api/goal/{goalId}/keyword
+  async getGoalKeyword(goalId) {
+    const { data } = await api.get(`${GOAL_BASE_URL}/${goalId}/keyword`);
     console.log('GOAL KEYWORD:', data);
     return data;
   },

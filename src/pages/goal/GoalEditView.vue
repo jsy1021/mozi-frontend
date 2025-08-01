@@ -29,17 +29,14 @@ const goalStore = useGoalStore();
 
 const goalData = ref(null);
 
-// 현재 사용자 ID (실제로는 인증 스토어에서 가져와야 함)
-const currentUserId = 1; // TODO: 실제 사용자 ID로 변경
-
 // 목표 ID
 const goalId = parseInt(route.params.goalId);
 
 // 목표 데이터 로드 - goalStore 사용
 const loadGoalData = async () => {
   try {
-    // goalStore의 getGoal 메서드 사용
-    await goalStore.getGoal(currentUserId, goalId);
+    // goalStore의 getGoal 메서드 사용 (userId 파라미터 제거)
+    await goalStore.getGoal(goalId);
 
     const goal = goalStore.selectedGoal;
 
@@ -72,8 +69,8 @@ const loadGoalData = async () => {
 // 목표 수정 처리 - goalStore 사용
 const handleUpdateGoal = async (formData) => {
   try {
-    // goalStore의 updateGoal 메서드 사용
-    await goalStore.updateGoal(currentUserId, goalId, formData);
+    // goalStore의 updateGoal 메서드 사용 (userId 파라미터 제거)
+    await goalStore.updateGoal(goalId, formData);
 
     console.log('Goal updated successfully');
 
