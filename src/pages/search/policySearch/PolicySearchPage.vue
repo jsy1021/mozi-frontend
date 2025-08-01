@@ -83,6 +83,7 @@
       v-for="(policy, index) in filteredList"
       :key="index"
       :policy="policy"
+      :isScrapped="policy.bookmarked"
     />
   </div>
 </template>
@@ -92,6 +93,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import PolicyCard from './policyCard.vue';
 import policyApi from '@/api/policyApi';
 import policyFilter from './policyFilter.vue';
+import { getScrappedPolicyIds } from '@/api/scrapApi';
 
 const searchKeyword = ref('');
 const currentCategory = ref('전체');
@@ -137,7 +139,7 @@ const selectedTagsWithCategory = computed(() => {
 const filteredList = computed(() => {
   let list = policyList.value;
 
-  // ✅ 지역 필터링 (zipCd 기준)
+  // 지역 필터링 (zipCd 기준)
   if (filterState.value.region.length > 0) {
     list = list.filter((policy) => {
       const policyZips = policy.zipCd?.split(',') || [];
@@ -196,7 +198,7 @@ const filteredList = computed(() => {
     });
   }
 
-  // ✅ 전공 필터링
+  // 전공 필터링
   if (
     filterState.value.major.length > 0 &&
     !filterState.value.major.includes('0011009') // 제한없음 제외
@@ -210,7 +212,7 @@ const filteredList = computed(() => {
     });
   }
 
-  // ✅ 특화분야 필터링
+  // 특화분야 필터링
   if (
     filterState.value.special.length > 0 &&
     !filterState.value.special.includes('0014010') // 제한없음 제외
@@ -315,12 +317,19 @@ onMounted(async () => {
     filterState.value = JSON.parse(saved);
   }
 
-  const data = await policyApi.getList();
-  policyList.value = data;
-});
-onMounted(async () => {
-  const data = await policyApi.getList();
-  console.log('정책 목록:', data);
-  policyList.value = data;
+  const userId = 1; // 하드코딩
+
+  const [data, scrappedIds] = await Promise.all([
+    policyApi.getList(),
+    getScrappedPolicyIds(userId),
+  ]);
+
+  // bookmarked 필드 추가
+  policyList.value = data.map((p) => ({
+    ...p,
+    bookmarked: scrappedIds.includes(p.policyId),
+  }));
+
+  console.log('정책 목록:', policyList.value);
 });
 </script>
