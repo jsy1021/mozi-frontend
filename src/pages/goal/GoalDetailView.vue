@@ -11,10 +11,11 @@ import goalApi from '@/api/goalApi';
 const route = useRoute();
 const router = useRouter();         //
 
-
+// route에서 goalId 가져오기
 const goalId = route.params.goalId;
 
-const userId = 1;                   // 실제 로그인 사용자 ID로 교체해야 함
+// const userId = 1;                   // 실제 로그인 사용자 ID로 교체해야 함
+// 백엔드 -> getCurrentUserId() 로 처리
 
 // - pinia store
 const goalStore = useGoalStore()
@@ -41,11 +42,11 @@ const loadGoal = async (id) => {
   const numericId = Number(id)
 
   // 목표 상세 조회
-  await goalStore.getGoal(userId, numericId)
+  await goalStore.getGoal(numericId)
 
   // 예상 달성일 
   const monthlyAmount = 1000000
-  const data = await goalApi.getExpectedDate(userId, numericId, monthlyAmount)
+  const data = await goalApi.getExpectedDate(numericId, monthlyAmount)
 
   console.log('예상 달성일 API 응답:', data)
 
@@ -77,7 +78,7 @@ const toggleExpand = () => {
 // - 삭제 
 const confirmDelete = async () => {
   if(!goal.value) return
-  await goalStore.deleteGoal(userId, goal.value.goalId)
+  await goalStore.deleteGoal(goal.value.goalId)
   showDeleteModal.value = false
   router.push('/goal')
 }
