@@ -112,7 +112,7 @@ onMounted(() => {
 
     <!-- 삭제 확인 모달 -->
     <div class="modal-overlay" v-if="showConfirm">
-      <div class="modal">
+      <div class="my-modal">
         <p class="modal-title">해당 은행을 연동 해지하시겠습니까?</p>
         <p class="modal-desc">관련 정보도 같이 삭제됩니다</p>
         <div class="modal-actions">
@@ -194,7 +194,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
 }
-.modal {
+.my-modal {
   background: white;
   padding: 20px;
   border-radius: 12px;

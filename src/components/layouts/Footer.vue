@@ -33,27 +33,23 @@ const isActive = (tabName) => route.name === tabName
 
     <router-link :to="{ name: 'scrapPage' }" class="tab">
       <i class="fas fa-tag" :style="{ color: isActive('scrapPage') ? '#1A1A1A' : '#C2C6CE' }"></i>
-      <span :class="{ active: isActive('scrapPage') }">자산</span>
-      <!-- 자산 컴포넌트로 변경할 부분 -->
+      <span :class="{ active: isActive('scrapPage') }">스크랩</span>
     </router-link>
   </div>
 </template>
 
 <style scoped>
 .footer {
-  position: fixed;
+  position: absolute;
   bottom: 0;
-  left: 0;
   width: 100%;
-  height: 60px;
-  padding: 8px 0;
+  height: 64px;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  background: white; /* 개별 컴포넌트에서 배경 관리 */
+  background: white;
   border-top: 1px solid #eee;
   box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
-  z-index: 1000;
 }
 
 .footer > .tab {
@@ -64,6 +60,11 @@ const isActive = (tabName) => route.name === tabName
   text-decoration: none;
   color: inherit;
   gap: 2px;
+}
+
+.footer .tab svg {
+  width: 24px;
+  height: 24px;
 }
 
 .footer .tab span {
