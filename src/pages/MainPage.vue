@@ -9,6 +9,7 @@ const route = useRoute();
 
 const bankSummaryList = ref(null);
 const isUnlinked = ref(false);
+const mainBankCode = ref(null); // :별: 추가
 
 const bankStore = useBankStore();
 const banks = bankStore.banks;
@@ -37,6 +38,11 @@ const loadSummary = async () => {
     }
     bankSummaryList.value = response.mainBankSummary ?? [];
     isUnlinked.value = false;
+    if (response.mainBankCode) {
+      mainBankCode.value = true;
+      return;
+    }
+    mainBankCode.value = false; // :별: 추가
   } catch (e) {
     isUnlinked.value = true;
     console.error('계좌 조회 실패:', e);
@@ -87,18 +93,31 @@ watch(
               : '0'
           }}원
           <br />
-          {{
-            bankSummaryList.representativeAccountName
-          }}외
-          {{
-            bankSummaryList.accountCount - 1
-          }}개 계좌
+          <span style="font-size: 8px; color: #555">
+            <!-- {{ bankSummaryList.accountCount }}개 계좌 -->
+            {{ bankSummaryList.representativeAccountName }}외
+            {{ bankSummaryList.accountCount - 1 }}개 계좌
+          </span>
         </ul>
-        <i
-          class="fa-solid fa-angle-right"
-          @click="goToTotalPage"
-          style="cursor: pointer"
-        ></i>
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+          "
+        >
+          <span v-if="mainBankCode === true">
+            <i class="fa-solid fa-star" style="color: #ffd43b"></i>
+          </span>
+
+          <i
+            class="fa-solid fa-angle-right"
+            @click="goToTotalPage"
+            style="cursor: pointer"
+          ></i>
+        </div>
       </div>
     </div>
 
@@ -159,8 +178,9 @@ watch(
 <style scoped>
 .card {
   width: 300px;
-  margin: 14px auto;
-  padding: 24px 16px;
+  height: 100px;
+  margin: auto;
+  padding: 8px 16px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   background: #fff;

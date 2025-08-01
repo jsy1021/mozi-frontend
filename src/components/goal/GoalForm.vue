@@ -67,8 +67,13 @@
             v-model="form.currentAmount"
             placeholder="0"
             min="0"
+            readonly
           />
           <span class="currency">원</span>
+        </div>
+        <div class="preset-info">
+          <i class="fas fa-info-circle"></i>
+          <span>연결된 계좌 잔액의 합계입니다</span>
         </div>
       </div>
 
@@ -131,29 +136,46 @@
       <!-- 포함된 계좌 -->
       <div class="form-group">
         <label>포함된 계좌</label>
-        <div class="account-list">
-          <div class="account-item">
+        <div v-if="loading" class="loading-accounts">
+          계좌 정보를 불러오는 중...
+        </div>
+        <div v-else-if="accountList.length === 0" class="no-accounts">
+          연결 가능한 계좌가 없습니다.
+        </div>
+        <div v-else class="account-list">
+          <div
+            v-for="account in accountList"
+            :key="account.accountId"
+            class="account-item"
+          >
             <label class="checkbox-label">
-              <input type="checkbox" value="1" />
+              <input
+                type="checkbox"
+                :value="account.accountNumber"
+                v-model="form.selectedAccountNumbers"
+                @change="updateCurrentAmount"
+              />
               <span class="checkmark"></span>
               <div class="account-info">
-                <span class="bank-name">KB국민은행</span>
-                <span class="account-number">****-****-1234</span>
-                <span class="balance">5,000,000원</span>
+                <span class="bank-name">{{
+                  account.bankName || account.bankCode
+                }}</span>
+                <span class="account-number">{{
+                  maskAccountNumber(account.accountNumber)
+                }}</span>
+                <span class="balance">{{
+                  formatAmount(account.balance || 0)
+                }}</span>
               </div>
             </label>
           </div>
-          <div class="account-item">
-            <label class="checkbox-label">
-              <input type="checkbox" value="2" />
-              <span class="checkmark"></span>
-              <div class="account-info">
-                <span class="bank-name">신한은행</span>
-                <span class="account-number">****-****-5678</span>
-                <span class="balance">3,000,000원</span>
-              </div>
-            </label>
-          </div>
+        </div>
+        <div
+          v-if="form.selectedAccountNumbers.length > 0"
+          class="selected-summary"
+        >
+          <i class="fas fa-check-circle"></i>
+          <span>{{ form.selectedAccountNumbers.length }}개 계좌 선택됨</span>
         </div>
       </div>
 
@@ -168,6 +190,7 @@
             'submit-btn',
             { 'billion-submit': presetData?.goalName === '1억 모으기' },
           ]"
+          :disabled="loading"
         >
           {{ isEdit ? '수정' : '등록' }}
         </button>
@@ -177,7 +200,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, computed } from 'vue';
 
 // Props 정의
 const props = defineProps({
@@ -198,8 +221,13 @@ const props = defineProps({
 // Emits 정의
 const emit = defineEmits(['submit', 'cancel']);
 
-// goalApi 임포트
+// API 임포트
 import goalApi from '@/api/goalApi';
+import { getAccountList, getAccountsByGoal } from '@/api/accountApi';
+
+// 계좌 목록 상태
+const accountList = ref([]);
+const loading = ref(false);
 
 // 키워드 목록 - goalApi의 getKeywordLabel 메서드와 매칭
 const keywords = [
@@ -215,12 +243,53 @@ const keywords = [
 const form = reactive({
   goalName: '',
   targetAmount: '',
-  currentAmount: '',
+  currentAmount: 0,
   targetDate: '',
   keyword: '',
   memo: '',
-  selectedAccounts: [],
+  selectedAccountNumbers: [], //변경: accountId 대신 accountNumber 사용
 });
+
+//  선택된 계좌들의 잔액 합계 계산
+const updateCurrentAmount = () => {
+  if (props.isEdit) {
+    const selectedAccounts = accountList.value.filter((account) =>
+      form.selectedAccountNumbers.includes(account.accountNumber)
+    );
+    form.currentAmount = selectedAccounts.reduce(
+      (sum, account) => sum + (account.balance || 0),
+      0
+    );
+  }
+};
+
+// 계좌 목록 로드 함수
+const loadAccounts = async () => {
+  loading.value = true;
+  try {
+    const response = await getAccountList();
+    accountList.value = response.accountList || [];
+
+    // 수정 모드이고 goalId가 있으면 연결된 계좌 정보 가져오기
+    if (props.isEdit && props.goalData?.id) {
+      const linkedResponse = await getAccountsByGoal(props.goalData.id);
+      const linkedAccounts = linkedResponse.accountList || [];
+
+      // 연결된 계좌번호 목록 설정
+      form.selectedAccountNumbers = linkedAccounts.map(
+        (acc) => acc.accountNumber
+      );
+
+      // 현재 금액 업데이트
+      updateCurrentAmount();
+    }
+  } catch (error) {
+    console.error('계좌 목록 로드 실패:', error);
+    accountList.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
 // 폼 초기화 (수정 모드일 때 또는 프리셋 데이터가 있을 때)
 const initializeForm = () => {
@@ -240,7 +309,6 @@ const initializeForm = () => {
     form.targetDate = props.goalData.targetDate || '';
     form.keyword = props.goalData.keyword || '';
     form.memo = props.goalData.memo || '';
-    form.selectedAccounts = props.goalData.selectedAccounts || [];
   }
 };
 
@@ -256,10 +324,15 @@ const handleSubmit = () => {
     goalDate: form.targetDate,
     keyword: form.keyword,
     memo: form.memo,
-    selectedAccounts: form.selectedAccounts,
   });
 
-  emit('submit', formData);
+  // 계좌팀 요청 형식으로 데이터 구성
+  const accountData = {
+    goalId: props.goalData?.id || null,
+    accountNumberList: form.selectedAccountNumbers,
+  };
+
+  emit('submit', { ...formData, accountData });
 };
 
 // 취소
@@ -307,9 +380,23 @@ const getKeywordLabel = (keywordKey) => {
   return goalApi.getKeywordLabel(keywordKey);
 };
 
-// 컴포넌트 마운트 시 폼 초기화
+// 계좌번호 마스킹 처리 함수
+const maskAccountNumber = (accountNumber) => {
+  if (!accountNumber) return '';
+  const length = accountNumber.length;
+  if (length <= 4) return accountNumber;
+
+  const firstPart = accountNumber.slice(0, 4);
+  const lastPart = accountNumber.slice(-4);
+  const middlePart = '*'.repeat(Math.max(0, length - 8));
+
+  return `${firstPart}${middlePart}${lastPart}`;
+};
+
+// 컴포넌트 마운트 시 폼 초기화 및 계좌 로드
 onMounted(() => {
   initializeForm();
+  loadAccounts();
 });
 </script>
 
@@ -487,10 +574,26 @@ onMounted(() => {
   gap: 8px;
 }
 
+.loading-accounts,
+.no-accounts {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
 .account-item {
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.account-item:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
 }
 
 .checkbox-label {
@@ -501,14 +604,17 @@ onMounted(() => {
 }
 
 .checkbox-label input[type='checkbox'] {
-  width: auto;
+  width: 18px;
+  height: 18px;
   margin: 0;
+  cursor: pointer;
 }
 
 .account-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
 }
 
 .bank-name {
@@ -525,6 +631,22 @@ onMounted(() => {
   font-size: 13px;
   color: #007bff;
   font-weight: 500;
+}
+
+.selected-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #e7f3ff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #0066cc;
+}
+
+.selected-summary i {
+  color: #0066cc;
 }
 
 .form-actions {
@@ -561,6 +683,11 @@ onMounted(() => {
 
 .submit-btn:hover {
   background: #555;
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .billion-submit {
