@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBankStore } from '@/stores/bank';
 import BankLoginModal from '@/pages/account/BankLoginModal.vue';
+import { watch } from 'vue';
 console.log('진입');
 const router = useRouter();
 const bankStore = useBankStore();
@@ -10,6 +11,9 @@ const bankStore = useBankStore();
 const selectedBankCode = ref('');
 const showModal = ref(false);
 const modalBank = ref(null);
+watch(showModal, (newVal) => {
+  console.log('showModal 값 변경:', newVal);
+});
 
 const banks = bankStore.banks;
 
@@ -20,6 +24,7 @@ function selectBank(code) {
 }
 
 function handleConnect(bank) {
+  console.log('handleConnect 호출, bank:', bank);
   modalBank.value = bank;
   showModal.value = true;
 }
@@ -28,7 +33,7 @@ function handleAgree() {
   console.log('버튼 클릭');
   if (hasConnectedBank.value) {
     console.log('넘어가기');
-    router.push({ name: 'homePage', query: { refresh: 'true' } });
+    router.push({ name: 'mainPage', query: { refresh: 'true' } });
   } else {
     alert('최소 하나 이상의 은행을 연동해주세요.');
   }

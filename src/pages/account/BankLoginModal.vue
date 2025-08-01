@@ -1,6 +1,6 @@
 <template>
   <div class="modal-overlay" @click.self="close">
-    <div class="modal">
+    <div class="my-modal">
       <div class="modal-header">
         <img :src="bank.logo" class="bank-logo" />
         <h2>{{ bank.name }} 연동</h2>
@@ -29,6 +29,8 @@ import { addAccountList } from '@/api/accountApi.js';
 const props = defineProps({
   bank: Object,
 });
+
+console.log('modal bank:', props.bank);
 const emit = defineEmits(['close']);
 const id = ref('');
 const password = ref('');
@@ -81,7 +83,7 @@ async function connect() {
   align-items: center;
   z-index: 999;
 }
-.modal {
+.my-modal {
   background: white;
   padding: 20px;
   width: 300px;
