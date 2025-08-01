@@ -160,4 +160,69 @@ export default {
   formatAchievementRate(rate) {
     return Math.round(rate * 100) / 100 + '%';
   },
+
+  // === 계좌-목표 연결 관련 함수들 ===
+
+  // 계좌 연결 - 여러 계좌를 한 목표에 연결
+  async linkAccountsToGoal(goalId, accountIds) {
+    try {
+      // accountApi의 updateAccountsByGoal 사용
+      const { updateAccountsByGoal } = await import('@/api/accountApi');
+
+      const data = {
+        goalId: goalId,
+        accountIds: accountIds, // [1, 2, 3] 형태의 계좌 ID 배열
+      };
+
+      const result = await updateAccountsByGoal(data);
+      console.log('ACCOUNTS LINKED TO GOAL:', result);
+      return result;
+    } catch (error) {
+      console.error('계좌 연결 실패:', error);
+      throw error;
+    }
+  },
+
+  // 계좌 연결 해제 - 특정 계좌의 목표 연결 해제
+  async unlinkAccountFromGoal(accountId) {
+    try {
+      // goalId를 null로 설정하여 연결 해제
+      const { updateAccountsByGoal } = await import('@/api/accountApi');
+
+      const data = {
+        goalId: null,
+        accountIds: [accountId], // 단일 계좌도 배열로 전달
+      };
+
+      const result = await updateAccountsByGoal(data);
+      console.log('ACCOUNT UNLINKED FROM GOAL:', result);
+      return result;
+    } catch (error) {
+      console.error('계좌 연결 해제 실패:', error);
+      throw error;
+    }
+  },
+
+  // 현재 달성 금액 - 목표에 연결된 계좌들의 잔액 합계 반환
+  async getCurrentAmountByGoal(goalId) {
+    try {
+      // accountApi의 getAccountsByGoal 사용
+      const { getAccountsByGoal } = await import('@/api/accountApi');
+
+      // 1. 목표별 계좌 조회
+      const linkedAccountsResponse = await getAccountsByGoal(goalId);
+
+      // 2. 프론트엔드에서 잔액 합계 계산
+      const accountList = linkedAccountsResponse.accountList || [];
+      const totalAmount = accountList.reduce((sum, account) => {
+        return sum + (account.balance || 0);
+      }, 0);
+
+      console.log(`CURRENT AMOUNT FOR GOAL ${goalId}:`, totalAmount);
+      return totalAmount;
+    } catch (error) {
+      console.error('현재 달성 금액 조회 실패:', error);
+      throw error;
+    }
+  },
 };
