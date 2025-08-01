@@ -7,6 +7,7 @@ import ProgressBar from '@/components/goal/ProgressBar.vue';
 
 import { useGoalStore } from '@/stores/goalStore';
 import goalApi from '@/api/goalApi';
+import { getAccountsByGoal, getAccountList } from '@/api/accountApi'
 
 const route = useRoute();
 const router = useRouter();         //
@@ -58,6 +59,13 @@ const loadGoal = async (id) => {
   if(goal.value && goal.value.goalStatus === false){
     showCompletePopup.value = true
   }
+
+  // 계좌 목록
+  await loadAccounts(numericId)
+
+  // 계좌 총합
+  currentAmount.value = await goalApi.getCurrentAmountByGoal(numericId)
+
 }
 
 // - 날짜
@@ -97,6 +105,39 @@ watch(
   }
 )
 
+// < 계좌 관련 >
+
+// 연결된 계좌 리스트
+const linkedAccounts = ref([])
+
+// 전체 계좌 리스트
+const allAccounts = ref([])
+
+const loadAccounts = async (goalId) => {
+  // 1. 연결된 계좌 목록
+  const linkedData = await getAccountsByGoal(goalId)
+  linkedAccounts.value = linkedData.accountList || []
+
+  // 2. 전체 계좌 목록
+  const allData = await getAccountList()
+  allAccounts.value = allData || []
+}
+
+// 계좌 연결 해제
+const unlinkAccount = async (accountId) => {
+  await goalApi.unlinkAccountFromGoal(accountId)
+  await loadAccounts(goalId)
+}
+
+// 계좌 연결
+const linkAccount = async (accountId) => {
+  await goalApi.linkAccountsToGoal(goalId, [accountId])
+  await loadAccounts(goalId)
+}
+
+
+// 계좌 총합
+const currentAmount = ref(0);  // 계좌 총합
 
 </script>
 
@@ -171,24 +212,36 @@ watch(
       <!-- end goal-top -->
 
       <!-- 진행률 바 -->
-      <ProgressBar
+      <!-- <ProgressBar
         style="width: 270px;"
         :current="goal.current_amount"
         :target="goal.target_amount"
+      /> -->
+      <ProgressBar
+        style="width: 270px;"
+        :current="currentAmount"
+        :target="goal.target_amount"
       />
+
       <!-- 금액 정보 표시 -->
+      <!-- 계좌 총합 , 목표 금액 -->
       <!-- <div class="amount-text">
         <p>
-          <span class="amount-label">현재:</span>
-          <span class="amount-value">{{ goal.current_amount.toLocaleString() }}원</span>
+          <span class="amount-label">연결 계좌 총액:</span>
+          <span class="amount-value">{{ linkedAccountsTotal.toLocaleString() }}원</span>
         </p>
         <p>
-          <span class="amount-label">목표:</span>
+          <span class="amount-label">목표 금액:</span>
           <span class="amount-value">{{ goal.target_amount.toLocaleString() }}원</span>
         </p>
       </div> -->
 
-      <!-- <p>목표 금액: {{ goal.target_amount.toLocaleString() }} 원</p> -->
+      <!-- 계좌 총액 / 목표 금액 형식 -->
+      <p class="account-sum" style="  margin-top: 8px; font-weight: 500; font-size: 14px;">
+        {{ (currentAmount || 0).toLocaleString() }}
+        /
+        {{ goal.target_amount.toLocaleString() }} 원
+      </p>
 
       <!-- 키워드 -->
       <div class="goal-keyword">
@@ -235,7 +288,7 @@ watch(
         </div>
 
         <!-- 선택 계좌 -->
-        <div class="goal-account">
+        <!-- <div class="goal-account">
           <p><span class="label">선택계좌</span></p>
 
           <div style="margin-bottom: 20px">
@@ -251,6 +304,40 @@ watch(
               ****-****-5678<br />
               500,000원
             </div>
+          </div>
+        </div> -->
+        <div class="goal-account">
+          <p><span class="label">선택계좌</span></p>
+
+          <div v-if="linkedAccounts.length > 0" style="margin-bottom: 20px">
+            <div v-for="acc in linkedAccounts" :key="acc.accountId" style="margin-bottom: 10px;">
+              <input 
+                type="checkbox" 
+                checked 
+                @change="unlinkAccount(acc.accountId)"
+              />
+              {{ acc.bankName }}<br />
+              ****-****-{{ acc.accountNumber.slice(-4) }}<br />
+              {{ acc.balance.toLocaleString() }}원
+            </div>
+          </div>
+          <div v-else>
+            <p>연결된 계좌가 없습니다.</p>
+          </div>
+
+          <hr />
+
+          <p style="margin-top: 10px;"><span class="label">연결 가능한 계좌</span></p>
+          <div v-for="acc in allAccounts.filter(a => !linkedAccounts.some(l => l.accountId === a.accountId))" 
+              :key="acc.accountId" 
+              style="margin-bottom: 10px;">
+            <input 
+              type="checkbox" 
+              @change="linkAccount(acc.accountId)"
+            />
+            {{ acc.bankName }}<br />
+            ****-****-{{ acc.accountNumber.slice(-4) }}<br />
+            {{ acc.balance.toLocaleString() }}원
           </div>
         </div>
 
