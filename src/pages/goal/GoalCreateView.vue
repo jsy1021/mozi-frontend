@@ -16,6 +16,7 @@
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useGoalStore } from '@/stores/goalStore';
+import { updateAccountsByGoal } from '@/api/accountApi';
 import GoalForm from '../../components/goal/GoalForm.vue';
 
 const router = useRouter();
@@ -40,10 +41,41 @@ const handleCreateGoal = async (formData) => {
   try {
     loading.value = true;
 
-    // goalStore의 createGoal 메서드 사용 (userId 파라미터 제거)
-    await goalStore.createGoal(formData);
+    // 1. 목표 생성 (계좌 데이터 제외)
+    const goalPayload = {
+      goalName: formData.goalName,
+      targetAmount: formData.targetAmount,
+      goalDate: formData.goalDate,
+      keyword: formData.keyword,
+      memo: formData.memo,
+    };
 
-    console.log('Goal created successfully');
+    const createdGoal = await goalStore.createGoal(goalPayload);
+    console.log('Goal created successfully:', createdGoal);
+
+    // 2. 선택된 계좌가 있으면 연결 (계좌팀 요청 형식)
+    if (
+      formData.accountData &&
+      formData.accountData.accountNumberList &&
+      formData.accountData.accountNumberList.length > 0
+    ) {
+      try {
+        // 계좌팀 요청 형식: { goalId: 5, accountNumberList: ['111-222-333', '444-555-666'] }
+        const accountLinkData = {
+          goalId: createdGoal.goalId,
+          accountNumberList: formData.accountData.accountNumberList,
+        };
+
+        await updateAccountsByGoal(accountLinkData);
+        console.log('Accounts linked to goal successfully');
+      } catch (accountError) {
+        console.error('계좌 연결 실패:', accountError);
+        // 목표는 생성되었지만 계좌 연결 실패 시 알림
+        alert(
+          '목표는 생성되었지만 계좌 연결에 실패했습니다. 나중에 수정에서 계좌를 연결해주세요.'
+        );
+      }
+    }
 
     // 목표 메인 페이지로 이동
     router.push({ name: 'goalMain' });

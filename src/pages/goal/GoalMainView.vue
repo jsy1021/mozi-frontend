@@ -71,6 +71,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGoalStore } from '@/stores/goalStore';
 import GoalCard from '../../components/goal/GoalCard.vue';
+import goalApi from '@/api/goalApi'; // 🔄 추가: goalApi 임포트 (계좌 연결 기능 사용을 위해)
 
 const router = useRouter();
 const goalStore = useGoalStore();
@@ -104,6 +105,17 @@ const loadGoals = async () => {
   try {
     // getGoalsByUserId에서 getGoals로 변경 (userId 파라미터 제거)
     await goalStore.getGoals();
+
+    // 추가: 각 목표별로 현재 달성 금액 조회 (연결된 계좌 잔액 합계)
+    for (const goal of goalStore.goals) {
+      try {
+        const currentAmount = await goalApi.getCurrentAmountByGoal(goal.goalId);
+        goal.currentAmount = currentAmount;
+      } catch (error) {
+        console.error(`목표 ${goal.goalId}의 현재 금액 조회 실패:`, error);
+        goal.currentAmount = 0;
+      }
+    }
   } catch (error) {
     console.error('목표 로딩 실패:', error);
   }
@@ -114,7 +126,7 @@ const transformGoal = (goal) => {
   return {
     id: goal.goalId,
     name: goal.goalName,
-    currentAmount: goal.currentAmount || 0,
+    currentAmount: goal.currentAmount || 0, // 🔄 수정: 계좌 연결로 가져온 실제 금액 사용
     targetAmount: goal.targetAmount,
     progress:
       goal.currentAmount && goal.targetAmount
