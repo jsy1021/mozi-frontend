@@ -21,6 +21,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useGoalStore } from '@/stores/goalStore';
+import goalApi from '@/api/goalApi';
+import { getAccountsByGoal } from '@/api/accountApi';
 import GoalForm from '../../components/goal/GoalForm.vue';
 
 const router = useRouter();
@@ -35,26 +37,45 @@ const goalId = parseInt(route.params.goalId);
 // 목표 데이터 로드 - goalStore 사용
 const loadGoalData = async () => {
   try {
-    // goalStore의 getGoal 메서드 사용 (userId 파라미터 제거)
+    // 1. 목표 상세 정보 조회
     await goalStore.getGoal(goalId);
-
     const goal = goalStore.selectedGoal;
 
-    if (goal) {
-      // GoalForm 컴포넌트 형식에 맞게 변환
-      goalData.value = {
-        id: goal.goalId,
-        name: goal.goalName,
-        targetAmount: goal.targetAmount,
-        currentAmount: goal.currentAmount || 0,
-        targetDate: goal.goalDate,
-        keyword: goal.keyword,
-        memo: goal.memo,
-        selectedAccounts: [], // 추후 계좌 연동 시 실제 데이터로 변경
-      };
-    } else {
+    if (!goal) {
       throw new Error('목표를 찾을 수 없습니다.');
     }
+
+    // 2. 목표에 연결된 계좌 목록 조회
+    let linkedAccounts = [];
+    let currentAmount = 0;
+
+    try {
+      const accountsResponse = await getAccountsByGoal(goalId);
+      linkedAccounts = accountsResponse.accountList || [];
+
+      // 연결된 계좌들의 잔액 합계 계산
+      currentAmount = linkedAccounts.reduce((sum, account) => {
+        return sum + (account.balance || 0);
+      }, 0);
+
+      console.log('연결된 계좌들:', linkedAccounts);
+      console.log('현재 달성 금액:', currentAmount);
+    } catch (accountError) {
+      console.error('계좌 정보 조회 실패:', accountError);
+      // 계좌 정보 조회 실패해도 목표 수정은 가능하도록 진행
+    }
+
+    // 3. GoalForm 컴포넌트 형식에 맞게 데이터 변환
+    goalData.value = {
+      id: goal.goalId,
+      name: goal.goalName,
+      targetAmount: goal.targetAmount,
+      currentAmount: currentAmount, // 계좌 잔액 합계로 설정
+      targetDate: goal.goalDate,
+      keyword: goal.keyword,
+      memo: goal.memo,
+      selectedAccounts: linkedAccounts.map((account) => account.accountId), // 연결된 계좌 ID 배열
+    };
   } catch (error) {
     console.error('Error loading goal:', error);
 
@@ -69,10 +90,21 @@ const loadGoalData = async () => {
 // 목표 수정 처리 - goalStore 사용
 const handleUpdateGoal = async (formData) => {
   try {
-    // goalStore의 updateGoal 메서드 사용 (userId 파라미터 제거)
+    // 1. 목표 정보 수정
     await goalStore.updateGoal(goalId, formData);
-
     console.log('Goal updated successfully');
+
+    // 2. 계좌 연결 업데이트
+    if (formData.selectedAccounts) {
+      try {
+        // 선택된 계좌들을 목표에 연결 (기존 연결은 자동으로 해제되고 새로 연결됨)
+        await goalApi.linkAccountsToGoal(goalId, formData.selectedAccounts);
+        console.log('Accounts updated successfully');
+      } catch (accountError) {
+        console.error('계좌 연결 업데이트 실패:', accountError);
+        alert('목표는 수정되었지만 계좌 연결 업데이트에 실패했습니다.');
+      }
+    }
 
     // 목표 메인 페이지로 이동
     router.push({ name: 'goalMain' });

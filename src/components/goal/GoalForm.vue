@@ -128,29 +128,38 @@
         <div class="char-count">{{ form.memo.length }}/50</div>
       </div>
 
-      <!-- 포함된 계좌 -->
+      <!-- 수정: 포함된 계좌 - 실제 계좌 데이터로 변경 -->
       <div class="form-group">
         <label>포함된 계좌</label>
-        <div class="account-list">
-          <div class="account-item">
+        <div v-if="loading" class="loading-accounts">
+          계좌 정보를 불러오는 중...
+        </div>
+        <div v-else-if="accountList.length === 0" class="no-accounts">
+          연결 가능한 계좌가 없습니다.
+        </div>
+        <div v-else class="account-list">
+          <div
+            v-for="account in accountList"
+            :key="account.accountId"
+            class="account-item"
+          >
             <label class="checkbox-label">
-              <input type="checkbox" value="1" />
+              <input
+                type="checkbox"
+                :value="account.accountId"
+                v-model="form.selectedAccounts"
+              />
               <span class="checkmark"></span>
               <div class="account-info">
-                <span class="bank-name">KB국민은행</span>
-                <span class="account-number">****-****-1234</span>
-                <span class="balance">5,000,000원</span>
-              </div>
-            </label>
-          </div>
-          <div class="account-item">
-            <label class="checkbox-label">
-              <input type="checkbox" value="2" />
-              <span class="checkmark"></span>
-              <div class="account-info">
-                <span class="bank-name">신한은행</span>
-                <span class="account-number">****-****-5678</span>
-                <span class="balance">3,000,000원</span>
+                <span class="bank-name">{{
+                  account.bankName || account.bankCode
+                }}</span>
+                <span class="account-number">{{
+                  maskAccountNumber(account.accountNumber)
+                }}</span>
+                <span class="balance">{{
+                  formatAmount(account.balance || 0)
+                }}</span>
               </div>
             </label>
           </div>
@@ -200,6 +209,11 @@ const emit = defineEmits(['submit', 'cancel']);
 
 // goalApi 임포트
 import goalApi from '@/api/goalApi';
+import { getAccountList, getAccountsByGoal } from '@/api/accountApi';
+
+// 계좌 목록 상태
+const accountList = ref([]);
+const loading = ref(false);
 
 // 키워드 목록 - goalApi의 getKeywordLabel 메서드와 매칭
 const keywords = [
@@ -219,8 +233,31 @@ const form = reactive({
   targetDate: '',
   keyword: '',
   memo: '',
-  selectedAccounts: [],
+  selectedAccounts: [], // 수정: 선택된 계좌 ID 배열
 });
+
+// 추가: 계좌 목록 로드 함수
+const loadAccounts = async () => {
+  loading.value = true;
+  try {
+    const response = await getAccountList();
+    accountList.value = response.accountList || [];
+
+    // 수정 모드이고 goalId가 있으면 연결된 계좌 정보 가져오기
+    if (props.isEdit && props.goalData?.id) {
+      const linkedResponse = await getAccountsByGoal(props.goalData.id);
+      const linkedAccounts = linkedResponse.accountList || [];
+
+      // 연결된 계좌 ID 목록 설정
+      form.selectedAccounts = linkedAccounts.map((acc) => acc.accountId);
+    }
+  } catch (error) {
+    console.error('계좌 목록 로드 실패:', error);
+    accountList.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
 // 폼 초기화 (수정 모드일 때 또는 프리셋 데이터가 있을 때)
 const initializeForm = () => {
@@ -256,7 +293,7 @@ const handleSubmit = () => {
     goalDate: form.targetDate,
     keyword: form.keyword,
     memo: form.memo,
-    selectedAccounts: form.selectedAccounts,
+    selectedAccounts: form.selectedAccounts, //추가: 선택된 계좌 ID 배열 포함
   });
 
   emit('submit', formData);
@@ -306,10 +343,23 @@ const formatAmount = (amount) => {
 const getKeywordLabel = (keywordKey) => {
   return goalApi.getKeywordLabel(keywordKey);
 };
+// 추가: 계좌번호 마스킹 처리 함수
+const maskAccountNumber = (accountNumber) => {
+  if (!accountNumber) return '';
+  const length = accountNumber.length;
+  if (length <= 4) return accountNumber;
+
+  const firstPart = accountNumber.slice(0, 4);
+  const lastPart = accountNumber.slice(-4);
+  const middlePart = '*'.repeat(length - 8);
+
+  return `${firstPart}${middlePart}${lastPart}`;
+};
 
 // 컴포넌트 마운트 시 폼 초기화
 onMounted(() => {
   initializeForm();
+  loadAccounts();
 });
 </script>
 
