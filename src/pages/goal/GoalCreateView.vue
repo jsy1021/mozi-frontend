@@ -24,9 +24,6 @@ const goalStore = useGoalStore();
 
 const loading = ref(false);
 
-// 현재 사용자 ID (실제로는 인증 스토어에서 가져와야 함)
-const currentUserId = 1; // TODO: 실제 사용자 ID로 변경
-
 // 1억 모으기 프리셋 데이터
 const presetData = computed(() => {
   if (route.query.preset === 'billion') {
@@ -43,8 +40,8 @@ const handleCreateGoal = async (formData) => {
   try {
     loading.value = true;
 
-    // goalStore의 createGoal 메서드 사용
-    await goalStore.createGoal(currentUserId, formData);
+    // goalStore의 createGoal 메서드 사용 (userId 파라미터 제거)
+    await goalStore.createGoal(formData);
 
     console.log('Goal created successfully');
 
