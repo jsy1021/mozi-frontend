@@ -38,30 +38,30 @@ export const useGoalStore = defineStore('goal', {
         },
 
         // 1. 사용자별 목표 목록 조회
-        async getGoalsByUserId(userId) {
-            const data = await this.wrapRequest(() => goalApi.getGoalsByUserId(userId))
+        async getGoals() {
+            const data = await this.wrapRequest(() => goalApi.getGoals())
             this.goals = data
         },
 
         // 2. 특정 목표 조회
-        async getGoal(userId, goalId) {
-            const data = await this.wrapRequest(() => goalApi.getGoal(userId, goalId))
+        async getGoal(goalId) {
+            const data = await this.wrapRequest(() => goalApi.getGoal(goalId))
             this.selectedGoal = data
         },
 
         // 3. 새 목표 생성
-        async createGoal(userId, goalData){
+        async createGoal(goalData){
             const formatted = goalApi.formatGoalData(goalData)
-            const data = await this.wrapRequest(() => goalApi.createGoal(userId, formatted))
+            const data = await this.wrapRequest(() => goalApi.createGoal(formatted))
             this.goals.push(data)
             return data
         },
 
         // 4. 목표 수정
-        async updateGoal(userId, goalId, goalData){
+        async updateGoal(goalId, goalData){
             const formatted = goalApi.formatGoalData(goalData)
             const data = await this.wrapRequest(() => 
-                goalApi.updateGoal(userId, goalId, formatted)
+                goalApi.updateGoal(goalId, formatted)
             )
             const idx = this.goals.findIndex(g => g.goalId === goalId)
             // if(idx !== -1) this.goals[idx] = { ...this.goals[idx], ...formatted }
@@ -71,52 +71,52 @@ export const useGoalStore = defineStore('goal', {
         },
 
         // 5. 목표 삭제
-        async deleteGoal(userId, goalId){
-            const data = await this.wrapRequest(() => goalApi.deleteGoal(userId, goalId))
+        async deleteGoal(goalId){
+            const data = await this.wrapRequest(() => goalApi.deleteGoal(goalId))
             if(data) this.goals = this.goals.filter(g => g.goalId !== goalId)
             return data
         },
 
         // 6. 목표 달성률 조회
-        async getAchievementRate(userId, goalId){
-            return this.wrapRequest(() => goalApi.getAchievementRate(userId, goalId))
+        async getAchievementRate(goalId){
+            return this.wrapRequest(() => goalApi.getAchievementRate(goalId))
         },
 
         // 7. 목표 달성 예상 날짜 조회
-        async getExpectedDate(userId, goalId, monthlyAmount){
+        async getExpectedDate(goalId, monthlyAmount){
             return this.wrapRequest(() =>
-                goalApi.getExpectedDate(userId, goalId, monthlyAmount)
+                goalApi.getExpectedDate(goalId, monthlyAmount)
             )
         },
 
         // 8. 목표 달성 여부 확인
-        async isGoalAchieved(userId, goalId){
-            return this.wrapRequest(() => goalApi.isGoalAchieved(userId, goalId))
+        async isGoalAchieved(goalId){
+            return this.wrapRequest(() => goalApi.isGoalAchieved(goalId))
         },
 
         // 9. 목표 상태 업데이트
-        async updateGoalStatus(userId, goalId, status){
-            return this.wrapRequest(() => goalApi.updateGoalStatus(userId, goalId, status))
+        async updateGoalStatus(goalId, status){
+            return this.wrapRequest(() => goalApi.updateGoalStatus(goalId, status))
         },
 
         // 10. 1억 모으기 목표 조회
-        async getBillionGoal(userId){
-            return this.wrapRequest(() => goalApi.getBillionGoal(userId))
+        async getBillionGoal(){
+            return this.wrapRequest(() => goalApi.getBillionGoal())
         },
 
         // 11. 남은 금액 계산
-        async getRemainingAmount(userId, goalId) {
-            return this.wrapRequest(() => goalApi.getRemainingAmount(userId, goalId))
+        async getRemainingAmount(goalId) {
+            return this.wrapRequest(() => goalApi.getRemainingAmount(goalId))
         },
 
         // 12. 남은 기간 계산 (일 단위)
-        async getRemainingDays(userId, goalId) {
-            return this.wrapRequest(() => goalApi.getRemainingDays(userId, goalId))
+        async getRemainingDays(goalId) {
+            return this.wrapRequest(() => goalApi.getRemainingDays(goalId))
         },
 
         // 13. 목표 키워드 조회
-        async getGoalKeyword(userId, goalId) {
-            return this.wrapRequest(() => goalApi.getGoalKeyword(userId, goalId))
+        async getGoalKeyword(goalId) {
+            return this.wrapRequest(() => goalApi.getGoalKeyword(goalId))
         }
 
 
