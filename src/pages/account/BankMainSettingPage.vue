@@ -82,8 +82,12 @@ const goBack = () => {
         />
         <span class="bank-name">{{ bank.name }}</span>
         <span class="star">
-          <span v-if="mainBankCode === bank.code">⭐</span>
-          <span v-else>☆</span>
+          <span v-if="mainBankCode === bank.code"
+            ><i class="fa-solid fa-star" style="color: #ffd43b"></i
+          ></span>
+          <span v-else
+            ><i class="fa-solid fa-star" style="color: #dedede"></i
+          ></span>
         </span>
       </div>
     </div>
