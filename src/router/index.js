@@ -8,6 +8,9 @@ import financialSearchRoutes from './financialSearch';
 import policySearchRoutes from './policySearch';
 import goalRoutes from './goal';
 import scrapRoutes from './scrap';
+import searchRoutes from './search';
+import recommendRoutes from './recommend';
+import accountRoutes from './account';
 
 const routes = [
   //인증 필요 라우트 - 로그인 사용자만 접근 가능
@@ -29,6 +32,9 @@ const routes = [
   ...policySearchRoutes,
   ...goalRoutes,
   ...scrapRoutes,
+  ...searchRoutes,
+  ...recommendRoutes,
+  ...accountRoutes,
 
   //정의되지 않은 경로는 메인 페이지로 redirect
   { path: '/:pathMatch(.*)*', redirect: { name: 'mainPage' } },

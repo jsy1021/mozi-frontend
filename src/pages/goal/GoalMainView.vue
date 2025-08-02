@@ -71,12 +71,10 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGoalStore } from '@/stores/goalStore';
 import GoalCard from '../../components/goal/GoalCard.vue';
+import goalApi from '@/api/goalApi'; // 🔄 추가: goalApi 임포트 (계좌 연결 기능 사용을 위해)
 
 const router = useRouter();
 const goalStore = useGoalStore();
-
-// 현재 사용자 ID (실제로는 인증 스토어에서 가져와야 함)
-const currentUserId = 1; // TODO: 실제 사용자 ID로 변경
 
 // 1억 모으기 목표가 있는지 확인
 const hasBillionGoal = computed(() => {
@@ -105,7 +103,19 @@ const sortedGoals = computed(() => {
 // 목표 데이터 로드 - goalStore 사용
 const loadGoals = async () => {
   try {
-    await goalStore.getGoalsByUserId(currentUserId);
+    // getGoalsByUserId에서 getGoals로 변경 (userId 파라미터 제거)
+    await goalStore.getGoals();
+
+    // 추가: 각 목표별로 현재 달성 금액 조회 (연결된 계좌 잔액 합계)
+    for (const goal of goalStore.goals) {
+      try {
+        const currentAmount = await goalApi.getCurrentAmountByGoal(goal.goalId);
+        goal.currentAmount = currentAmount;
+      } catch (error) {
+        console.error(`목표 ${goal.goalId}의 현재 금액 조회 실패:`, error);
+        goal.currentAmount = 0;
+      }
+    }
   } catch (error) {
     console.error('목표 로딩 실패:', error);
   }
@@ -116,7 +126,7 @@ const transformGoal = (goal) => {
   return {
     id: goal.goalId,
     name: goal.goalName,
-    currentAmount: goal.currentAmount || 0,
+    currentAmount: goal.currentAmount || 0, // 🔄 수정: 계좌 연결로 가져온 실제 금액 사용
     targetAmount: goal.targetAmount,
     progress:
       goal.currentAmount && goal.targetAmount
@@ -142,7 +152,8 @@ const handleDeleteGoal = async (goalId) => {
   }
 
   try {
-    await goalStore.deleteGoal(currentUserId, goalId);
+    // deleteGoal에서 userId 파라미터 제거
+    await goalStore.deleteGoal(goalId);
     console.log('목표가 성공적으로 삭제되었습니다.');
   } catch (error) {
     console.error('목표 삭제 실패:', error);
@@ -302,6 +313,17 @@ window.addEventListener('focus', loadGoals);
 .banner-arrow {
   font-size: 16px;
   color: #b8860b;
+}
+
+@keyframes sparkle {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 
 .goals-container {

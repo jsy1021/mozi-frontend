@@ -8,16 +8,17 @@ const route = useRoute();
 
 <template>
   <div class="iphone-frame">
-    <Header class="header" v-if="route.meta.isHeader" />
+    <Header v-if="route.meta.isHeader" />
     <div
       class="content"
       :style="{
-        top: route.meta.isHeader ? '60px' : '0px',
-        bottom: route.meta.isFooter ? '60px' : '0px',
-      }">
+        top: route.meta.isHeader ? '56px' : '0px',
+        bottom: route.meta.isFooter ? '64px' : '0px',
+      }"
+    >
       <slot></slot>
     </div>
-    <Footer class="footer" v-if="route.meta.isFooter" />
+    <Footer v-if="route.meta.isFooter" />
   </div>
 </template>
 
@@ -28,26 +29,7 @@ const route = useRoute();
   background-color: white;
   margin: 0 auto;
   position: relative;
-}
-
-.header {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  height: 60px; /*수정필요*/
-  z-index: 10;
-  background-color: #f2f2f2;
-  box-sizing: border-box;
-}
-
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 60px; /*수정필요*/
-  z-index: 10;
-  background-color: #f2f2f2;
-  box-sizing: border-box;
+  border: 1px solid #eee;
 }
 
 .content {
@@ -56,4 +38,5 @@ const route = useRoute();
   width: 100%;
   box-sizing: border-box;
 }
+
 </style>
