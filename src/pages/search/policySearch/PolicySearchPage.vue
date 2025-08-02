@@ -178,6 +178,7 @@ const filteredList = computed(() => {
       );
     }
   }
+
   // 연소득 필터링
   if (customIncome.value) {
     const incomeValue = parseInt(customIncome.value, 10);
@@ -265,7 +266,7 @@ const filteredList = computed(() => {
     !filterState.value.special.includes('0014010') // 제한없음 제외
   ) {
     list = list.filter((policy) => {
-      const specialCodes = policy.sBizCd?.split(',') || [];
+      const specialCodes = policy.sbizCd?.split(',') || [];
       return (
         specialCodes.includes('0014010') || // 제한없음 정책 포함
         specialCodes.some((code) => filterState.value.special.includes(code))
@@ -311,12 +312,65 @@ const selectCategory = (tab) => {
   currentCategory.value = tab;
 };
 
+const maritalStatusMap = {
+  '0055001': '기혼',
+  '0055002': '미혼',
+  '0055003': '제한없음',
+};
+
+const educationMap = {
+  '0049010': '제한없음',
+  '0049001': '고졸미만',
+  '0049002': '고교재학',
+  '0049003': '고졸예정',
+  '0049004': '고교졸업',
+  '0049005': '대학재학',
+  '0049006': '대졸예정',
+  '0049007': '대학졸업',
+  '0049008': '석/박사',
+  '0049009': '기타',
+};
+
+const employmentMap = {
+  '0013010': '제한없음',
+  '0013001': '재직자',
+  '0013002': '자영업자',
+  '0013003': '미취업자',
+  '0013004': '프리랜서',
+  '0013005': '일용근로자',
+  '0013006': '(예비)창업자',
+  '0013007': '단기근로자',
+  '0013008': '영농종사자',
+  '0013009': '기타',
+};
+
+const majorMap = {
+  '0011009': '제한없음',
+  '0011001': '인문계열',
+  '0011002': '사회계열',
+  '0011003': '상경계열',
+  '0011004': '어학계열',
+  '0011005': '공학계열',
+  '0011006': '예체능계열',
+  '0011007': '농산업계열',
+  '0011008': '기타',
+};
+
+const specialMap = {
+  '0014001': '중소기업',
+  '0014002': '여성',
+  '0014003': '기초생활수급자',
+  '0014004': '한부모가정',
+  '0014005': '장애인',
+  '0014006': '농업인',
+  '0014007': '군인',
+  '0014008': '지역인재',
+  '0014009': '기타',
+  '0014010': '제한없음',
+};
+
 const summaryTags = computed(() => {
   const grouped = {};
-
-  //   if (customIncome.value) {
-  //   summaries.push({ category: 'income', label: `${customIncome.value}만원 이하` });
-  // }
 
   for (const tag of selectedTagsWithCategory.value) {
     if (!grouped[tag.category]) grouped[tag.category] = [];
@@ -325,14 +379,37 @@ const summaryTags = computed(() => {
 
   const summaries = [];
 
+  // ✅ customIncome이 있으면 따로 추가
+  if (customIncome.value) {
+    summaries.push({
+      category: 'income',
+      label: `${customIncome.value}만원`,
+    });
+  }
   for (const category in grouped) {
     const list = grouped[category];
-    if (list.length === 1) {
-      summaries.push({ category, label: list[0] });
-    } else if (list.length > 1) {
+
+    const mappedList =
+      category === 'age'
+        ? list.map((val) => `${val}대`)
+        : category === 'maritalStatus'
+        ? list.map((val) => maritalStatusMap[val] || val)
+        : category === 'education'
+        ? list.map((val) => educationMap[val] || val)
+        : category === 'employment'
+        ? list.map((val) => employmentMap[val] || val)
+        : category === 'major'
+        ? list.map((val) => majorMap[val] || val)
+        : category === 'special'
+        ? list.map((val) => specialMap[val] || val)
+        : list;
+
+    if (mappedList.length === 1) {
+      summaries.push({ category, label: mappedList[0] });
+    } else if (mappedList.length > 1) {
       summaries.push({
         category,
-        label: `${list[0]} 외 ${list.length - 1}`,
+        label: `${mappedList[0]} 외 ${mappedList.length - 1}`,
         originalLabels: list,
       });
     }
@@ -342,15 +419,56 @@ const summaryTags = computed(() => {
 });
 
 const removeTag = (tag) => {
+  if (tag.category === 'income') {
+    customIncome.value = '';
+    return;
+  }
+
+  // 역변환용 map (라벨 → 코드)
+  const reverseMaritalMap = {
+    기혼: '0055001',
+    미혼: '0055002',
+    제한없음: '0055003',
+  };
+  const reverseEducationMap = Object.fromEntries(
+    Object.entries(educationMap).map(([k, v]) => [v, k])
+  );
+  const reverseEmploymentMap = Object.fromEntries(
+    Object.entries(employmentMap).map(([k, v]) => [v, k])
+  );
+  const reverseMajorMap = Object.fromEntries(
+    Object.entries(majorMap).map(([k, v]) => [v, k])
+  );
+  const reversespecialMap = Object.fromEntries(
+    Object.entries(specialMap).map(([k, v]) => [v, k])
+  );
+
+  const getValueToRemove = (label) => {
+    if (tag.category === 'age') return label.replace('대', '');
+    if (tag.category === 'maritalStatus')
+      return reverseMaritalMap[label] || label;
+    if (tag.category === 'education')
+      return reverseEducationMap[label] || label;
+    if (tag.category === 'employment')
+      return reverseEmploymentMap[label] || label;
+    if (tag.category === 'major') return reverseMajorMap[label] || label;
+    if (tag.category === 'special') return reversespecialMap[label] || label;
+
+    return label;
+  };
+
   if (tag.originalLabels) {
-    // 여러 개가 묶인 경우 → 모두 제거
     tag.originalLabels.forEach((label) => {
-      const list = filterState.value[tag.category];
-      filterState.value[tag.category] = list.filter((v) => v !== label);
+      const valueToRemove = getValueToRemove(label);
+      filterState.value[tag.category] = filterState.value[tag.category].filter(
+        (v) => v !== valueToRemove
+      );
     });
   } else {
-    const list = filterState.value[tag.category];
-    filterState.value[tag.category] = list.filter((v) => v !== tag.label);
+    const valueToRemove = getValueToRemove(tag.label);
+    filterState.value[tag.category] = filterState.value[tag.category].filter(
+      (v) => v !== valueToRemove
+    );
   }
 };
 
