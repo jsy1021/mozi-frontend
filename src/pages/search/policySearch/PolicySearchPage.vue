@@ -38,13 +38,13 @@
         v-for="(tag, index) in summaryTags"
         :key="index"
         class="badge bg-secondary me-1 d-inline-flex align-items-center"
-        style="font-size: 0.75rem"
+        style="font-size: 0.65rem"
       >
         {{ tag.label }}
         <button
           class="btn-close btn-close-white btn-sm ms-1"
           aria-label="Close"
-          style="width: 0.7rem; height: 0.7rem"
+          style="width: 0.4rem; height: 0.5rem"
           @click="removeTag(tag)"
         ></button>
       </span>
@@ -56,6 +56,7 @@
       :filterState="filterState"
       :toggleFilter="toggleFilter"
       v-model:customIncome="customIncome"
+      :regionNameMap="regionNameMap"
     />
 
     <!-- 카테고리 탭 -->
@@ -95,12 +96,14 @@ import PolicyCard from './policyCard.vue';
 import policyApi from '@/api/policyApi';
 import policyFilter from './policyFilter.vue';
 import { getScrappedPolicyIds } from '@/api/scrapApi';
+import { fetchRegionNamesByZipCodes } from '@/api/regionApi';
 
 const searchKeyword = ref('');
 const currentCategory = ref('전체');
 const showFilter = ref(false);
 const showSearch = ref(false);
 const customIncome = ref('');
+const regionNameMap = ref({});
 
 const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
 const policyList = ref([]);
@@ -379,7 +382,7 @@ const summaryTags = computed(() => {
 
   const summaries = [];
 
-  // ✅ customIncome이 있으면 따로 추가
+  // customIncome이 있으면 따로 추가
   if (customIncome.value) {
     summaries.push({
       category: 'income',
@@ -390,7 +393,9 @@ const summaryTags = computed(() => {
     const list = grouped[category];
 
     const mappedList =
-      category === 'age'
+      category === 'region'
+        ? list.map((zip) => regionNameMap.value?.[zip] || zip)
+        : category === 'age'
         ? list.map((val) => `${val}대`)
         : category === 'maritalStatus'
         ? list.map((val) => maritalStatusMap[val] || val)
@@ -424,12 +429,16 @@ const removeTag = (tag) => {
     return;
   }
 
-  // 역변환용 map (라벨 → 코드)
-  const reverseMaritalMap = {
-    기혼: '0055001',
-    미혼: '0055002',
-    제한없음: '0055003',
-  };
+  const reverseRegionMap = computed(() =>
+    Object.fromEntries(
+      Object.entries(regionNameMap.value).map(([zip, name]) => [name, zip])
+    )
+  );
+
+  const reverseMaritalMap = Object.fromEntries(
+    Object.entries(maritalStatusMap).map(([k, v]) => [v, k])
+  );
+
   const reverseEducationMap = Object.fromEntries(
     Object.entries(educationMap).map(([k, v]) => [v, k])
   );
@@ -439,11 +448,13 @@ const removeTag = (tag) => {
   const reverseMajorMap = Object.fromEntries(
     Object.entries(majorMap).map(([k, v]) => [v, k])
   );
-  const reversespecialMap = Object.fromEntries(
+  const reverseSpecialMap = Object.fromEntries(
     Object.entries(specialMap).map(([k, v]) => [v, k])
   );
 
   const getValueToRemove = (label) => {
+    if (tag.category === 'region')
+      return reverseRegionMap.value[label] || label;
     if (tag.category === 'age') return label.replace('대', '');
     if (tag.category === 'maritalStatus')
       return reverseMaritalMap[label] || label;
@@ -452,7 +463,7 @@ const removeTag = (tag) => {
     if (tag.category === 'employment')
       return reverseEmploymentMap[label] || label;
     if (tag.category === 'major') return reverseMajorMap[label] || label;
-    if (tag.category === 'special') return reversespecialMap[label] || label;
+    if (tag.category === 'special') return reverseSpecialMap[label] || label;
 
     return label;
   };
@@ -480,6 +491,18 @@ watch(
   { deep: true }
 );
 
+watch(
+  () => filterState.value.region,
+  async (zipCodes) => {
+    if (!zipCodes || zipCodes.length === 0) return;
+    const names = await fetchRegionNamesByZipCodes(zipCodes);
+    regionNameMap.value = Object.fromEntries(
+      zipCodes.map((z, i) => [z, names[i]])
+    );
+  },
+  { immediate: true }
+);
+
 onMounted(async () => {
   const saved = sessionStorage.getItem('filterState');
   if (saved) {
@@ -502,3 +525,38 @@ onMounted(async () => {
   console.log('정책 목록:', policyList.value);
 });
 </script>
+<style scoped>
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 2px 6px;
+  height: 22px;
+  line-height: 20px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+.summary-chip--active {
+  background: #36c18c;
+  border-color: #36c18c;
+  color: #fff;
+}
+.chip-close {
+  font-size: 10px;
+  line-height: 1;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  margin-left: 2px;
+  cursor: pointer;
+}
+.summary-chip:active {
+  transform: scale(0.98);
+}
+</style>

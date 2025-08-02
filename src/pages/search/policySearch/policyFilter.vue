@@ -39,6 +39,7 @@
     <!-- 지역 모달 연결 -->
     <RegionSelectModal
       v-if="showRegionModal"
+      :initial-zip-codes="filterState.region"
       @close="showRegionModal = false"
       @apply="handleRegionApply"
     />
@@ -123,8 +124,9 @@
 <script setup>
 import { defineProps } from 'vue';
 import FilterLayout from './FilterLayout.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import RegionSelectModal from './RegionSelectModal.vue';
+import { fetchZipCodes, fetchRegionNamesByZipCodes } from '@/api/regionApi';
 
 const usePersonalInfo = ref(true); //체크 상태
 
@@ -133,17 +135,42 @@ const props = defineProps({
   filterState: Object,
   toggleFilter: Function,
   exactAge: Number,
+  regionNameMap: Object,
 });
 
 // 지역 선택 상태
 const showRegionModal = ref(false);
 const selectedRegions = ref([]);
 
-// apply 함수 정의
-const handleRegionApply = ({ zipCodes, regionNames }) => {
-  console.log('받은 지역명:', regionNames);
+// // apply 함수 정의
+// const handleRegionApply = ({ zipCodes, regionNames }) => {
+//   console.log('받은 지역명:', regionNames);
+//   props.filterState.region = zipCodes;
+//   selectedRegions.value = regionNames;
+// };
+
+// 🔥 filterState.region 변경될 때 지역명으로 변환해서 selectedRegions에 세팅
+watch(
+  () => props.filterState.region,
+  async (zipCodes) => {
+    if (!zipCodes || zipCodes.length === 0) {
+      selectedRegions.value = [];
+      return;
+    }
+
+    const regionNames = await fetchRegionNamesByZipCodes(zipCodes);
+    selectedRegions.value = regionNames;
+  },
+  { immediate: true }
+);
+
+// 🧠 수정된 handleRegionApply
+const handleRegionApply = async ({ regionNames }) => {
+  const zipCodes = await fetchZipCodes(regionNames); // 🔥 지역명 → zipCode 변환
+
   props.filterState.region = zipCodes;
   selectedRegions.value = regionNames;
+  showRegionModal.value = false; // 모달 닫기
 };
 
 // 지역명 요약 텍스트
