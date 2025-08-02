@@ -157,13 +157,10 @@ const maritalStatus = [
 ];
 
 const income = [
-  '제한없음',
-  '1000만원 이하',
-  '2000만원 이하',
-  '3000이하',
-  '4000이하',
-  '5000이하',
+  { label: '소득 무관', value: '0043001' },
+  { label: '기타 입력', value: 'custom' },
 ];
+
 const education = [
   { label: '제한없음', value: '0049010' },
   { label: '고졸미만', value: '0049001' },

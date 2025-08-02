@@ -4,12 +4,25 @@
       <div class="d-flex justify-content-between align-items-start">
         <!-- 정책 이미지 + 정책명 + 중간 정보 -->
         <div class="d-flex">
-          <!-- 이미지 -->
-          <img
-            src="/images/goal/policy.png"
-            alt="정책 이미지"
-            style="width: 25px; height: 25px; margin-right: 8px"
-          />
+          <!-- 이미지 + 소득기준 -->
+          <div class="d-flex flex-column align-items-center me-2">
+            <!-- 이미지 -->
+            <img
+              src="/images/goal/policy.png"
+              alt="정책 이미지"
+              style="width: 25px; height: 25px"
+            />
+
+            <!-- 🔥 소득 기준 있음 (세 줄) -->
+            <div
+              v-if="hasIncomeCondition"
+              class="text-danger fw-semibold text-center"
+              style="font-size: 0.65rem; line-height: 1rem; margin-top: 4px"
+            >
+              <div>소득</div>
+              <div>제한</div>
+            </div>
+          </div>
 
           <!-- 정책명 + 중간정보 수직 정렬 -->
           <div>
@@ -91,8 +104,7 @@
 </template>
 
 <script setup>
-//defineProps({ policy: Object });
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { scrapPolicy, cancelScrap } from '@/api/scrapApi';
 
 const props = defineProps({
@@ -101,6 +113,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+});
+
+const hasIncomeCondition = computed(() => {
+  const code = String(props.policy?.earnCndSeCd || '').trim();
+  return ['0043002', '0043003'].includes(code);
 });
 
 const bookmarked = ref(props.isScrapped);
