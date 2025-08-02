@@ -142,7 +142,12 @@ const regionSummaryText = computed(() => {
   return `${regions[0]} 외 ${count - 1}개`;
 });
 
-const ages = ['10대', '20대', '30대', '40대'];
+const ages = [
+  { label: '10대', value: '10s' },
+  { label: '20대', value: '20s' },
+  { label: '30대', value: '30s' },
+  { label: '40대', value: '40s' },
+];
 
 // 혼인 여부 코드 매핑
 const maritalStatus = [
