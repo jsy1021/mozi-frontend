@@ -2,15 +2,27 @@
   <div class="container py-3">
     <h4 class="fw-bold mb-3">내 스크랩</h4>
 
-    <!-- 탭 -->
-    <div class="d-flex justify-content-around mb-3">
-      <button @click="changeTab('policy')" :class="btnClass('policy')">
-        정책
-      </button>
-      <button @click="changeTab('finance')" :class="btnClass('finance')">
-        금융
-      </button>
-    </div>
+    <!-- 카테고리 탭 -->
+    <ul
+      class="nav nav-tabs justify-content-between small mb-2"
+      style="font-size: 0.85rem"
+    >
+      <li
+        v-for="tab in ['정책', '금융']"
+        :key="tab"
+        class="nav-item"
+        style="flex: 1; text-align: center"
+      >
+        <a
+          href="#"
+          :class="['nav-link', activeTab === (tab === '정책' ? 'policy' : 'finance') ? 'active' : '']"
+          @click.prevent="changeTab(tab === '정책' ? 'policy' : 'finance')"
+          style="padding: 6px 4px"
+        >
+          {{ tab }}
+        </a>
+      </li>
+    </ul>
 
     <!-- 정책 스크랩 리스트 -->
     <div v-if="activeTab === 'policy'">
@@ -138,9 +150,5 @@ const changeTab = async (tab) => {
   }
 };
 
-const btnClass = (tab) => {
-  return activeTab.value === tab
-    ? 'btn btn-primary'
-    : 'btn btn-outline-primary';
-};
+
 </script>
