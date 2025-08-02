@@ -1,21 +1,33 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faEye, faEyeSlash);
+const router = useRouter();
 
 const id = ref('');
 const passwd = ref('');
 const showPassword = ref(false);
 
-const canSubmit = computed(() => {
-  return id.value.trim() !== '' && passwd.value.trim() !== '';
-});
+const canSubmit = computed(() => id.value.trim() && passwd.value.trim());
 
 function toggleShow() {
   showPassword.value = !showPassword.value;
+}
+
+// 인증 처리 함수
+function login() {
+  const correctId = 'IEbbuda';
+  const correctPass = 'qwerqwer123';
+
+  if (id.value === correctId && passwd.value === correctPass) {
+    router.push({ name: 'mainPage' });
+  } else {
+    error.value = '아이디 또는 비밀번호가 틀렸습니다.';
+  }
 }
 </script>
 
@@ -43,6 +55,7 @@ function toggleShow() {
         |
         <router-link to="/find-passwd">비밀번호 찾기</router-link>
       </div>
+      <div v-if="error" class="error">{{ error }}</div>
       <button type="submit" :disabled="!canSubmit" :class="{ 'active-btn': canSubmit, 'inactive-btn': !canSubmit }">
         로그인
       </button>
@@ -136,5 +149,10 @@ h1 {
   cursor: pointer;
   color: #000;
   font-size: 1.1rem;
+}
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: -10px;
 }
 </style>
