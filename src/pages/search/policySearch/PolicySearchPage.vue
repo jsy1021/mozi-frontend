@@ -146,6 +146,20 @@ const filteredList = computed(() => {
       return policyZips.some((zip) => filterState.value.region.includes(zip));
     });
   }
+
+  // 연령 필터링
+  if (filterState.value.age.length > 0) {
+    list = list.filter((policy) => {
+      const minAge = parseInt(policy.sprtTrgtMinAge || '0', 10);
+      const maxAge = parseInt(policy.sprtTrgtMaxAge || '200', 10);
+
+      return filterState.value.age.some((selectedAge) => {
+        const base = parseInt(selectedAge, 10);
+        return minAge <= base + 9 && maxAge >= base;
+      });
+    });
+  }
+
   // 혼인 여부 필터링
   if (filterState.value.maritalStatus.length === 1) {
     const status = filterState.value.maritalStatus[0];
