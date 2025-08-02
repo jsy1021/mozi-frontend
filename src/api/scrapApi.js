@@ -6,12 +6,12 @@ const api = axios.create({
   timeout: 30000,
 });
 
-export const scrapPolicy = (userId, policyId) => {
-  return axios.post(`/api/scrap/policy/${policyId}?userId=${userId}`);
+export const scrapPolicy = (userId, plcyNo) => {
+  return axios.post(`/api/scrap/policy/${plcyNo}?userId=${userId}`);
 };
 
-export const cancelScrap = (userId, policyId) => {
-  return axios.delete(`/api/scrap/policy/${policyId}?userId=${userId}`);
+export const cancelScrap = (userId, plcyNo) => {
+  return axios.delete(`/api/scrap/policy/${plcyNo}?userId=${userId}`);
 };
 
 export const getScrappedPolicyIds = (userId) =>

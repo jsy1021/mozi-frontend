@@ -93,7 +93,7 @@
 <script setup>
 //defineProps({ policy: Object });
 import { ref } from 'vue';
-import { scrapPolicy, cancelScrap } from '@/api/scrapApi'; // 💡 scrapApi.js에 만들어놨다고 가정
+import { scrapPolicy, cancelScrap } from '@/api/scrapApi';
 
 const props = defineProps({
   policy: Object,
@@ -112,15 +112,15 @@ const toggleBookmark = async () => {
   try {
     console.log('📌 북마크 클릭됨:', {
       현재상태: bookmarked.value,
-      정책ID: props.policy.policyId,
+      정책ID: props.policy.plcyNo,
       유저ID: userId,
     });
 
     if (bookmarked.value) {
-      await cancelScrap(userId, props.policy.policyId);
+      await cancelScrap(userId, props.policy.plcyNo);
       console.log('❌ 스크랩 해제 요청 보냄');
     } else {
-      await scrapPolicy(userId, props.policy.policyId);
+      await scrapPolicy(userId, props.policy.plcyNo);
       console.log('✅ 스크랩 등록 요청 보냄');
     }
 

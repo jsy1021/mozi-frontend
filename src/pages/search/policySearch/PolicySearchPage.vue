@@ -80,8 +80,8 @@
     </ul>
 
     <PolicyCard
-      v-for="(policy, index) in filteredList"
-      :key="index"
+      v-for="policy in filteredList"
+      :key="policy.plcyNo"
       :policy="policy"
       :isScrapped="policy.bookmarked"
     />
@@ -341,7 +341,7 @@ onMounted(async () => {
   // bookmarked 필드 추가
   policyList.value = data.map((p) => ({
     ...p,
-    bookmarked: scrappedIds.includes(p.policyId),
+    bookmarked: scrappedIds.includes(p.plcyNo),
   }));
 
   console.log('정책 목록:', policyList.value);
