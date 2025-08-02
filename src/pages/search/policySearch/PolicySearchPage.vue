@@ -55,6 +55,7 @@
       v-if="showFilter"
       :filterState="filterState"
       :toggleFilter="toggleFilter"
+      v-model:customIncome="customIncome"
     />
 
     <!-- 카테고리 탭 -->
@@ -99,6 +100,7 @@ const searchKeyword = ref('');
 const currentCategory = ref('전체');
 const showFilter = ref(false);
 const showSearch = ref(false);
+const customIncome = ref('');
 
 const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
 const policyList = ref([]);
@@ -175,6 +177,37 @@ const filteredList = computed(() => {
           policy.mrgSttsCd === '0055002' || policy.mrgSttsCd === '0055003'
       );
     }
+  }
+  // 연소득 필터링
+  if (customIncome.value) {
+    const incomeValue = parseInt(customIncome.value, 10);
+
+    list = list.filter((policy) => {
+      const code = policy.earnCndSeCd || '';
+      const min = Number(policy.earnMinAmt ?? 0);
+      const max = Number(policy.earnMaxAmt ?? 99999999);
+
+      console.log(
+        '[소득 필터] 입력값:',
+        incomeValue,
+        '정책:',
+        min,
+        max,
+        '조건코드:',
+        code
+      );
+
+      // 조건 없음 or 기타조건은 무조건 통과
+      if (code === '' || code === '0043001' || code === '0043003') return true;
+
+      // 범위 조건일 때만 비교
+      if (code === '0043002') {
+        return incomeValue >= min && incomeValue <= max;
+      }
+
+      // 예외 처리 (알 수 없는 코드)
+      return false;
+    });
   }
 
   // 학력 필터링
@@ -280,6 +313,10 @@ const selectCategory = (tab) => {
 
 const summaryTags = computed(() => {
   const grouped = {};
+
+  //   if (customIncome.value) {
+  //   summaries.push({ category: 'income', label: `${customIncome.value}만원 이하` });
+  // }
 
   for (const tag of selectedTagsWithCategory.value) {
     if (!grouped[tag.category]) grouped[tag.category] = [];

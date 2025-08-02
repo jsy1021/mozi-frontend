@@ -61,15 +61,27 @@
       :toggleFilter="toggleFilter"
     />
 
-    <!-- 연소득 -->
+    <!-- 연소득
     <FilterLayout
       label="연소득"
       :items="income"
       category="income"
       :filterState="filterState"
       :toggleFilter="toggleFilter"
-    />
+    /> -->
 
+    <!-- 연소득 입력 필터 -->
+    <div class="mb-3">
+      <label class="fw-bold small d-block mb-1">연소득 (만원)</label>
+      <input
+        v-model="customIncome"
+        type="number"
+        class="form-control form-control-sm"
+        placeholder="예: 2400"
+        :step="100"
+        min="0"
+      />
+    </div>
     <!-- 학력 -->
     <FilterLayout
       label="학력"
@@ -156,10 +168,13 @@ const maritalStatus = [
   { label: '기혼', value: '0055001' },
 ];
 
-const income = [
-  { label: '소득 무관', value: '0043001' },
-  { label: '기타 입력', value: 'custom' },
-];
+// const income = [
+//   { label: '소득 무관', value: '0043001' },
+//   { label: '기타 입력', value: 'custom' },
+// ];
+
+// script setup 최상단에
+const customIncome = defineModel('customIncome');
 
 const education = [
   { label: '제한없음', value: '0049010' },
