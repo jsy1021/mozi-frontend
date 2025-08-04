@@ -1,5 +1,5 @@
 // 목표 관련 api 함수 모음
-import axios from 'axios';
+import axios from './index.js';
 
 const api = axios.create({
   baseURL: '/api',
