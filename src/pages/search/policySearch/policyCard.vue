@@ -8,13 +8,12 @@
       />
       <span class="policy-title">{{ policy?.plcyNm || '정책명 없음' }}</span>
 
-      <i
-        class="fa-regular fa-bookmark bookmark"
-        :class="{ scraped: bookmarked }"
-        @click="toggleBookmark"
-        style="margin-left: auto; cursor: pointer"
-      ></i>
+      <i class="fa-regular fa-bookmark bookmark" 
+         :class="{ 'scraped': bookmarked }" 
+         @click="toggleBookmark" 
+         style="margin-left: auto; cursor: pointer;"></i>
     </div>
+    
 
     <div class="card-body" v-if="policy">
       <div class="info-section">
@@ -24,17 +23,21 @@
         </div>
         <div class="info-item">
           <span class="label">연령</span>
+
           <span
             class="value"
             v-if="policy.sprtTrgtMinAge || policy.sprtTrgtMaxAge"
           >
             만 {{ policy.sprtTrgtMinAge || '?' }}세 ~ 만
             {{ policy.sprtTrgtMaxAge || '?' }}세
+
           </span>
           <span class="value" v-else>누구나</span>
         </div>
       </div>
+
     </div>
+
 
     <div class="bottom-section">
       <div class="keywords-section">
@@ -155,7 +158,9 @@ const toggleBookmark = async () => {
 }
 
 .bookmark.scraped {
+
   color: #569fff;
+
   font-weight: 900;
 }
 

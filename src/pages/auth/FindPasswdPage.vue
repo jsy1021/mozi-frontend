@@ -5,6 +5,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { authAPI } from '@/api/auth.js';
 
 library.add(faEye, faEyeSlash);
 library.add(faChevronLeft);
@@ -17,11 +18,13 @@ const errors = reactive({ userId: '', email: '', verificationCode: '' });
 const loading = ref(false);
 const submitError = ref('');
 const verificationCode = ref('');
-const sentCode = ref('');
+const sentCode = ref(false);
 const isEmailVerified = ref(false);
 
 function validateUserId() {
-  errors.userId = userId.value.trim() ? '' : '가입 시 등록한 아이디를 입력해주세요';
+  errors.userId = userId.value.trim()
+    ? ''
+    : '가입 시 등록한 아이디를 입력해주세요';
 }
 
 function validateEmail() {
@@ -35,28 +38,69 @@ function validateEmail() {
   }
 }
 
-function sendVerificationCode() {
+async function sendVerificationCode() {
   validateEmail();
   if (errors.email) return;
 
-  //서버에 요청하여 이메일로 인증 코드를 발송
-  //ex. 123456
-  sentCode.value = '123456';
-  alert('인증 코드가 이메일로 발송되었습니다');
+  try {
+    // authAPI 사용 - 비밀번호 재설정용 이메일 인증번호 발송
+    const response = await authAPI.sendPasswordResetCode(email.value);
+
+    if (response.isSuccess || response.code === 200) {
+      sentCode.value = true;
+      alert('인증 코드가 이메일로 발송되었습니다');
+    } else {
+      alert(
+        response.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.'
+      );
+    }
+  } catch (error) {
+    console.error('이메일 발송 실패:', error);
+    alert(
+      error.response?.data?.message ||
+        '인증 코드 발송에 실패했습니다. 다시 시도해주세요.'
+    );
+  }
 }
 
-function verifyCode() {
-  if (verificationCode.value === sentCode.value) {
-    isEmailVerified.value = true;
-    errors.verificationCode = '';
-    alert('이메일 인증이 완료되었습니다.');
-  } else {
-    errors.verificationCode = '인증 코드가 일치하지 않습니다.';
+async function verifyCode() {
+  if (!verificationCode.value.trim()) {
+    errors.verificationCode = '인증 코드를 입력해주세요.';
+    return;
+  }
+
+  try {
+    // authAPI 사용 - 비밀번호 재설정용 인증번호 확인
+    const response = await authAPI.verifyPasswordResetCode({
+      email: email.value,
+      verificationCode: verificationCode.value,
+    });
+
+    if (response.isSuccess || response.code === 200) {
+      isEmailVerified.value = true;
+      errors.verificationCode = '';
+      alert('이메일 인증이 완료되었습니다.');
+    } else {
+      isEmailVerified.value = false;
+      errors.verificationCode =
+        response.message || '인증 코드가 일치하지 않습니다.';
+    }
+  } catch (error) {
+    console.error('이메일 인증 실패:', error);
+    isEmailVerified.value = false;
+    errors.verificationCode =
+      error.response?.data?.message || '인증 코드가 일치하지 않습니다.';
   }
 }
 
 const canSubmit = computed(() => {
-  return userId.value.trim() && email.value.trim() && !errors.userId && !errors.email && isEmailVerified.value;
+  return (
+    userId.value.trim() &&
+    email.value.trim() &&
+    !errors.userId &&
+    !errors.email &&
+    isEmailVerified.value
+  );
 });
 
 async function handleSubmit() {
@@ -68,37 +112,33 @@ async function handleSubmit() {
 
   loading.value = true;
   try {
-    // 예시: API로 validation 요청 (axios/fetch 사용)
-    const res = await fetch('/api/auth/validate-reset', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: userId.value, email: email.value }),
+    // authAPI 사용 - 계정 확인 및 토큰 발급
+    const response = await authAPI.verifyAccount({
+      loginId: userId.value,
+      email: email.value,
     });
-    const data = await res.json();
 
-    if (res.ok && data.valid) {
-      // 서버에서 유효하다고 응답하면 ResetPasswdPage로 이동
+    if (response.isSuccess || response.code === 200 || response.result) {
+      // 토큰을 받았으므로 비밀번호 재설정 페이지로 이동
+      // result 필드에 토큰이 있거나, response 자체가 토큰일 수 있음
+      const token = response.result || response;
       await router.push({
         name: 'ResetPasswdPage',
-        params: { userId: userId.value },
+        query: { token: token },
       });
     } else {
-      submitError.value = data.message || '아이디 또는 이메일이 일치하지 않습니다';
+      submitError.value =
+        response.message || '아이디 또는 이메일이 일치하지 않습니다';
     }
-  } catch {
-    submitError.value = '요청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+  } catch (error) {
+    console.error('계정 확인 실패:', error);
+    submitError.value =
+      error.response?.data?.message ||
+      '요청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
   } finally {
     loading.value = false;
   }
 }
-
-// function handleSubmit() {
-//   validateUserId();
-//   validateEmail();
-//   if (canSubmit.value) {
-//     alert('비밀번호 찾기 요청이 제출되었습니다.');
-//   }
-// }
 </script>
 
 <template>
@@ -113,39 +153,69 @@ async function handleSubmit() {
       <section class="writeID section-field">
         <label>
           아이디
-          <input name="userId" type="text" v-model="userId" placeholder="아이디를 입력하세요" @blur="validateUserId" />
+          <input
+            name="userId"
+            type="text"
+            v-model="userId"
+            placeholder="아이디를 입력하세요"
+            @blur="validateUserId"
+          />
           <span v-if="errors.userId" class="error">{{ errors.userId }}</span>
         </label>
       </section>
+
       <div class="certification">
         <section class="writeEmail section-field">
           <label>
             이메일
-            <input name="email" type="email" v-model="email" placeholder="이메일을 입력하세요" @blur="validateEmail" />
+            <input
+              name="email"
+              type="email"
+              v-model="email"
+              placeholder="이메일을 입력하세요"
+              @blur="validateEmail"
+            />
           </label>
-          <span :class="['error-message', { visible: errors.email }]">{{ errors.email || '' }}</span>
-
+          <span :class="['error-message', { visible: errors.email }]">{{
+            errors.email || ''
+          }}</span>
           <button type="button" @click="sendVerificationCode">인증</button>
         </section>
-        <section class="verificationCode section-field">
+
+        <section v-if="sentCode" class="verificationCode section-field">
           <label>
             인증 코드
             <input
               name="verificationCode"
               type="text"
               v-model="verificationCode"
-              placeholder="인증 코드를 입력하세요" />
-            <span v-if="errors.verificationCode" class="error">{{ errors.verificationCode }}</span>
+              placeholder="인증 코드를 입력하세요"
+            />
+            <span v-if="errors.verificationCode" class="error">{{
+              errors.verificationCode
+            }}</span>
           </label>
           <button type="button" @click="verifyCode">확인</button>
         </section>
+
+        <!-- 인증 완료 메시지 -->
+        <div v-if="isEmailVerified" class="verification-success">
+          ✅ 이메일 인증이 완료되었습니다.
+        </div>
       </div>
-      <button type="submit" :disabled="!canSubmit" :class="{ 'active-btn': canSubmit, 'inactive-btn': !canSubmit }">
-        확인
+
+      <button
+        type="submit"
+        :disabled="!canSubmit || loading"
+        :class="{
+          'active-btn': canSubmit && !loading,
+          'inactive-btn': !canSubmit || loading,
+        }"
+      >
+        {{ loading ? '처리중...' : '확인' }}
       </button>
 
       <div v-if="loading" class="loading-message">요청중입니다...</div>
-
       <div v-if="submitError" class="error submit-error">{{ submitError }}</div>
     </form>
   </div>
@@ -224,7 +294,6 @@ body {
 }
 .form-container input:focus {
   outline: none;
-
   background-color: #fff;
 }
 .form-container .section-field {
@@ -271,6 +340,18 @@ input::placeholder {
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  background-color: #36c18c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.writeEmail button:disabled,
+.verificationCode button:disabled,
+.certification section button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .form-container input {
@@ -299,7 +380,18 @@ input::placeholder {
   align-items: center;
   justify-content: center;
   height: 2.4rem;
+  background-color: #36c18c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
+
+.verificationCode button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 .error {
   color: red;
   font-size: 12px;
@@ -325,10 +417,11 @@ input::placeholder {
 }
 .active-btn {
   cursor: pointer;
-}
-.active-btn:hover {
   background-color: #36c18c;
   color: #fff;
+}
+.active-btn:hover {
+  background-color: #2fa876;
 }
 .inactive-btn,
 button:disabled {
@@ -353,9 +446,13 @@ button:disabled {
 .verification-success {
   color: #28a745;
   font-size: 14px;
-  margin-top: -0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 1.5rem;
-  text-align: left;
+  text-align: center;
+  padding: 8px;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
 }
 
 .certification {
@@ -382,9 +479,31 @@ button:disabled {
   width: 50px;
   font-size: 14px;
   cursor: pointer;
+  background-color: #36c18c;
+  color: white;
+  border: none;
+  border-radius: 4px;
 }
+
+.certification section button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 .certification section input {
   width: 100%;
   padding-right: 4rem;
+}
+
+.loading-message {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-top: 1rem;
+}
+
+.submit-error {
+  text-align: center;
+  margin-top: 1rem;
 }
 </style>
