@@ -75,8 +75,12 @@ onMounted(() => {
   <div class="page">
     <!-- 상단 헤더 -->
     <div class="header">
-      <span class="back-btn" @click="goBack">＜</span>
-      <h2>은행 연동 해지</h2>
+      <span class=".back-btn" @click="goBack"
+        ><i class="fa-solid fa-angle-left"></i
+      ></span>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">
+        은행 연동 해지
+      </div>
     </div>
 
     <!-- 은행 리스트 -->
@@ -126,12 +130,12 @@ onMounted(() => {
 
 <style scoped>
 .page {
-  padding: 20px;
+  padding: 16px;
 }
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 110px;
 }
 .back-btn {
   font-size: 24px;
