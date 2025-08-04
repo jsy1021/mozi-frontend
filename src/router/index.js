@@ -91,7 +91,7 @@ router.beforeEach((to) => {
     'ResetPasswdPage',
   ];
   if (isAuthenticated && unauthOnlyPages.includes(to.name)) {
-    return { name: 'MyPage' };
+    return { name: 'mainPage' };
   }
 
   return true;
