@@ -5,12 +5,12 @@ export default [
     component: () => import('../pages/auth/LoginPage.vue'),
     meta: { isHeader: false, isFooter: false },
   },
-  // {
-  //   path: '/find-id',
-  //   name: 'findID',
-  //   component: () => import('../pages/auth/FindIDPage.vue'),
-  //   meta: { isHeader: false, isFooter: false },
-  // },
+  {
+    path: '/find-id',
+    name: 'findID',
+    component: () => import('../pages/auth/FindIDPage.vue'),
+    meta: { isHeader: false, isFooter: false },
+  },
   {
     path: '/find-passwd',
     name: 'findPasswd',
