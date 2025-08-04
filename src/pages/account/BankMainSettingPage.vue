@@ -60,13 +60,15 @@ const goBack = () => {
 
 <template>
   <div class="container">
-    <h2>주거래 은행</h2>
-    <p>주거래 은행 한 개를 선택해주세요</p>
-
-    <!-- ← 뒤로가기 버튼 -->
-    <div class="back-btn" @click="goBack">
-      <i class="fa-solid fa-angle-left"></i> 뒤로가기
+    <div class="header">
+      <span class=".back-btn" @click="goBack"
+        ><i class="fa-solid fa-angle-left"></i
+      ></span>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">
+        주거래 은행
+      </div>
     </div>
+    <p>주거래 은행 한 개를 선택해주세요</p>
 
     <div class="bank-box">
       <div
@@ -110,12 +112,15 @@ const goBack = () => {
 .container {
   padding: 16px;
 }
+.header {
+  display: flex;
+  align-items: center;
+  gap: 115px;
+}
 .back-btn {
-  user-select: none;
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 12px;
+  font-size: 24px;
   cursor: pointer;
+  user-select: none;
 }
 .bank-box {
   border: 1px solid #ddd;

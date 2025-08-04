@@ -1,7 +1,9 @@
+// api/index.js
 import axios from 'axios';
+import router from '@/router';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -20,27 +22,31 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 응답 인터셉터 - BaseResponse 구조 처리
+// 응답 인터셉터 수정
 api.interceptors.response.use(
   (response) => {
-    // 백엔드가 BaseResponse로 감싸서 보내는 경우
     if (response.data && typeof response.data === 'object') {
-      // BaseResponse 구조인 경우 data 필드 반환
-      if (response.data.hasOwnProperty('data')) {
-        return response.data.data;
+      if (response.data.hasOwnProperty('result')) {
+        return response.data;
       }
-      // AuthResultDTO나 다른 직접 응답인 경우 그대로 반환
       return response.data;
     }
     return response.data;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      // 인증 스토어에서 로그아웃 처리
+    const status = error.response?.status;
+    const currentRoute = router.currentRoute.value.name;
+
+    // 로그인 관련 페이지에서는 401 에러를 자동 처리하지 않음
+    const authPages = ['loginPage', 'join', 'findPasswd', 'ResetPasswdPage'];
+
+    if (status === 401 && !authPages.includes(currentRoute)) {
+      console.log('인증 실패 - 로그인 페이지로 이동');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('userInfo');
-      window.location.href = '/auth/login';
+      router.push({ name: 'loginPage' });
     }
+
     return Promise.reject(error);
   }
 );

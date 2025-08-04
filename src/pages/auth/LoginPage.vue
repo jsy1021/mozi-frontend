@@ -4,33 +4,56 @@ import { useRouter } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import { authAPI } from '@/api/auth.js';
-import { useAuthStore } from '@/stores/auth.js';
+import api from '@/api/index.js'; // Auth Store 대신 직접 API 호출
 
 library.add(faEye, faEyeSlash);
 const router = useRouter();
-const authStore = useAuthStore();
 
 const id = ref('');
 const passwd = ref('');
 const showPassword = ref(false);
+const error = ref(''); // 에러 메시지
+const loading = ref(false);
 
 const canSubmit = computed(() => id.value.trim() && passwd.value.trim());
 
 function toggleShow() {
   showPassword.value = !showPassword.value;
 }
-// 기존 하드코딩된 로그인 함수를 API 호출로 변경
-async function login() {
-  const result = await authStore.login({
-    loginId: id.value.trim(),
-    password: passwd.value.trim(),
-  });
 
-  if (result.success) {
-    await router.push({ name: 'mainPage' });
-  } else {
-    error.value = result.message;
+async function login() {
+  error.value = ''; // 이전 에러 메시지 초기화
+  loading.value = true;
+
+  try {
+    const response = await api.post('/auth/login', {
+      loginId: id.value.trim(),
+      password: passwd.value.trim(),
+    });
+
+    console.log('로그인 성공:', response);
+
+    // 성공 시 토큰 저장
+    if (response.token && response.user) {
+      localStorage.setItem('accessToken', response.token);
+      localStorage.setItem('userInfo', JSON.stringify(response.user));
+      await router.push({ name: 'mainPage' });
+    } else {
+      error.value = '로그인 응답이 올바르지 않습니다.';
+    }
+  } catch (err) {
+    console.log('로그인 실패:', err);
+
+    // 에러 메시지 설정
+    if (err.response?.status === 401) {
+      error.value = '아이디 또는 비밀번호가 일치하지 않습니다.';
+    } else if (err.response?.data?.message) {
+      error.value = err.response.data.message;
+    } else {
+      error.value = '로그인 중 오류가 발생했습니다.';
+    }
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -53,7 +76,7 @@ function loginWithGoogle() {
     <form class="login-form" @submit.prevent="login">
       <div class="login">
         <input type="text" v-model="id" placeholder="아이디" />
-        <br />
+
         <div class="passwd-wrapper">
           <input
             :type="showPassword ? 'text' : 'password'"
@@ -65,25 +88,39 @@ function loginWithGoogle() {
             class="toggle-icon"
             @click="toggleShow" />
         </div>
+
+        <!-- 에러 메시지 영역을 고정 높이로 미리 확보 -->
+        <div class="error-container">
+          <div v-if="error" class="error">{{ error }}</div>
+        </div>
       </div>
+
       <div class="find">
         <router-link to="/find-id">아이디 찾기</router-link>
         |
         <router-link to="/find-passwd">비밀번호 찾기</router-link>
       </div>
-      <div v-if="error" class="error">{{ error }}</div>
-      <button type="submit" :disabled="!canSubmit" :class="{ 'active-btn': canSubmit, 'inactive-btn': !canSubmit }">
-        로그인
+
+      <button
+        type="submit"
+        :disabled="!canSubmit || loading"
+        :class="{
+          'active-btn': canSubmit && !loading,
+          'inactive-btn': !canSubmit || loading,
+        }">
+        {{ loading ? '로그인 중...' : '로그인' }}
       </button>
+
       <div class="join">
         회원이 아니신가요?
         <a href="/join">회원가입</a>
       </div>
+
+      <!-- 소셜 로그인 -->
       <!--소셜 로그인 -->
       <div class="social-login">
         <p class="social-title">또는 소셜 계정으로 로그인</p>
 
-        <!-- 카카오 -->
         <button type="button" class="kakao-btn" @click="loginWithKakao">
           <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path
@@ -93,7 +130,6 @@ function loginWithGoogle() {
           카카오로 로그인
         </button>
 
-        <!-- 네이버 -->
         <button type="button" class="naver-btn" @click="loginWithNaver">
           <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path fill="white" d="M4 4h4l4 7V4h4v16h-4l-4-7v7H4z" />
@@ -101,7 +137,6 @@ function loginWithGoogle() {
           네이버로 로그인
         </button>
 
-        <!-- 구글 -->
         <button type="button" class="google-btn" @click="loginWithGoogle">
           <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
             <path
@@ -132,6 +167,7 @@ function loginWithGoogle() {
   align-items: center;
   height: 35vh;
 }
+
 h1 {
   text-align: center;
   margin-top: 4rem;
@@ -140,37 +176,82 @@ h1 {
   transform: translateY(0%);
   transform: translateX(0%);
 }
+
 .login-form {
   margin-top: 90%;
-  max-width: 320px;
+  max-width: 330px; /* 360px에서 330px로 축소 */
+  width: 100%;
   margin-bottom: 4rem;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
+/* 입력창 스타일 - 크기 축소 */
 .login input {
-  display: flex;
-  flex-direction: column;
-  padding-right: 2.5rem;
-  font-size: 20px;
+  width: 100%;
+  padding: 10px; /* 11px에서 10px로 축소 */
+  font-size: 16px;
   border-radius: 5px;
-  padding: 5px;
   border: 1px solid #d9d9d9;
+  box-sizing: border-box;
+  margin-bottom: 10px;
 }
+
 .passwd-wrapper {
   position: relative;
+  margin-bottom: 5px;
 }
+
+.passwd-input {
+  width: 100%;
+  padding: 10px; /* 11px에서 10px로 축소 */
+  padding-right: 40px; /* 42px에서 40px로 축소 */
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #d9d9d9;
+  box-sizing: border-box;
+}
+
+.toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 12px; /* 13px에서 12px로 축소 */
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+  font-size: 16px; /* 17px에서 16px로 축소 */
+}
+
+/* 에러 메시지 컨테이너 - 고정 높이 */
+.error-container {
+  min-height: 18px; /* 20px에서 18px로 축소 */
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+/* 에러 메시지 스타일 */
+.error {
+  color: #e74c3c;
+  font-size: 12px;
+  text-align: left;
+  line-height: 1.2;
+  margin: 0;
+}
+
 .find {
   font-size: 12px;
   display: flex;
   justify-content: right;
   gap: 5px;
 }
+
 .find a {
   color: #000;
   font-weight: bold;
+  text-decoration: none;
 }
+
 .join {
   display: flex;
   justify-content: center;
@@ -179,42 +260,34 @@ h1 {
   color: #757575;
   margin-bottom: 2rem;
 }
+
 .join a {
   color: #000;
   font-weight: bold;
+  text-decoration: none;
 }
+
 .login-form button {
   border-radius: 5px;
-  padding: 5px;
+  padding: 12px; /* 13px에서 12px로 축소 */
   border: none;
-  font-size: 20px;
+  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
 }
+
 .inactive-btn {
   background-color: #f2f4f6;
   color: #b0b8c1;
   cursor: not-allowed;
 }
+
 .active-btn {
   background-color: #36c18c;
   color: #ffffff;
 }
-.toggle-icon {
-  position: absolute;
-  top: 50%;
-  right: 1rem;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #000;
-  font-size: 1.1rem;
-}
-.error {
-  color: red;
-  font-size: 14px;
-  margin-top: -10px;
-}
-/* 소셜로그인 */
+
+/* 소셜 로그인 스타일 */
 .social-login {
   display: flex;
   flex-direction: column;
@@ -226,8 +299,8 @@ h1 {
   font-size: 11px;
   color: #999999;
   margin-bottom: 4px;
-  text-align: left; /* 왼쪽 정렬 */
-  margin-left: 4px; /* 버튼과 살짝 들여쓰기 */
+  text-align: left;
+  margin-left: 4px;
 }
 
 .social-login button {
@@ -236,7 +309,7 @@ h1 {
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 10px;
+  padding: 10px; /* 11px에서 10px로 축소 */
   border-radius: 5px;
   font-size: 14px;
   cursor: pointer;

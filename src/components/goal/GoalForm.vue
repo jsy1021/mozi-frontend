@@ -400,6 +400,8 @@ onMounted(() => {
 });
 </script>
 
+<!-- GoalForm.vue 스타일 부분만 수정 - 1억 모으기 관련 색상을 로고 색상으로 변경 -->
+
 <style scoped>
 .goal-form-container {
   padding: 20px;
@@ -422,7 +424,7 @@ onMounted(() => {
 }
 
 .billion-icon {
-  color: #ffd700;
+  color: #4fa2a0;
   font-size: 20px;
   animation: sparkle 2s ease-in-out infinite alternate;
 }
@@ -439,8 +441,8 @@ onMounted(() => {
 }
 
 .preset-notice {
-  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
-  border: 1px solid #ffd700;
+  background: linear-gradient(135deg, #f0fffe 0%, #ffffff 100%);
+  border: 1px solid #4fa2a0;
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 20px;
@@ -450,13 +452,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #b8860b;
+  color: #428b92;
   font-size: 14px;
   font-weight: 500;
 }
 
 .notice-content i {
-  color: #ffd700;
+  color: #4fa2a0;
 }
 
 .goal-form {
@@ -491,13 +493,13 @@ onMounted(() => {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #4fa2a0;
 }
 
 .preset-input {
-  background-color: #f8f9fa !important;
-  border-color: #ffd700 !important;
-  color: #666 !important;
+  background-color: #f0fffe !important;
+  border-color: #4fa2a0 !important;
+  color: #428b92 !important;
 }
 
 .preset-info {
@@ -506,11 +508,11 @@ onMounted(() => {
   gap: 6px;
   margin-top: 6px;
   font-size: 12px;
-  color: #b8860b;
+  color: #428b92;
 }
 
 .preset-info i {
-  color: #ffd700;
+  color: #4fa2a0;
 }
 
 .amount-input {
@@ -544,20 +546,20 @@ onMounted(() => {
 }
 
 .keyword-btn:hover {
-  border-color: #007bff;
-  color: #007bff;
+  border-color: #4fa2a0;
+  color: #4fa2a0;
 }
 
 .keyword-btn.active {
-  background: #007bff;
-  border-color: #007bff;
+  background: #4fa2a0;
+  border-color: #4fa2a0;
   color: white;
 }
 
 .keyword-btn.preset {
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  border-color: #ffd700;
-  color: #b8860b;
+  background: linear-gradient(135deg, #4fa2a0, #9cd5cb);
+  border-color: #4fa2a0;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -592,8 +594,8 @@ onMounted(() => {
 }
 
 .account-item:hover {
-  border-color: #007bff;
-  background-color: #f8f9fa;
+  border-color: #4fa2a0;
+  background-color: #f0fffe;
 }
 
 .checkbox-label {
@@ -629,7 +631,7 @@ onMounted(() => {
 
 .balance {
   font-size: 13px;
-  color: #007bff;
+  color: #4fa2a0;
   font-weight: 500;
 }
 
@@ -639,14 +641,14 @@ onMounted(() => {
   gap: 6px;
   margin-top: 8px;
   padding: 8px 12px;
-  background-color: #e7f3ff;
+  background-color: #f0fffe;
   border-radius: 6px;
   font-size: 13px;
-  color: #0066cc;
+  color: #428b92;
 }
 
 .selected-summary i {
-  color: #0066cc;
+  color: #4fa2a0;
 }
 
 .form-actions {
@@ -691,15 +693,15 @@ onMounted(() => {
 }
 
 .billion-submit {
-  background: linear-gradient(135deg, #ffd700, #ffed4e) !important;
-  color: #b8860b !important;
+  background: linear-gradient(135deg, #4fa2a0, #9cd5cb) !important;
+  color: #ffffff !important;
   font-weight: 600 !important;
 }
 
 .billion-submit:hover {
-  background: linear-gradient(135deg, #ffed4e, #ffd700) !important;
+  background: linear-gradient(135deg, #428b92, #4fa2a0) !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(79, 162, 160, 0.3);
 }
 
 /* 반응형 디자인 */

@@ -27,19 +27,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   });
 
-  // Actions
+  // stores/auth.js
   const login = async (credentials) => {
     try {
       isLoading.value = true;
 
-      // 백엔드 로그인 API 호출
       const response = await api.post('/auth/login', {
         loginId: credentials.loginId,
         password: credentials.password,
       });
 
-      // 백엔드 응답 구조에 맞춰 처리
-      // response.data는 AuthResultDTO 형태
+      console.log('로그인 응답:', response); // 디버깅용
+
+      // 성공 응답 처리
       if (response.token && response.user) {
         token.value = response.token;
         user.value = {
@@ -48,30 +48,47 @@ export const useAuthStore = defineStore('auth', () => {
           roles: response.user.roles,
         };
 
-        // localStorage에 저장
         localStorage.setItem('accessToken', response.token);
         localStorage.setItem('userInfo', JSON.stringify(user.value));
 
         return { success: true };
       } else {
-        throw new Error('로그인 응답 형식이 올바르지 않습니다.');
+        return {
+          success: false,
+          message: '로그인 응답 형식이 올바르지 않습니다.',
+        };
       }
     } catch (error) {
       console.error('로그인 에러:', error);
+
+      // 에러 응답에서 메시지 추출
+      let errorMessage = '로그인에 실패했습니다.';
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data) {
+        // 단순 문자열 응답인 경우
+        errorMessage = error.response.data;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       return {
         success: false,
-        message: error.response?.data?.message || '로그인에 실패했습니다.',
+        message: errorMessage,
       };
     } finally {
       isLoading.value = false;
     }
   };
-
   const logout = () => {
     token.value = null;
     user.value = null;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userInfo');
+
+    // 로그아웃 시 메인 페이지로 이동하지 않고 현재 위치 유지
+    // 라우터에서 자동으로 로그인 페이지로 리다이렉트됨
   };
 
   const initializeAuth = () => {
