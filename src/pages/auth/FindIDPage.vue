@@ -4,6 +4,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 library.add(faChevronLeft);
 
@@ -12,6 +13,11 @@ const email = ref('');
 const error = reactive({ name: '', email: '' });
 const foundId = ref('');
 const isSubmitted = ref(false);
+const router = useRouter();
+
+function goBack() {
+  router.back();
+}
 
 function validate() {
   error.name = name.value.trim() ? '' : '가입 시 등록한 이름을 입력해 주세요';
@@ -49,7 +55,7 @@ async function handleSubmit() {
 
 <template>
   <div class="header">
-    <font-awesome-icon icon="fa-solid fa-chevron-left" class="backIcon" />
+    <font-awesome-icon icon="fa-solid fa-chevron-left" class="backIcon" @click="goBack" />
     <h1 class="logo">MoZi</h1>
   </div>
   <div class="title">아이디 찾기</div>
