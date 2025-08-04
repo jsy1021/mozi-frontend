@@ -63,12 +63,28 @@ watch(
 );
 </script>
 <template>
+  <div style="display: flex">
+    <p style="margin: 10px 10px 5px 25px; color: #6b7684; font-weight: bolder">
+      나의 계좌
+    </p>
+    <i
+      class="fa-solid fa-angle-right fa-sm"
+      @click="goToTotalPage"
+      style="color: #d9d9d9; cursor: pointer; margin: 23px 0 5px 0"
+    ></i>
+  </div>
   <div>
     <!-- 연동 안 됐을 때 -->
     <div v-if="isUnlinked" class="card">
-      <p>연동시 더 많은 기능을</p>
-      <p>이용할 수 있어요</p>
-      <button class="card-btn" @click="goToAccountAuth">계좌연결</button>
+      <div style="font-size: 10px">연동시 더 많은 기능을</div>
+      <div style="font-size: 10px">이용할 수 있어요!</div>
+      <button
+        class="card-btn"
+        @click="goToAccountAuth"
+        style="position: relative; bottom: 7px"
+      >
+        <div style="font-size: 10px; color: #6b7684">계좌연동</div>
+      </button>
     </div>
 
     <!-- 연동된 경우 -->
@@ -83,22 +99,21 @@ watch(
         <img
           :src="bankLogoUrl"
           alt="은행 로고"
-          style="height: 64px; margin-right: 0.5rem"
+          style="height: 64px; margin: 0 0 0 0px; align-self: flex-start"
         />
-        <ul style="text-align: left; padding: 0 1rem; margin-top: 8px">
-          총 :
-          {{
-            bankSummaryList.totalBalance
-              ? bankSummaryList.totalBalance.toLocaleString()
-              : '0'
-          }}원
-          <br />
-          <span style="font-size: 8px; color: #555">
-            <!-- {{ bankSummaryList.accountCount }}개 계좌 -->
+        <div style="text-align: left; margin: 10px 0 25px -80px">
+          <div style="font-size: 16px; font-weight: 500; margin-bottom: -3px">
+            {{
+              bankSummaryList.totalBalance
+                ? bankSummaryList.totalBalance.toLocaleString()
+                : '0'
+            }}원
+          </div>
+          <div style="font-size: 12px; color: #555">
             {{ bankSummaryList.representativeAccountName }}외
             {{ bankSummaryList.accountCount - 1 }}개 계좌
-          </span>
-        </ul>
+          </div>
+        </div>
         <div
           style="
             display: flex;
@@ -109,14 +124,11 @@ watch(
           "
         >
           <span v-if="mainBankCode === true">
-            <i class="fa-solid fa-star" style="color: #ffd43b"></i>
+            <i
+              class="fa-solid fa-star"
+              style="color: #ffd43b; position: relative; top: -30px; left: 8px"
+            ></i>
           </span>
-
-          <i
-            class="fa-solid fa-angle-right"
-            @click="goToTotalPage"
-            style="cursor: pointer"
-          ></i>
         </div>
       </div>
     </div>
@@ -177,8 +189,8 @@ watch(
 </template>
 <style scoped>
 .card {
-  width: 300px;
-  height: 100px;
+  width: 350px;
+  height: 80px;
   margin: auto;
   padding: 8px 16px;
   border-radius: 12px;
@@ -188,17 +200,17 @@ watch(
   border: 1px solid #e0e0e0;
 }
 
-/* 카드 스타일 버튼 */
 .card-btn {
   display: block;
-  width: 100%;
-  margin: 16px 0 0 0;
-  padding: 16px 0;
+  width: 200px;
+  height: 30px; /* 높이 증가 */
+  margin: 10px auto 0 auto; /* 가운데 정렬 및 상단 여백 */
+  padding: 6px 0;
   border-radius: 8px;
-  border: 1.5px solid #bdbdbd;
-  background: #fafafa;
+  border: 1.5px solid #f2f4f6;
+  background: #f2f4f6;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   transition: box-shadow 0.2s;
 }
