@@ -48,6 +48,7 @@ const handleCreateGoal = async (formData) => {
       goalDate: formData.goalDate,
       keyword: formData.keyword,
       memo: formData.memo,
+      goalStatus: true, // ← 명시적으로 true 설정
     };
 
     const createdGoal = await goalStore.createGoal(goalPayload);
