@@ -59,13 +59,11 @@ function loginWithGoogle() {
             :type="showPassword ? 'text' : 'password'"
             v-model="passwd"
             placeholder="비밀번호"
-            class="passwd-input"
-          />
+            class="passwd-input" />
           <FontAwesomeIcon
             :icon="showPassword ? ['fas', 'eye-slash'] : ['fas', 'eye']"
             class="toggle-icon"
-            @click="toggleShow"
-          />
+            @click="toggleShow" />
         </div>
       </div>
       <div class="find">
@@ -74,18 +72,14 @@ function loginWithGoogle() {
         <router-link to="/find-passwd">비밀번호 찾기</router-link>
       </div>
       <div v-if="error" class="error">{{ error }}</div>
-      <button
-        type="submit"
-        :disabled="!canSubmit"
-        :class="{ 'active-btn': canSubmit, 'inactive-btn': !canSubmit }"
-      >
+      <button type="submit" :disabled="!canSubmit" :class="{ 'active-btn': canSubmit, 'inactive-btn': !canSubmit }">
         로그인
       </button>
       <div class="join">
         회원이 아니신가요?
         <a href="/join">회원가입</a>
       </div>
-      <!-- ✅ 소셜 로그인 -->
+      <!--소셜 로그인 -->
       <div class="social-login">
         <p class="social-title">또는 소셜 계정으로 로그인</p>
 
@@ -136,8 +130,7 @@ function loginWithGoogle() {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 45vh;
-  transform: translate(0%, 0%);
+  height: 35vh;
 }
 h1 {
   text-align: center;
