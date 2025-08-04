@@ -1,13 +1,29 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import { authAPI } from '@/api/auth.js';
 
 const newPassword = ref('');
 const confirmPassword = ref('');
 const passwordError = ref('');
 const confirmError = ref('');
+const submitError = ref('');
+const loading = ref(false);
 const router = useRouter();
+const route = useRoute();
+
+// 토큰 저장
+const resetToken = ref('');
+
+// 컴포넌트 마운트 시 토큰 확인
+onMounted(() => {
+  resetToken.value = route.query.token || '';
+  if (!resetToken.value) {
+    alert('유효하지 않은 접근입니다. 비밀번호 찾기를 다시 시도해주세요.');
+    router.push('/password-find');
+  }
+});
 
 //✖✔ 조건//
 const isLengthOk = computed(() => newPassword.value.length >= 10);
@@ -22,8 +38,15 @@ const isCompositionOk = computed(() => {
 const isNoTripleNumber = computed(() => !/(\d)\1\1/.test(newPassword.value));
 
 const isFormValid = computed(() => {
-  return newPassword.value && confirmPassword.value && !passwordError.value && !confirmError.value;
+  return (
+    newPassword.value &&
+    confirmPassword.value &&
+    !passwordError.value &&
+    !confirmError.value &&
+    resetToken.value
+  );
 });
+
 function validatePassword() {
   const pwd = newPassword.value;
 
@@ -39,16 +62,50 @@ function validatePassword() {
 }
 
 function validateConfirmPassword() {
-  confirmError.value = newPassword.value !== confirmPassword.value ? '동일한 비밀번호를 입력해주세요.' : '';
+  confirmError.value =
+    newPassword.value !== confirmPassword.value
+      ? '동일한 비밀번호를 입력해주세요.'
+      : '';
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   validatePassword();
   validateConfirmPassword();
+  submitError.value = '';
 
-  if (!passwordError.value && !confirmError.value) {
-    router.push('/reset-complete');
-    // 실제 비밀번호 변경 요청 로직은 여기에 추가
+  if (!isFormValid.value) return;
+
+  loading.value = true;
+  try {
+    // authAPI 사용 - 비밀번호 재설정
+    const response = await authAPI.resetPassword({
+      token: resetToken.value,
+      newPassword: newPassword.value,
+    });
+
+    if (response.isSuccess || response.code === 200) {
+      alert('비밀번호가 성공적으로 변경되었습니다.');
+      // 로그인 페이지로 이동
+      router.push('/login');
+    } else {
+      submitError.value =
+        response.message || '비밀번호 변경에 실패했습니다. 다시 시도해주세요.';
+    }
+  } catch (error) {
+    console.error('비밀번호 재설정 실패:', error);
+    const errorMessage =
+      error.response?.data?.message ||
+      '요청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    submitError.value = errorMessage;
+
+    // 토큰이 만료되었거나 유효하지 않은 경우
+    if (errorMessage.includes('토큰') || errorMessage.includes('만료')) {
+      setTimeout(() => {
+        router.push('/password-find');
+      }, 2000);
+    }
+  } finally {
+    loading.value = false;
   }
 }
 </script>
@@ -69,14 +126,20 @@ function handleSubmit() {
             type="password"
             v-model="newPassword"
             placeholder="새 비밀번호를 입력해주세요"
-            @input="validatePassword" />
+            @input="validatePassword"
+          />
           <p class="error" v-if="passwordError">{{ passwordError }}</p>
           <ul class="guide">
-            <li :class="{ valid: isLengthOk, invalid: !isLengthOk }">{{ isLengthOk ? '✔' : '✖' }} 10자 이상 입력</li>
-            <li :class="{ valid: isCompositionOk, invalid: !isCompositionOk }">
-              {{ isCompositionOk ? '✔' : '✖' }} 영문/숫자/특수문자 중 2개 이상 조합
+            <li :class="{ valid: isLengthOk, invalid: !isLengthOk }">
+              {{ isLengthOk ? '✔' : '✖' }} 10자 이상 입력
             </li>
-            <li :class="{ valid: isNoTripleNumber, invalid: !isNoTripleNumber }">
+            <li :class="{ valid: isCompositionOk, invalid: !isCompositionOk }">
+              {{ isCompositionOk ? '✔' : '✖' }} 영문/숫자/특수문자 중 2개 이상
+              조합
+            </li>
+            <li
+              :class="{ valid: isNoTripleNumber, invalid: !isNoTripleNumber }"
+            >
               {{ isNoTripleNumber ? '✔' : '✖' }} 동일한 숫자 3개 연속 사용 불가
             </li>
           </ul>
@@ -87,11 +150,24 @@ function handleSubmit() {
             type="password"
             v-model="confirmPassword"
             placeholder="비밀번호 확인"
-            @input="validateConfirmPassword" />
+            @input="validateConfirmPassword"
+          />
           <p class="error" v-if="confirmError">{{ confirmError }}</p>
         </div>
       </div>
-      <button class="submit-btn" :disabled="!isFormValid" @click="handleSubmit">확인</button>
+
+      <div v-if="loading" class="loading-message">
+        비밀번호를 변경하고 있습니다...
+      </div>
+      <div v-if="submitError" class="error submit-error">{{ submitError }}</div>
+
+      <button
+        class="submit-btn"
+        :disabled="!isFormValid || loading"
+        @click="handleSubmit"
+      >
+        {{ loading ? '처리중...' : '확인' }}
+      </button>
     </section>
   </div>
 </template>
@@ -113,11 +189,6 @@ function handleSubmit() {
 .logo {
   font-size: 48px;
   color: #4fa2a0;
-  /* margin: 0; */
-  /* padding-left: -10px; */
-  /* top: 50%;
-  transform: translateY(0%);
-  transform: translateX(0%); */
 }
 .backIcon {
   font-size: 30px;
@@ -200,5 +271,19 @@ input {
 .new-form {
   margin-top: 4rem;
   margin-left: 1rem;
+}
+
+.loading-message {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-top: 1rem;
+}
+
+.submit-error {
+  text-align: center;
+  margin-top: 1rem;
+  color: red;
+  font-size: 14px;
 }
 </style>

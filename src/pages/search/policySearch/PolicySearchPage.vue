@@ -38,13 +38,13 @@
         v-for="(tag, index) in summaryTags"
         :key="index"
         class="badge bg-secondary me-1 d-inline-flex align-items-center"
-        style="font-size: 0.75rem"
+        style="font-size: 0.65rem"
       >
         {{ tag.label }}
         <button
           class="btn-close btn-close-white btn-sm ms-1"
           aria-label="Close"
-          style="width: 0.7rem; height: 0.7rem"
+          style="width: 0.4rem; height: 0.5rem"
           @click="removeTag(tag)"
         ></button>
       </span>
@@ -55,6 +55,11 @@
       v-if="showFilter"
       :filterState="filterState"
       :toggleFilter="toggleFilter"
+      v-model:customIncome="customIncome"
+      v-model:customAge="customAge"
+      v-model:usePersonalInfo="usePersonalInfo"
+      :regionNameMap="regionNameMap"
+      :user-profile="userProfile"
     />
 
     <!-- 카테고리 탭 -->
@@ -80,8 +85,8 @@
     </ul>
 
     <PolicyCard
-      v-for="(policy, index) in filteredList"
-      :key="index"
+      v-for="policy in filteredList"
+      :key="policy.plcyNo"
       :policy="policy"
       :isScrapped="policy.bookmarked"
     />
@@ -89,20 +94,37 @@
 </template>
 
 <script setup>
+// 기본 import
 import { ref, onMounted, computed, watch } from 'vue';
 import PolicyCard from './policyCard.vue';
 import policyApi from '@/api/policyApi';
 import policyFilter from './policyFilter.vue';
 import { getScrappedPolicyIds } from '@/api/scrapApi';
+import {
+  fetchRegionNamesByZipCodes,
+  fetchZipCodesBySido,
+} from '@/api/regionApi';
+import { getCodeFromEnum } from './util/policyEnums';
+import {
+  RegionEnum,
+  MaritalStatusEnum,
+  EducationLevelEnum,
+  EmploymentStatusEnum,
+  MajorEnum,
+  SpecialtyEnum,
+} from './util/policyEnums';
+import { fetchUserProfileById } from '@/api/UserProfileApi';
 
+// 상태 변수
 const searchKeyword = ref('');
 const currentCategory = ref('전체');
 const showFilter = ref(false);
 const showSearch = ref(false);
-
-const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
+const customIncome = ref('');
+const customAge = ref('');
+const regionNameMap = ref({});
 const policyList = ref([]);
-// script setup 최상단
+const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
 
 // 필터 상태
 const filterState = ref({
@@ -126,7 +148,22 @@ const toggleFilter = (type, value) => {
   }
 };
 
-// 선택된 키워드들
+// 카테고리 선택
+const selectCategory = (tab) => {
+  currentCategory.value = tab;
+};
+
+// 필터 토글
+const toggleFilterPanel = () => {
+  showFilter.value = !showFilter.value;
+};
+
+// 검색창 토글
+const toggleSearch = () => {
+  showSearch.value = !showSearch.value;
+};
+
+// 선택된 태그들
 const selectedTagsWithCategory = computed(() => {
   const result = [];
   for (const [category, values] of Object.entries(filterState.value)) {
@@ -136,8 +173,12 @@ const selectedTagsWithCategory = computed(() => {
   }
   return result;
 });
+
+// 정책 필터링
 const filteredList = computed(() => {
   let list = policyList.value;
+
+  // 지역 → 연령 → 혼인 → 소득 → 학력 → 취업 → 전공 → 특화 → 카테고리 탭 순서
 
   // 지역 필터링 (zipCd 기준)
   if (filterState.value.region.length > 0) {
@@ -146,10 +187,21 @@ const filteredList = computed(() => {
       return policyZips.some((zip) => filterState.value.region.includes(zip));
     });
   }
+
+  // 정확한 연령 필터링
+  if (customAge.value) {
+    const exactAge = parseInt(customAge.value, 10);
+
+    list = list.filter((policy) => {
+      const minAge = parseInt(policy.sprtTrgtMinAge || '0', 10);
+      const maxAge = parseInt(policy.sprtTrgtMaxAge || '200', 10);
+      return exactAge >= minAge && exactAge <= maxAge;
+    });
+  }
+
   // 혼인 여부 필터링
   if (filterState.value.maritalStatus.length === 1) {
     const status = filterState.value.maritalStatus[0];
-
     if (status === '0055001') {
       list = list.filter(
         (policy) =>
@@ -163,6 +215,21 @@ const filteredList = computed(() => {
     }
   }
 
+  // 연소득 필터링
+  if (customIncome.value) {
+    const incomeValue = parseInt(customIncome.value, 10);
+    list = list.filter((policy) => {
+      const code = policy.earnCndSeCd || '';
+      const min = Number(policy.earnMinAmt ?? 0);
+      const max = Number(policy.earnMaxAmt ?? 99999999);
+      if (code === '' || code === '0043001' || code === '0043003') return true;
+      if (code === '0043002') {
+        return incomeValue >= min && incomeValue <= max;
+      }
+      return false;
+    });
+  }
+
   // 학력 필터링
   if (
     filterState.value.education.length > 0 &&
@@ -172,14 +239,11 @@ const filteredList = computed(() => {
     )
   ) {
     const selectedCodes = filterState.value.education;
-
     list = list.filter((policy) => {
       const policyCodes = policy.schoolCd?.split(',') || [];
-
-      // 하나라도 선택된 학력에 해당하거나 제한없음인 정책은 통과
       return (
-        policyCodes.includes('0049010') || // 제한없음
-        selectedCodes.some((code) => policyCodes.includes(code)) // 선택한 것 중 하나라도 포함
+        policyCodes.includes('0049010') ||
+        selectedCodes.some((code) => policyCodes.includes(code))
       );
     });
   }
@@ -187,12 +251,12 @@ const filteredList = computed(() => {
   //  취업 상태 필터링
   if (
     filterState.value.employment.length > 0 &&
-    !filterState.value.employment.includes('0013010') // 제한없음 제외
+    !filterState.value.employment.includes('0013010')
   ) {
     list = list.filter((policy) => {
       const jobCodes = policy.jobCd?.split(',') || [];
       return (
-        jobCodes.includes('0013010') || // 제한없음 정책 포함
+        jobCodes.includes('0013010') ||
         jobCodes.some((code) => filterState.value.employment.includes(code))
       );
     });
@@ -201,12 +265,12 @@ const filteredList = computed(() => {
   // 전공 필터링
   if (
     filterState.value.major.length > 0 &&
-    !filterState.value.major.includes('0011009') // 제한없음 제외
+    !filterState.value.major.includes('0011009')
   ) {
     list = list.filter((policy) => {
       const majorCodes = policy.plcyMajorCd?.split(',') || [];
       return (
-        majorCodes.includes('0011009') || // 제한없음 정책 포함
+        majorCodes.includes('0011009') ||
         majorCodes.some((code) => filterState.value.major.includes(code))
       );
     });
@@ -215,12 +279,12 @@ const filteredList = computed(() => {
   // 특화분야 필터링
   if (
     filterState.value.special.length > 0 &&
-    !filterState.value.special.includes('0014010') // 제한없음 제외
+    !filterState.value.special.includes('0014010')
   ) {
     list = list.filter((policy) => {
-      const specialCodes = policy.sBizCd?.split(',') || [];
+      const specialCodes = policy.sbizCd?.split(',') || [];
       return (
-        specialCodes.includes('0014010') || // 제한없음 정책 포함
+        specialCodes.includes('0014010') ||
         specialCodes.some((code) => filterState.value.special.includes(code))
       );
     });
@@ -247,42 +311,139 @@ const filteredList = computed(() => {
     });
   }
 
-  console.log('혼인 필터 상태:', filterState.value.maritalStatus);
   console.log('전체 정책 수:', policyList.value.length);
   console.log('필터링 후 정책 수:', list.length);
 
   return list;
 });
 
-const toggleFilterPanel = () => {
-  showFilter.value = !showFilter.value;
-};
-const toggleSearch = () => {
-  showSearch.value = !showSearch.value;
-};
-const selectCategory = (tab) => {
-  currentCategory.value = tab;
+// 요약 테그 매핑용
+const maritalStatusMap = {
+  '0055001': '기혼',
+  '0055002': '미혼',
+  '0055003': '제한없음',
 };
 
+const educationMap = {
+  '0049010': '제한없음',
+  '0049001': '고졸미만',
+  '0049002': '고교재학',
+  '0049003': '고졸예정',
+  '0049004': '고교졸업',
+  '0049005': '대학재학',
+  '0049006': '대졸예정',
+  '0049007': '대학졸업',
+  '0049008': '석/박사',
+  '0049009': '기타',
+};
+
+const employmentMap = {
+  '0013010': '제한없음',
+  '0013001': '재직자',
+  '0013002': '자영업자',
+  '0013003': '미취업자',
+  '0013004': '프리랜서',
+  '0013005': '일용근로자',
+  '0013006': '(예비)창업자',
+  '0013007': '단기근로자',
+  '0013008': '영농종사자',
+  '0013009': '기타',
+};
+
+const majorMap = {
+  '0011009': '제한없음',
+  '0011001': '인문계열',
+  '0011002': '사회계열',
+  '0011003': '상경계열',
+  '0011004': '어학계열',
+  '0011005': '공학계열',
+  '0011006': '예체능계열',
+  '0011007': '농산업계열',
+  '0011008': '기타',
+};
+
+const specialMap = {
+  '0014001': '중소기업',
+  '0014002': '여성',
+  '0014003': '기초생활수급자',
+  '0014004': '한부모가정',
+  '0014005': '장애인',
+  '0014006': '농업인',
+  '0014007': '군인',
+  '0014008': '지역인재',
+  '0014009': '기타',
+  '0014010': '제한없음',
+};
+
+// 요약 태그 랜더링용
 const summaryTags = computed(() => {
   const grouped = {};
 
+  // 필터별 선택된 값 정리
   for (const tag of selectedTagsWithCategory.value) {
     if (!grouped[tag.category]) grouped[tag.category] = [];
     grouped[tag.category].push(tag.label);
   }
 
   const summaries = [];
+  const orderedCategories = [
+    'region',
+    'age',
+    'maritalStatus',
+    'income',
+    'education',
+    'employment',
+    'major',
+    'special',
+  ];
 
-  for (const category in grouped) {
+  // 퍼스널 정보 - 나이, 연소득 입력 목
+  if (customAge.value) {
+    grouped['age'] = [`${customAge.value}세`];
+  }
+  if (customIncome.value) {
+    grouped['income'] = [`${customIncome.value}만원`];
+  }
+
+  for (const category of orderedCategories) {
     const list = grouped[category];
-    if (list.length === 1) {
-      summaries.push({ category, label: list[0] });
-    } else if (list.length > 1) {
+    if (!list || list.length === 0) continue;
+
+    // 제한없음 필터 제거
+    const filteredList = list.filter(
+      (label) =>
+        label !== '제한없음' &&
+        label !== '0055003' && // 혼인 제한없음
+        label !== '0049010' && // 학력 제한없음
+        label !== '0013010' && // 취업 제한없음
+        label !== '0011009' && // 전공 제한없음
+        label !== '0014010' // 특화 제한없음
+    );
+    if (filteredList.length === 0) continue;
+
+    // 코드 -> 라벨 매핑
+    const mappedList =
+      category === 'region'
+        ? filteredList.map((zip) => regionNameMap.value?.[zip] || zip)
+        : category === 'maritalStatus'
+        ? filteredList.map((val) => maritalStatusMap[val] || val)
+        : category === 'education'
+        ? filteredList.map((val) => educationMap[val] || val)
+        : category === 'employment'
+        ? filteredList.map((val) => employmentMap[val] || val)
+        : category === 'major'
+        ? filteredList.map((val) => majorMap[val] || val)
+        : category === 'special'
+        ? filteredList.map((val) => specialMap[val] || val)
+        : filteredList;
+
+    if (mappedList.length === 1) {
+      summaries.push({ category, label: mappedList[0] });
+    } else if (mappedList.length > 1) {
       summaries.push({
         category,
-        label: `${list[0]} 외 ${list.length - 1}`,
-        originalLabels: list,
+        label: `${mappedList[0]} 외 ${mappedList.length - 1}`,
+        originalLabels: filteredList,
       });
     }
   }
@@ -290,19 +451,70 @@ const summaryTags = computed(() => {
   return summaries;
 });
 
+// 요약 태그 제거
 const removeTag = (tag) => {
+  if (tag.category === 'age') {
+    customAge.value = '';
+    return;
+  }
+  if (tag.category === 'income') {
+    customIncome.value = '';
+    return;
+  }
+
+  const reverseRegionMap = computed(() =>
+    Object.fromEntries(
+      Object.entries(regionNameMap.value).map(([zip, name]) => [name, zip])
+    )
+  );
+  const reverseMaritalMap = Object.fromEntries(
+    Object.entries(maritalStatusMap).map(([k, v]) => [v, k])
+  );
+  const reverseEducationMap = Object.fromEntries(
+    Object.entries(educationMap).map(([k, v]) => [v, k])
+  );
+  const reverseEmploymentMap = Object.fromEntries(
+    Object.entries(employmentMap).map(([k, v]) => [v, k])
+  );
+  const reverseMajorMap = Object.fromEntries(
+    Object.entries(majorMap).map(([k, v]) => [v, k])
+  );
+  const reverseSpecialMap = Object.fromEntries(
+    Object.entries(specialMap).map(([k, v]) => [v, k])
+  );
+
+  const getValueToRemove = (label) => {
+    if (tag.category === 'region')
+      return reverseRegionMap.value[label] || label;
+    if (tag.category === 'age') return label.replace('대', '');
+    if (tag.category === 'maritalStatus')
+      return reverseMaritalMap[label] || label;
+    if (tag.category === 'education')
+      return reverseEducationMap[label] || label;
+    if (tag.category === 'employment')
+      return reverseEmploymentMap[label] || label;
+    if (tag.category === 'major') return reverseMajorMap[label] || label;
+    if (tag.category === 'special') return reverseSpecialMap[label] || label;
+
+    return label;
+  };
+
   if (tag.originalLabels) {
-    // 여러 개가 묶인 경우 → 모두 제거
     tag.originalLabels.forEach((label) => {
-      const list = filterState.value[tag.category];
-      filterState.value[tag.category] = list.filter((v) => v !== label);
+      const valueToRemove = getValueToRemove(label);
+      filterState.value[tag.category] = filterState.value[tag.category].filter(
+        (v) => v !== valueToRemove
+      );
     });
   } else {
-    const list = filterState.value[tag.category];
-    filterState.value[tag.category] = list.filter((v) => v !== tag.label);
+    const valueToRemove = getValueToRemove(tag.label);
+    filterState.value[tag.category] = filterState.value[tag.category].filter(
+      (v) => v !== valueToRemove
+    );
   }
 };
 
+// filterState 변경 감시 → 세션스토리지 저장
 watch(
   filterState,
   (newVal) => {
@@ -311,25 +523,134 @@ watch(
   { deep: true }
 );
 
+// 지역 필터(region) → 지역 이름 자동 매핑
+watch(
+  () => filterState.value.region,
+  async (zipCodes) => {
+    if (!zipCodes || zipCodes.length === 0) return;
+    const names = await fetchRegionNamesByZipCodes(zipCodes);
+    regionNameMap.value = Object.fromEntries(
+      zipCodes.map((z, i) => [z, names[i]])
+    );
+  },
+  { immediate: true }
+);
+
+// 초기 데이터 fetch 및 퍼스널 필터 자동 적용
 onMounted(async () => {
   const saved = sessionStorage.getItem('filterState');
   if (saved) {
     filterState.value = JSON.parse(saved);
   }
 
-  const userId = 1; // 하드코딩
+  const userId = 1; // 하드코딩 추후 변경
 
-  const [data, scrappedIds] = await Promise.all([
+  const [data, scrappedIds, userProfile] = await Promise.all([
     policyApi.getList(),
     getScrappedPolicyIds(userId),
+    fetchUserProfileById(userId),
   ]);
 
-  // bookmarked 필드 추가
+  // 콘솔: 퍼스널 정보 전체 확인
+  console.log('[userProfile]', userProfile);
+
+  // 지역
+  const regionLabel = RegionEnum?.[userProfile.region]?.label;
+  if (regionLabel) {
+    try {
+      const zipCodes = await fetchZipCodesBySido(regionLabel);
+      filterState.value.region = zipCodes;
+      console.log('[퍼스널 지역 → zipCodes]', zipCodes);
+    } catch (e) {
+      console.error('퍼스널 지역 zipCode 불러오기 실패', e);
+    }
+  }
+
+  // 나이
+  if (userProfile?.age) {
+    customAge.value = userProfile.age;
+  }
+
+  // 혼인 여부
+  const mrgSttsCode = getCodeFromEnum(
+    MaritalStatusEnum,
+    userProfile.marital_status
+  );
+  console.log('[혼인 여부 코드]', mrgSttsCode);
+  if (mrgSttsCode) filterState.value.maritalStatus = [mrgSttsCode];
+
+  // 연소득 자동 적용
+  if (userProfile.annual_income) {
+    customIncome.value = String(userProfile.annual_income);
+    console.log('[연소득 자동 적용]', customIncome.value);
+  }
+
+  // 학력
+  const educationCode = getCodeFromEnum(
+    EducationLevelEnum,
+    userProfile.education_level
+  );
+  console.log('[학력 코드]', educationCode);
+  if (educationCode) filterState.value.education = [educationCode];
+
+  // 취업 상태
+  const employmentCode = getCodeFromEnum(
+    EmploymentStatusEnum,
+    userProfile.employment_status
+  );
+  console.log('[취업 상태 코드]', employmentCode);
+  if (employmentCode) filterState.value.employment = [employmentCode];
+
+  // 전공
+  const majorCode = getCodeFromEnum(MajorEnum, userProfile.major);
+  console.log('[전공 코드]', majorCode);
+  if (majorCode) filterState.value.major = [majorCode];
+
+  // 특화 분야
+  const specialtyCode = getCodeFromEnum(SpecialtyEnum, userProfile.specialty);
+  console.log('[특화 분야 코드]', specialtyCode);
+  if (specialtyCode) filterState.value.special = [specialtyCode];
+
+  // 정책 스크랩 여부 포함해서 저장
   policyList.value = data.map((p) => ({
     ...p,
-    bookmarked: scrappedIds.includes(p.policyId),
+    bookmarked: scrappedIds.includes(p.plcyNo),
   }));
-
-  console.log('정책 목록:', policyList.value);
 });
 </script>
+
+<style scoped>
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 2px 6px;
+  height: 22px;
+  line-height: 20px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+.summary-chip--active {
+  background: #36c18c;
+  border-color: #36c18c;
+  color: #fff;
+}
+.chip-close {
+  font-size: 10px;
+  line-height: 1;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  margin-left: 2px;
+  cursor: pointer;
+}
+.summary-chip:active {
+  transform: scale(0.98);
+}
+</style>

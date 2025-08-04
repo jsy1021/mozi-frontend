@@ -4,9 +4,12 @@ import { useRouter } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { authAPI } from '@/api/auth.js';
+import { useAuthStore } from '@/stores/auth.js';
 
 library.add(faEye, faEyeSlash);
 const router = useRouter();
+const authStore = useAuthStore();
 
 const id = ref('');
 const passwd = ref('');
@@ -17,16 +20,17 @@ const canSubmit = computed(() => id.value.trim() && passwd.value.trim());
 function toggleShow() {
   showPassword.value = !showPassword.value;
 }
+// 기존 하드코딩된 로그인 함수를 API 호출로 변경
+async function login() {
+  const result = await authStore.login({
+    loginId: id.value.trim(),
+    password: passwd.value.trim(),
+  });
 
-// 인증 처리 함수
-function login() {
-  const correctId = 'IEbbuda';
-  const correctPass = 'qwerqwer123';
-
-  if (id.value === correctId && passwd.value === correctPass) {
-    router.push({ name: 'mainPage' });
+  if (result.success) {
+    await router.push({ name: 'mainPage' });
   } else {
-    error.value = '아이디 또는 비밀번호가 틀렸습니다.';
+    error.value = result.message;
   }
 }
 
@@ -55,11 +59,13 @@ function loginWithGoogle() {
             :type="showPassword ? 'text' : 'password'"
             v-model="passwd"
             placeholder="비밀번호"
-            class="passwd-input" />
+            class="passwd-input"
+          />
           <FontAwesomeIcon
             :icon="showPassword ? ['fas', 'eye-slash'] : ['fas', 'eye']"
             class="toggle-icon"
-            @click="toggleShow" />
+            @click="toggleShow"
+          />
         </div>
       </div>
       <div class="find">
@@ -68,7 +74,11 @@ function loginWithGoogle() {
         <router-link to="/find-passwd">비밀번호 찾기</router-link>
       </div>
       <div v-if="error" class="error">{{ error }}</div>
-      <button type="submit" :disabled="!canSubmit" :class="{ 'active-btn': canSubmit, 'inactive-btn': !canSubmit }">
+      <button
+        type="submit"
+        :disabled="!canSubmit"
+        :class="{ 'active-btn': canSubmit, 'inactive-btn': !canSubmit }"
+      >
         로그인
       </button>
       <div class="join">
