@@ -22,6 +22,6 @@ export default defineConfig({
     },
   },
   build: {
-    outDir:
+    outDir: //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
   },
 });
