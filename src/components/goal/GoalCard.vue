@@ -7,11 +7,14 @@
     <div class="card-header">
       <div class="goal-info">
         <h3 class="goal-name">
-          <i v-if="isBillionGoal" class="fas fa-star billion-star"></i>
           {{ goal.name }}
         </h3>
       </div>
       <div class="action-buttons">
+        <!-- 모든 목표에 상태 태그 표시 -->
+        <div class="status-tag" :class="getStatusClass">
+          {{ getStatusText }}
+        </div>
         <button class="edit-btn" @click.stop="goToEdit" aria-label="목표 수정">
           <i class="fas fa-edit"></i>
         </button>
@@ -42,12 +45,6 @@
       }}</span>
       <span class="divider">/</span>
       <span class="target-amount">{{ formatCurrency(goal.targetAmount) }}</span>
-    </div>
-
-    <!-- 1억 모으기 특별 메시지 -->
-    <div v-if="isBillionGoal" class="billion-message">
-      <i class="fas fa-medal"></i>
-      <span>1억 모으기 도전 중!</span>
     </div>
   </div>
 
@@ -101,6 +98,26 @@ const isBillionGoal = computed(() => {
   );
 });
 
+// 목표 달성 여부 확인
+const isGoalAchieved = computed(() => {
+  return (props.goal.progress || 0) >= 100;
+});
+
+// 상태 텍스트
+const getStatusText = computed(() => {
+  return isGoalAchieved.value ? '완료' : '진행중';
+});
+
+// 상태 클래스
+const getStatusClass = computed(() => {
+  if (!isBillionGoal.value) {
+    // 1억 모으기가 아닌 카드는 색상 없는 기본 스타일
+    return isGoalAchieved.value ? 'completed-default' : 'in-progress-default';
+  }
+  // 1억 모으기 카드는 기존 색상 유지
+  return isGoalAchieved.value ? 'completed' : 'in-progress';
+});
+
 // 카드 클릭 핸들러
 const handleCardClick = () => {
   emit('click', props.goal.id);
@@ -147,12 +164,14 @@ const formatCurrency = (amount) => {
 .goal-card {
   background: white;
   border-radius: 12px;
-  padding: 20px;
+  padding: 10px 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid #e9ecef;
   position: relative;
+  width: 100%;
+  min-height: 55px;
 }
 
 .goal-card:hover {
@@ -162,13 +181,13 @@ const formatCurrency = (amount) => {
 
 /* 1억 모으기 특별 스타일 */
 .billion-goal {
-  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
-  border: 2px solid #ffd700;
-  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.2);
+  background: linear-gradient(135deg, #f0fffe 0%, #ffffff 100%);
+  border: 2px solid #4fa2a0;
+  box-shadow: 0 4px 16px rgba(79, 162, 160, 0.2);
 }
 
 .billion-goal:hover {
-  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(79, 162, 160, 0.3);
   transform: translateY(-3px);
 }
 
@@ -179,62 +198,81 @@ const formatCurrency = (amount) => {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+  background: linear-gradient(90deg, #4fa2a0, #9cd5cb, #4fa2a0);
   border-radius: 12px 12px 0 0;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  align-items: flex-start;
+  margin-bottom: 6px;
 }
 
 .goal-info {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
 }
 
 .goal-name {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  line-height: 1.2;
 }
 
-.billion-star {
-  color: #ffd700;
-  animation: sparkle 2s ease-in-out infinite alternate;
+.status-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
 }
 
-@keyframes sparkle {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
+/* 1억 모으기 카드 색상 있는 태그 */
+.status-tag.in-progress {
+  background-color: #428b92;
+  color: #ffffff;
+}
+
+.status-tag.completed {
+  background-color: #4fa2a0;
+  color: #ffffff;
+}
+
+/* 일반 카드 색상 없는 태그 */
+.status-tag.in-progress-default {
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.status-tag.completed-default {
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ddd;
 }
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  align-items: center;
 }
 
 .edit-btn,
 .delete-btn {
   background: none;
   border: none;
-  padding: 8px;
+  padding: 6px;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s ease;
   color: #666;
+  font-size: 14px;
 }
 
 .edit-btn:hover {
@@ -248,14 +286,15 @@ const formatCurrency = (amount) => {
 }
 
 .progress-section {
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .amount-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 0;
 }
 
 .current-amount {
@@ -264,7 +303,7 @@ const formatCurrency = (amount) => {
 }
 
 .billion-goal .current-amount {
-  color: #b8860b;
+  color: #428b92;
 }
 
 .divider {
@@ -275,23 +314,7 @@ const formatCurrency = (amount) => {
   color: #666;
 }
 
-.billion-message {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: linear-gradient(90deg, #ffd700, #ffed4e);
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #b8860b;
-  justify-content: center;
-}
-
-.billion-message .fas {
-  color: #b8860b;
-}
+/* 퍼센트 텍스트 스타일 제거 */
 
 /* 모달 스타일 */
 .modal-overlay {
@@ -378,4 +401,6 @@ const formatCurrency = (amount) => {
 .confirm-btn:hover {
   background-color: #c82333;
 }
+
+/* 카드 높이 제거 - 불필요한 반응형 코드 삭제 */
 </style>

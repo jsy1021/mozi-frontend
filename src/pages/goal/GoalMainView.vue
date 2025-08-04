@@ -52,7 +52,7 @@
           <p>첫 번째 목표를 설정해보세요!</p>
         </div>
 
-        <div v-else class="goals-list">
+        <div v-else class="goals-grid">
           <GoalCard
             v-for="goal in sortedGoals"
             :key="goal.goalId"
@@ -71,7 +71,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGoalStore } from '@/stores/goalStore';
 import GoalCard from '../../components/goal/GoalCard.vue';
-import goalApi from '@/api/goalApi'; // 🔄 추가: goalApi 임포트 (계좌 연결 기능 사용을 위해)
+import goalApi from '@/api/goalApi';
 
 const router = useRouter();
 const goalStore = useGoalStore();
@@ -103,10 +103,9 @@ const sortedGoals = computed(() => {
 // 목표 데이터 로드 - goalStore 사용
 const loadGoals = async () => {
   try {
-    // getGoalsByUserId에서 getGoals로 변경 (userId 파라미터 제거)
     await goalStore.getGoals();
 
-    // 추가: 각 목표별로 현재 달성 금액 조회 (연결된 계좌 잔액 합계)
+    // 각 목표별로 현재 달성 금액 조회 (연결된 계좌 잔액 합계)
     for (const goal of goalStore.goals) {
       try {
         const currentAmount = await goalApi.getCurrentAmountByGoal(goal.goalId);
@@ -126,7 +125,7 @@ const transformGoal = (goal) => {
   return {
     id: goal.goalId,
     name: goal.goalName,
-    currentAmount: goal.currentAmount || 0, // 🔄 수정: 계좌 연결로 가져온 실제 금액 사용
+    currentAmount: goal.currentAmount || 0,
     targetAmount: goal.targetAmount,
     progress:
       goal.currentAmount && goal.targetAmount
@@ -152,7 +151,6 @@ const handleDeleteGoal = async (goalId) => {
   }
 
   try {
-    // deleteGoal에서 userId 파라미터 제거
     await goalStore.deleteGoal(goalId);
     console.log('목표가 성공적으로 삭제되었습니다.');
   } catch (error) {
@@ -226,7 +224,7 @@ window.addEventListener('focus', loadGoals);
 
 .retry-button {
   padding: 10px 20px;
-  background-color: #007bff;
+  background-color: #4fa2a0;
   color: white;
   border: none;
   border-radius: 6px;
@@ -235,17 +233,17 @@ window.addEventListener('focus', loadGoals);
 }
 
 .retry-button:hover {
-  background-color: #0056b3;
+  background-color: #428b92;
 }
 
 .banner-section {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: linear-gradient(135deg, #4fa2a0 0%, #9cd5cb 100%);
   padding: 20px;
   border-radius: 16px;
   margin-bottom: 30px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(79, 162, 160, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -277,7 +275,7 @@ window.addEventListener('focus', loadGoals);
 
 .banner-section:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(79, 162, 160, 0.4);
 }
 
 .banner-content {
@@ -290,7 +288,7 @@ window.addEventListener('focus', loadGoals);
 
 .banner-icon {
   font-size: 24px;
-  color: #b8860b;
+  color: #ffffff;
   animation: sparkle 2s ease-in-out infinite alternate;
 }
 
@@ -301,18 +299,19 @@ window.addEventListener('focus', loadGoals);
 .banner-title {
   font-size: 16px;
   font-weight: 600;
-  color: #b8860b;
+  color: #ffffff;
   margin-bottom: 4px;
 }
 
 .banner-subtitle {
   font-size: 13px;
-  color: #996f00;
+  color: #ffffff;
+  opacity: 0.9;
 }
 
 .banner-arrow {
   font-size: 16px;
-  color: #b8860b;
+  color: #ffffff;
 }
 
 @keyframes sparkle {
@@ -347,10 +346,11 @@ window.addEventListener('focus', loadGoals);
   font-size: 16px;
 }
 
-.goals-list {
+/* 모바일 최적화 - 세로 리스트 형태 */
+.goals-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 @media (max-width: 480px) {
@@ -378,8 +378,8 @@ window.addEventListener('focus', loadGoals);
     font-size: 12px;
   }
 
-  .goals-list {
-    gap: 15px;
+  .goals-grid {
+    gap: 10px;
   }
 }
 </style>
