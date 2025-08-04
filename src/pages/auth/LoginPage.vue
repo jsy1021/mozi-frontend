@@ -116,7 +116,6 @@ function loginWithGoogle() {
         <a href="/join">회원가입</a>
       </div>
 
-      <!-- 소셜 로그인 -->
       <!--소셜 로그인 -->
       <div class="social-login">
         <p class="social-title">또는 소셜 계정으로 로그인</p>
