@@ -1,6 +1,6 @@
 <template>
   <div class="border p-3 rounded mb-3 bg-light">
-    <!-- 상단 체크박스 추가 -->
+    <!-- 퍼스널 정보 체크박스  -->
     <div class="d-flex justify-content-end mb-2 align-items-center">
       <input
         type="checkbox"
@@ -17,6 +17,7 @@
       </label>
     </div>
 
+    <!-- 지역 선택 -->
     <div class="mb-3">
       <label class="fw-bold small d-block mb-1">지역</label>
       <div class="d-flex align-items-center gap-2">
@@ -39,18 +40,23 @@
     <!-- 지역 모달 연결 -->
     <RegionSelectModal
       v-if="showRegionModal"
+      :initial-zip-codes="filterState.region"
       @close="showRegionModal = false"
       @apply="handleRegionApply"
     />
 
-    <!-- 연령 -->
-    <FilterLayout
-      label="연령"
-      :items="ages"
-      category="age"
-      :filterState="filterState"
-      :toggleFilter="toggleFilter"
-    />
+    <!-- 연령  -->
+    <div class="mb-3">
+      <label class="fw-bold small d-block mb-1">연령</label>
+      <input
+        v-model="customAge"
+        type="number"
+        class="form-control form-control-sm"
+        placeholder="예: 25"
+        :step="1"
+        min="0"
+      />
+    </div>
 
     <!-- 혼인 여부 -->
     <FilterLayout
@@ -59,16 +65,22 @@
       category="maritalStatus"
       :filterState="filterState"
       :toggleFilter="toggleFilter"
+      :radioMode="true"
+      :single="true"
     />
 
-    <!-- 연소득 -->
-    <FilterLayout
-      label="연소득"
-      :items="income"
-      category="income"
-      :filterState="filterState"
-      :toggleFilter="toggleFilter"
-    />
+    <!-- 연소득 입력 -->
+    <div class="mb-3">
+      <label class="fw-bold small d-block mb-1">연소득 (만원)</label>
+      <input
+        v-model="customIncome"
+        type="number"
+        class="form-control form-control-sm"
+        placeholder="예: 2400"
+        :step="100"
+        min="0"
+      />
+    </div>
 
     <!-- 학력 -->
     <FilterLayout
@@ -87,6 +99,7 @@
       :filterState="filterState"
       :toggleFilter="toggleFilter"
     />
+
     <FilterLayout
       label="전공 분야"
       :items="major"
@@ -107,62 +120,125 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
+import { ref, computed, watch, defineProps } from 'vue';
 import FilterLayout from './FilterLayout.vue';
-import { ref, computed } from 'vue';
 import RegionSelectModal from './RegionSelectModal.vue';
+import { fetchZipCodes, fetchRegionNamesByZipCodes } from '@/api/regionApi';
+import { mapUserProfileToFilter } from './util/policyMapping';
 
-const usePersonalInfo = ref(true); //체크 상태
+const usePersonalInfo = ref(true); //퍼스널 정보 체크 상태
 
-// props
+// props 정의
 const props = defineProps({
   filterState: Object,
   toggleFilter: Function,
   exactAge: Number,
+  regionNameMap: Object,
+  userProfile: Object,
 });
 
 // 지역 선택 상태
 const showRegionModal = ref(false);
 const selectedRegions = ref([]);
 
-// apply 함수 정의
-const handleRegionApply = ({ zipCodes, regionNames }) => {
-  console.log('받은 지역명:', regionNames);
-  props.filterState.region = zipCodes;
-  selectedRegions.value = regionNames;
+// 연령/연소득 입력
+const customAge = defineModel('customAge');
+const customIncome = defineModel('customIncome');
+
+// 필터 초기화
+const clearFilters = () => {
+  Object.assign(props.filterState, {
+    region: [],
+    education: [],
+    employment: [],
+    major: [],
+    special: [],
+    maritalStatus: [],
+  });
+  customAge.value = null;
+  customIncome.value = null;
 };
 
-// 지역명 요약 텍스트
-const regionSummaryText = computed(() => {
-  const regions = selectedRegions.value;
-  const count = regions.length;
+// 퍼스널 체크 시 필터 자동 적용
+watch(usePersonalInfo, async (enabled) => {
+  if (!enabled) {
+    clearFilters();
+  } else if (props.userProfile) {
+    const { region, age, annual_income } = props.userProfile;
 
-  if (count === 0) return '선택된 지역 없음';
-  if (count === 1) return regions[0];
-  return `${regions[0]} 외 ${count - 1}개`;
+    const zipCodes = await fetchZipCodes([region]);
+    props.filterState.region = zipCodes;
+
+    customAge.value = age || null;
+    customIncome.value = annual_income || null;
+
+    const filterCodes = mapUserProfileToFilter(props.userProfile);
+    props.filterState.education = [filterCodes.schoolCd].filter(Boolean);
+    props.filterState.employment = [filterCodes.jobCd].filter(Boolean);
+    props.filterState.major = [filterCodes.plcyMajorCd].filter(Boolean);
+    props.filterState.special = [filterCodes.sBizCd].filter(Boolean);
+    props.filterState.maritalStatus = [filterCodes.mrgSttsCd].filter(Boolean);
+  }
 });
 
-const ages = [
-  { label: '10대', value: '10s' },
-  { label: '20대', value: '20s' },
-  { label: '30대', value: '30s' },
-  { label: '40대', value: '40s' },
-];
+// userProfile 변경 시에도 적용
+watch(
+  () => props.userProfile,
+  async (profile) => {
+    if (usePersonalInfo.value && profile) {
+      const zipCodes = await fetchZipCodes([profile.region]);
+      props.filterState.region = zipCodes;
 
-// 혼인 여부 코드 매핑
+      customAge.value = profile.age || null;
+      customIncome.value = profile.annual_income || null;
+
+      const filterCodes = mapUserProfileToFilter(profile);
+      props.filterState.education = [filterCodes.schoolCd].filter(Boolean);
+      props.filterState.employment = [filterCodes.jobCd].filter(Boolean);
+      props.filterState.major = [filterCodes.plcyMajorCd].filter(Boolean);
+      props.filterState.special = [filterCodes.sBizCd].filter(Boolean);
+      props.filterState.maritalStatus = [filterCodes.mrgSttsCd].filter(Boolean);
+    }
+  },
+  { immediate: true }
+);
+
+// 지역 필터 → 지역명 표시용 selectedRegions 갱신
+watch(
+  () => props.filterState.region,
+  async (zipCodes) => {
+    if (!zipCodes || zipCodes.length === 0) {
+      selectedRegions.value = [];
+      return;
+    }
+    const regionNames = await fetchRegionNamesByZipCodes(zipCodes);
+    selectedRegions.value = regionNames;
+  },
+  { immediate: true }
+);
+
+// 지역 모달 apply 처리
+const handleRegionApply = async ({ regionNames }) => {
+  const zipCodes = await fetchZipCodes(regionNames);
+  props.filterState.region = zipCodes;
+  selectedRegions.value = regionNames;
+  showRegionModal.value = false;
+};
+
+// 지역 텍스트 요약
+const regionSummaryText = computed(() => {
+  const regions = selectedRegions.value;
+  if (regions.length === 0) return '선택된 지역 없음';
+  if (regions.length === 1) return regions[0];
+  return `${regions[0]} 외 ${regions.length - 1}개`;
+});
+
+// 필터 항목 리스트
+
 const maritalStatus = [
   { label: '제한없음', value: '0055003' },
   { label: '미혼', value: '0055002' },
   { label: '기혼', value: '0055001' },
-];
-
-const income = [
-  '제한없음',
-  '1000만원 이하',
-  '2000만원 이하',
-  '3000이하',
-  '4000이하',
-  '5000이하',
 ];
 const education = [
   { label: '제한없음', value: '0049010' },
