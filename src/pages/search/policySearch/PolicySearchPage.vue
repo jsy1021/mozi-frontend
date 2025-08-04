@@ -554,62 +554,104 @@ onMounted(async () => {
   // 콘솔: 퍼스널 정보 전체 확인
   console.log('[userProfile]', userProfile);
 
-  // 지역
-  const regionLabel = RegionEnum?.[userProfile.region]?.label;
-  if (regionLabel) {
-    try {
-      const zipCodes = await fetchZipCodesBySido(regionLabel);
-      filterState.value.region = zipCodes;
-      console.log('[퍼스널 지역 → zipCodes]', zipCodes);
-    } catch (e) {
-      console.error('퍼스널 지역 zipCode 불러오기 실패', e);
+  if (userProfile) {
+    const regionLabel = RegionEnum?.[userProfile.region]?.label;
+    if (regionLabel) {
+      try {
+        const zipCodes = await fetchZipCodesBySido(regionLabel);
+        filterState.value.region = zipCodes;
+        console.log('[퍼스널 지역 → zipCodes]', zipCodes);
+      } catch (e) {
+        console.error('퍼스널 지역 zipCode 불러오기 실패', e);
+      }
     }
+
+    // 나이
+    if (userProfile.age) {
+      customAge.value = userProfile.age;
+    }
+
+    // 혼인 여부
+    const mrgSttsCode = getCodeFromEnum(
+      MaritalStatusEnum,
+      userProfile.marital_status
+    );
+    if (mrgSttsCode) filterState.value.maritalStatus = [mrgSttsCode];
+
+    // 연소득
+    if (userProfile.annual_income) {
+      customIncome.value = String(userProfile.annual_income);
+    }
+
+    // 학력
+    const educationCode = getCodeFromEnum(
+      EducationLevelEnum,
+      userProfile.education_level
+    );
+    if (educationCode) filterState.value.education = [educationCode];
+
+    // 취업 상태
+    const employmentCode = getCodeFromEnum(
+      EmploymentStatusEnum,
+      userProfile.employment_status
+    );
+    if (employmentCode) filterState.value.employment = [employmentCode];
+
+    // 전공
+    const majorCode = getCodeFromEnum(MajorEnum, userProfile.major);
+    if (majorCode) filterState.value.major = [majorCode];
+
+    // 특화 분야
+    const specialtyCode = getCodeFromEnum(SpecialtyEnum, userProfile.specialty);
+    if (specialtyCode) filterState.value.special = [specialtyCode];
+  } else {
+    console.warn('[경고] userProfile 없음: 퍼스널 정보 자동 필터 생략');
   }
 
-  // 나이
-  if (userProfile?.age) {
-    customAge.value = userProfile.age;
-  }
+  // // 나이
+  // if (userProfile?.age) {
+  //   customAge.value = userProfile.age;
+  // }
 
-  // 혼인 여부
-  const mrgSttsCode = getCodeFromEnum(
-    MaritalStatusEnum,
-    userProfile.marital_status
-  );
-  console.log('[혼인 여부 코드]', mrgSttsCode);
-  if (mrgSttsCode) filterState.value.maritalStatus = [mrgSttsCode];
+  // // 혼인 여부
+  // const mrgSttsCode = getCodeFromEnum(
+  //   MaritalStatusEnum,
+  //   userProfile.marital_status
+  // );
+  // console.log('[혼인 여부 코드]', mrgSttsCode);
+  // if (mrgSttsCode) filterState.value.maritalStatus = [mrgSttsCode];
 
-  // 연소득 자동 적용
-  if (userProfile.annual_income) {
-    customIncome.value = String(userProfile.annual_income);
-    console.log('[연소득 자동 적용]', customIncome.value);
-  }
+  // // 연소득 자동 적용
+  // if (userProfile.annual_income) {
+  //   customIncome.value = String(userProfile.annual_income);
+  //   console.log('[연소득 자동 적용]', customIncome.value);
+  // }
 
-  // 학력
-  const educationCode = getCodeFromEnum(
-    EducationLevelEnum,
-    userProfile.education_level
-  );
-  console.log('[학력 코드]', educationCode);
-  if (educationCode) filterState.value.education = [educationCode];
+  // // 학력
+  // const educationCode = getCodeFromEnum(
+  //   EducationLevelEnum,
+  //   userProfile.education_level
+  // );
+  // console.log('[학력 코드]', educationCode);
+  // if (educationCode) filterState.value.education = [educationCode];
 
-  // 취업 상태
-  const employmentCode = getCodeFromEnum(
-    EmploymentStatusEnum,
-    userProfile.employment_status
-  );
-  console.log('[취업 상태 코드]', employmentCode);
-  if (employmentCode) filterState.value.employment = [employmentCode];
+  // // 취업 상태
+  // const employmentCode = getCodeFromEnum(
+  //   EmploymentStatusEnum,
+  //   userProfile.employment_status
+  // );
+  // console.log('[취업 상태 코드]', employmentCode);
+  // if (employmentCode) filterState.value.employment = [employmentCode];
 
-  // 전공
-  const majorCode = getCodeFromEnum(MajorEnum, userProfile.major);
-  console.log('[전공 코드]', majorCode);
-  if (majorCode) filterState.value.major = [majorCode];
+  // // 전공
+  // const majorCode = getCodeFromEnum(MajorEnum, userProfile.major);
+  // console.log('[전공 코드]', majorCode);
+  // if (majorCode) filterState.value.major = [majorCode];
 
-  // 특화 분야
-  const specialtyCode = getCodeFromEnum(SpecialtyEnum, userProfile.specialty);
-  console.log('[특화 분야 코드]', specialtyCode);
-  if (specialtyCode) filterState.value.special = [specialtyCode];
+  // // 특화 분야
+  // const specialtyCode = getCodeFromEnum(SpecialtyEnum, userProfile.specialty);
+  // console.log('[특화 분야 코드]', specialtyCode);
+  // if (specialtyCode) filterState.value.special = [specialtyCode];
 
   // 정책 스크랩 여부 포함해서 저장
   policyList.value = data.map((p) => ({

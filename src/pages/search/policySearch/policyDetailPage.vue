@@ -22,7 +22,11 @@
 
       <!-- 키워드 -->
       <div class="keywords" v-if="policy.plcyKywdNm">
-        <span v-for="(kw, i) in policy.plcyKywdNm.split(',')" :key="i" class="keyword">
+        <span
+          v-for="(kw, i) in policy.plcyKywdNm.split(',')"
+          :key="i"
+          class="keyword"
+        >
           #{{ kw.trim() }}
         </span>
       </div>
@@ -45,7 +49,9 @@
           </div>
           <div class="info-row">
             <span class="label">신청기간</span>
-            <span>{{ formatPeriod(policy.bizPrdBgngYmd, policy.bizPrdEndYmd) }}</span>
+            <span>{{
+              formatPeriod(policy.bizPrdBgngYmd, policy.bizPrdEndYmd)
+            }}</span>
           </div>
         </div>
       </section>
@@ -56,7 +62,10 @@
         <div class="info-list">
           <div class="info-row">
             <span class="label">연령</span>
-            <span>{{ policy.sprtTrgtMinAge }}세 ~ {{ policy.sprtTrgtMaxAge }}세</span>
+            <span
+              >{{ policy.sprtTrgtMinAge }}세 ~
+              {{ policy.sprtTrgtMaxAge }}세</span
+            >
           </div>
           <div class="info-row">
             <span class="label">거주지역</span>
@@ -66,11 +75,18 @@
             <span class="label">소득조건</span>
             <span>{{ convertLabel(policy.earnCndSeCd, 'income') }}</span>
           </div>
-          <div class="info-row" v-if="policy.earnMinAmt || policy.earnMaxAmt || policy.earnEtcCn">
+          <div
+            class="info-row"
+            v-if="policy.earnMinAmt || policy.earnMaxAmt || policy.earnEtcCn"
+          >
             <span class="label">소득금액</span>
             <span>
-              <span v-if="policy.earnMinAmt">최소 {{ formatCurrency(policy.earnMinAmt) }}</span>
-              <span v-if="policy.earnMaxAmt"> ~ 최대 {{ formatCurrency(policy.earnMaxAmt) }}</span>
+              <span v-if="policy.earnMinAmt"
+                >최소 {{ formatCurrency(policy.earnMinAmt) }}</span
+              >
+              <span v-if="policy.earnMaxAmt">
+                ~ 최대 {{ formatCurrency(policy.earnMaxAmt) }}</span
+              >
               <span v-if="policy.earnEtcCn"> ({{ policy.earnEtcCn }})</span>
             </span>
           </div>
@@ -101,7 +117,11 @@
       <section class="section card">
         <h2>신청 정보</h2>
         <p class="link">
-          <a :href="policy.aplyUrlAddr" target="_blank" rel="noopener noreferrer">
+          <a
+            :href="policy.aplyUrlAddr"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             {{ policy.aplyUrlAddr }}
           </a>
         </p>
