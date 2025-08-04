@@ -99,9 +99,40 @@
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
-import { fetchZipCodes } from '@/api/regionApi';
+import { fetchZipCodes, fetchRegionNamesByZipCodes } from '@/api/regionApi';
 
 const emit = defineEmits(['close', 'apply']);
+
+const props = defineProps({
+  initialZipCodes: {
+    type: Array,
+    default: () => [],
+  },
+});
+
+onMounted(async () => {
+  if (!props.initialZipCodes || props.initialZipCodes.length === 0) return;
+
+  try {
+    // zipCode → 지역명 리스트 변환
+    const regionNames = await fetchRegionNamesByZipCodes(props.initialZipCodes);
+
+    // "서울특별시 강남구" → 시도, 구군 나누기
+    regionNames.forEach((fullName) => {
+      const [sido, gugun] = fullName.split(' ');
+      if (!selectedGugunBySido[sido]) selectedGugunBySido[sido] = [];
+      if (!selectedGugunBySido[sido].includes(gugun)) {
+        selectedGugunBySido[sido].push(gugun);
+      }
+    });
+
+    // 현재 시도 갱신
+    selectedSido.value = Object.keys(selectedGugunBySido)[0] || '서울특별시';
+    selectedGugun.value = selectedGugunBySido[selectedSido.value];
+  } catch (e) {
+    console.error('지역 초기화 실패:', e);
+  }
+});
 
 // 지역 데이터
 const regionMap = {
@@ -446,6 +477,7 @@ const selectedCountBySido = (sido) => {
   return selectedGugunBySido[sido]?.length || 0;
 };
 
+// 지역 전체 이름
 // 지역 전체 이름
 const selectedFullNames = computed(() =>
   Object.entries(selectedGugunBySido).flatMap(([sido, guguns]) =>

@@ -7,14 +7,16 @@ import ProgressBar from '@/components/goal/ProgressBar.vue';
 
 import { useGoalStore } from '@/stores/goalStore';
 import goalApi from '@/api/goalApi';
+import { getAccountsByGoal, getAccountList } from '@/api/accountApi'
 
 const route = useRoute();
 const router = useRouter();         //
 
-
+// route에서 goalId 가져오기
 const goalId = route.params.goalId;
 
-const userId = 1;                   // 실제 로그인 사용자 ID로 교체해야 함
+// const userId = 1;                   // 실제 로그인 사용자 ID로 교체해야 함
+// 백엔드 -> getCurrentUserId() 로 처리
 
 // - pinia store
 const goalStore = useGoalStore()
@@ -41,11 +43,11 @@ const loadGoal = async (id) => {
   const numericId = Number(id)
 
   // 목표 상세 조회
-  await goalStore.getGoal(userId, numericId)
+  await goalStore.getGoal(numericId)
 
   // 예상 달성일 
   const monthlyAmount = 1000000
-  const data = await goalApi.getExpectedDate(userId, numericId, monthlyAmount)
+  const data = await goalApi.getExpectedDate(numericId, monthlyAmount)
 
   console.log('예상 달성일 API 응답:', data)
 
@@ -57,6 +59,13 @@ const loadGoal = async (id) => {
   if(goal.value && goal.value.goalStatus === false){
     showCompletePopup.value = true
   }
+
+  // 계좌 목록
+  await loadAccounts(numericId)
+
+  // 계좌 총합
+  currentAmount.value = await goalApi.getCurrentAmountByGoal(numericId)
+
 }
 
 // - 날짜
@@ -74,16 +83,10 @@ const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
 };
 
-// - 삭제 확정
-/*
-const confirmDelete = () => {
-  // 실제 삭제 로직은 이 안에 구현 (예: emit 이벤트 or API 호출 등)
-  console.log(`Deleting goal with id: ${goal.value?.goal_id}`);
-  showDeleteModal.value = false;
-};*/
+// - 삭제 
 const confirmDelete = async () => {
   if(!goal.value) return
-  await goalStore.deleteGoal(userId, goal.value.goalId)
+  await goalStore.deleteGoal(goal.value.goalId)
   showDeleteModal.value = false
   router.push('/goal')
 }
@@ -94,14 +97,6 @@ const closePopup = () => {
 };
 
 // - 초기 로드와 goalId 변경 감지
-/*
-onMounted(() => loadGoal(props.goalId));
-watch(
-  () => props.goalId,
-  (newId) => {
-    loadGoal(newId);
-  }
-);*/
 onMounted(() => loadGoal(goalId))
 watch(
   () => route.params.goalId,
@@ -110,12 +105,43 @@ watch(
   }
 )
 
+// < 계좌 관련 >
+
+// 연결된 계좌 리스트
+const linkedAccounts = ref([])
+
+// 전체 계좌 리스트
+const allAccounts = ref([])
+
+const loadAccounts = async (goalId) => {
+  // 1. 연결된 계좌 목록
+  const linkedData = await getAccountsByGoal(goalId)
+  linkedAccounts.value = linkedData.accountList || []
+
+  // 2. 전체 계좌 목록
+  const allData = await getAccountList()
+  allAccounts.value = allData || []
+}
+
+// 계좌 연결 해제
+const unlinkAccount = async (accountId) => {
+  await goalApi.unlinkAccountFromGoal(accountId)
+  await loadAccounts(goalId)
+}
+
+// 계좌 연결
+const linkAccount = async (accountId) => {
+  await goalApi.linkAccountsToGoal(goalId, [accountId])
+  await loadAccounts(goalId)
+}
+
+
+// 계좌 총합
+const currentAmount = ref(0);  // 계좌 총합
 
 </script>
 
 <template>
-  <!-- <h1>목표 상세 페이지</h1> -->
-
   <!-- 상단-->
   <div class="top">
     <!-- 뒤로가기 -->
@@ -126,7 +152,7 @@ watch(
     </div>
     <!-- 제목 -->
     <div class="top-title">
-      <h3 style="text-align: center">목표 상세보기</h3>
+      <p>목표 상세보기</p>
     </div>
   </div>
 
@@ -134,10 +160,10 @@ watch(
   <div v-if="goal" class="goal-detail">
     <!-- 목표 정보 영역 -->
     <div class="goal-info">
-      <div class="goal-top">
 
+      <div class="goal-top">
         <div class="mygoal">
-          <h3>나의 목표 : {{ goal.goalName }}</h3>
+          <p class="goalName">나의 목표 : {{ goal.goalName }}</p>
         </div>
 
         <div class="icon">
@@ -147,7 +173,6 @@ watch(
           </router-link>
 
           <!-- 삭제 -->
-          <!-- <i class="fa-solid fa-trash"></i> -->
           <button
             class="delete-btn"
             @click.stop="showDeleteModal = true"
@@ -187,24 +212,36 @@ watch(
       <!-- end goal-top -->
 
       <!-- 진행률 바 -->
-      <ProgressBar
+      <!-- <ProgressBar
         style="width: 270px;"
         :current="goal.current_amount"
         :target="goal.target_amount"
+      /> -->
+      <ProgressBar
+        style="width: 270px;"
+        :current="currentAmount"
+        :target="goal.target_amount"
       />
+
       <!-- 금액 정보 표시 -->
+      <!-- 계좌 총합 , 목표 금액 -->
       <!-- <div class="amount-text">
         <p>
-          <span class="amount-label">현재:</span>
-          <span class="amount-value">{{ goal.current_amount.toLocaleString() }}원</span>
+          <span class="amount-label">연결 계좌 총액:</span>
+          <span class="amount-value">{{ linkedAccountsTotal.toLocaleString() }}원</span>
         </p>
         <p>
-          <span class="amount-label">목표:</span>
+          <span class="amount-label">목표 금액:</span>
           <span class="amount-value">{{ goal.target_amount.toLocaleString() }}원</span>
         </p>
       </div> -->
 
-      <!-- <p>목표 금액: {{ goal.target_amount.toLocaleString() }} 원</p> -->
+      <!-- 계좌 총액 / 목표 금액 형식 -->
+      <p class="account-sum" style="  margin-top: 8px; font-weight: 500; font-size: 14px;">
+        {{ (currentAmount || 0).toLocaleString() }}
+        /
+        {{ goal.target_amount.toLocaleString() }} 원
+      </p>
 
       <!-- 키워드 -->
       <div class="goal-keyword">
@@ -251,7 +288,7 @@ watch(
         </div>
 
         <!-- 선택 계좌 -->
-        <div class="goal-account">
+        <!-- <div class="goal-account">
           <p><span class="label">선택계좌</span></p>
 
           <div style="margin-bottom: 20px">
@@ -267,6 +304,40 @@ watch(
               ****-****-5678<br />
               500,000원
             </div>
+          </div>
+        </div> -->
+        <div class="goal-account">
+          <p><span class="label">선택계좌</span></p>
+
+          <div v-if="linkedAccounts.length > 0" style="margin-bottom: 20px">
+            <div v-for="acc in linkedAccounts" :key="acc.accountId" style="margin-bottom: 10px;">
+              <input 
+                type="checkbox" 
+                checked 
+                @change="unlinkAccount(acc.accountId)"
+              />
+              {{ acc.bankName }}<br />
+              ****-****-{{ acc.accountNumber.slice(-4) }}<br />
+              {{ acc.balance.toLocaleString() }}원
+            </div>
+          </div>
+          <div v-else>
+            <p>연결된 계좌가 없습니다.</p>
+          </div>
+
+          <hr />
+
+          <p style="margin-top: 10px;"><span class="label">연결 가능한 계좌</span></p>
+          <div v-for="acc in allAccounts.filter(a => !linkedAccounts.some(l => l.accountId === a.accountId))" 
+              :key="acc.accountId" 
+              style="margin-bottom: 10px;">
+            <input 
+              type="checkbox" 
+              @change="linkAccount(acc.accountId)"
+            />
+            {{ acc.bankName }}<br />
+            ****-****-{{ acc.accountNumber.slice(-4) }}<br />
+            {{ acc.balance.toLocaleString() }}원
           </div>
         </div>
 
@@ -305,15 +376,23 @@ watch(
 /* 상단 */
 .top{
   display: flex; 
-  text-align: center
+  text-align: center;
+
+  height: 40px;
+  margin-top: 1rem;
 }
 .top-backbtn{
-  margin-top: 20px; 
-  margin-left: 20px
+  margin-left: 23px;
+  margin-top: 2px;
 }
+
 .top-title{
   align-items: center; 
-  margin-left: 110px
+  margin-left: 100px;
+}
+.top-title>p{
+  font-size: 20px;
+  font-weight: 500; 
 }
 
 /* 내용 시작 */
@@ -335,20 +414,24 @@ watch(
 }
 
 .goal-top{
-  display: flex
+  display: flex;
+  height: 30px;
+  margin-top: 10px;
 }
 
 .mygoal{
   align-items: center; 
-  margin-left: 50px
+  margin-left: 50px;
+}
+.goalName{
+  font-size: 16px;
 }
 
 .icon{
-  margin-top: 20px; 
-  margin-left: 30px
+  margin-left: 30px;
 }
 .update{
-  margin-right: 10px
+  margin-right: 10px;
 }
 
 /* 삭제버튼(모달) -> 아래쪽에 */
@@ -382,7 +465,6 @@ watch(
 .goal-keyword > p {
   display: inline-block;
   padding: 7px;
-  /* border: 1px solid gray; */
   background-color: lightgray;
   color: gray;
   border-radius: 5px;

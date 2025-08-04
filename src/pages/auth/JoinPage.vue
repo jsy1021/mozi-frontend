@@ -3,7 +3,17 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faChevronRight, faChevronLeft, faXmark, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { authAPI } from '@/api/auth.js';
+import {
+  faChevronRight,
+  faChevronLeft,
+  faXmark,
+  faEye,
+  faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons';
+import { useAuthStore } from '@/stores/auth.js';
+
+const authStore = useAuthStore();
 
 library.add(faChevronRight, faChevronLeft, faXmark, faEye, faEyeSlash);
 
@@ -41,46 +51,56 @@ const emailMessage = ref('');
 const sentCode = ref(''); // 서버에서 발송한 인증 코드
 const isEmailVerified = ref(false);
 
-//아이디 중복 확인
-function checkUserId() {
-  if (!formData.value.userId.trim()) {
-    idCheckMessage.value = '아이디를 입력해주세요.';
-    isIdAvailable.value = false;
-    return;
-  }
+async function checkUserId() {
+  try {
+    const isAvailable = await authStore.checkUsername(formData.value.userId);
 
-  // 실제 API 요청 예시
-  if (formData.value.userId === 'testuser') {
-    idCheckMessage.value = '이미 사용 중인 아이디입니다.';
+    if (isAvailable) {
+      idCheckMessage.value = '사용 가능한 아이디입니다.';
+      isIdAvailable.value = true;
+    } else {
+      idCheckMessage.value = '이미 사용 중인 아이디입니다.';
+      isIdAvailable.value = false;
+    }
+  } catch (error) {
+    console.error('아이디 중복 확인 중 오류:', error);
+    idCheckMessage.value = '아이디 확인에 실패했습니다. 다시 시도해주세요.';
     isIdAvailable.value = false;
-  } else {
-    idCheckMessage.value = '사용 가능한 아이디입니다.';
-    isIdAvailable.value = true;
   }
 }
 
-//이메일 인증 코드 발송
-function sendVerificationCode() {
-  if (!formData.value.email.includes('@')) {
-    emailMessage.value = '이메일을 입력하세요.';
-    return;
+// 이메일 인증번호 발송
+async function sendVerificationCode() {
+  try {
+    await authAPI.sendSignupEmailCode(formData.value.email);
+    // correctCode.value = '123456'; // 실제로는 서버에서 처리됨
+    sentCode.value = true;
+    emailMessage.value = '인증 코드가 발송되었습니다.';
+  } catch (error) {
+    emailMessage.value = '인증 코드 발송에 실패했습니다.';
   }
-
-  // 실제 API 요청 (예: 이메일로 코드 발송)
-  correctCode.value = '123456'; // 서버에서 받은 코드라고 가정
-  sentCode.value = true;
-  emailMessage.value = '인증 코드가 발송되었습니다.';
 }
 
-//인증 코드 확인
-function verifyCode() {
-  if (formData.value.verificationCode === correctCode.value) {
-    isEmailVerified.value = true;
-    emailMessage.value = '이메일 인증이 완료되었습니다.';
-    isEmailVerified.value = true;
-  } else {
-    emailMessage.value = '인증 코드가 올바르지 않습니다.';
+async function verifyCode() {
+  try {
+    const response = await authAPI.verifySignupEmailCode({
+      email: formData.value.email,
+      verificationCode: formData.value.verificationCode,
+    });
+
+    if (response?.isSuccess || response?.code === 200) {
+      isEmailVerified.value = true;
+      emailMessage.value = '이메일 인증이 완료되었습니다.';
+    } else {
+      isEmailVerified.value = false;
+      emailMessage.value =
+        response?.message || '인증 코드가 올바르지 않습니다.';
+    }
+  } catch (error) {
+    console.error('이메일 인증 실패:', error);
     isEmailVerified.value = false;
+    emailMessage.value =
+      error.response?.data?.message || '인증 코드가 올바르지 않습니다.';
   }
 }
 
@@ -100,10 +120,14 @@ const isCompositionOk = computed(() => {
   return count >= 2;
 });
 
-const isNoTripleNumber = computed(() => !/(\d)\1\1/.test(formData.value.password));
+const isNoTripleNumber = computed(
+  () => !/(\d)\1\1/.test(formData.value.password)
+);
 
 //이메일 형식
-const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email));
+const isEmailValid = computed(() =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email)
+);
 
 //생년월일 형식(YYMMDD, 6자리 숫자)
 const isBirthValid = computed(() => {
@@ -181,7 +205,7 @@ function goJoinPage() {
 }
 
 // 회원가입 버튼 클릭
-function submitJoin() {
+async function submitJoin() {
   if (!formData.value.name.trim()) {
     alert('이름을 입력해주세요.');
     return;
@@ -227,13 +251,24 @@ function submitJoin() {
     return;
   }
 
-  // 입력값 저장 (API 호출)
-  console.log('가입 완료:', formData.value);
+  try {
+    await authAPI.signup({
+      loginId: formData.value.userId,
+      username: formData.value.name,
+      password: formData.value.password,
+      phoneNumber: `${formData.value.phone1}-${formData.value.phone2}-${formData.value.phone3}`,
+      email: formData.value.email,
+      birthDate: formData.value.birth,
+    });
 
-  alert('회원가입이 완료되었습니다!');
-
-  // 로그인 페이지로 이동
-  router.push('/auth/LoginPage');
+    alert('회원가입이 완료되었습니다!');
+    router.push('/auth/LoginPage');
+  } catch (error) {
+    alert(
+      '회원가입에 실패했습니다: ' +
+        (error.response?.data?.message || '알 수 없는 오류')
+    );
+  }
 }
 </script>
 
@@ -256,21 +291,43 @@ function submitJoin() {
 
         <div class="checkbox-wrapper">
           <label class="checkbox">
-            <input type="checkbox" v-model="agreed.service" @change="updateAllState" />
+            <input
+              type="checkbox"
+              v-model="agreed.service"
+              @change="updateAllState"
+            />
             <span>이용약관 동의(필수)</span>
           </label>
-          <font-awesome-icon icon="fa-solid fa-chevron-right" class="arrow" @click.stop="showServiceModal = true" />
+          <font-awesome-icon
+            icon="fa-solid fa-chevron-right"
+            class="arrow"
+            @click.stop="showServiceModal = true"
+          />
         </div>
 
         <div class="checkbox-wrapper">
           <label class="checkbox">
-            <input type="checkbox" v-model="agreed.personal" @change="updateAllState" />
+            <input
+              type="checkbox"
+              v-model="agreed.personal"
+              @change="updateAllState"
+            />
             <span>개인정보 수집 및 이용 동의(필수)</span>
           </label>
-          <font-awesome-icon icon="fa-solid fa-chevron-right" class="arrow" @click.stop="showPersonalModal = true" />
+          <font-awesome-icon
+            icon="fa-solid fa-chevron-right"
+            class="arrow"
+            @click.stop="showPersonalModal = true"
+          />
         </div>
 
-        <button :disabled="!canNext" @click="goJoinPage" :class="{ active: canNext }">다음</button>
+        <button
+          :disabled="!canNext"
+          @click="goJoinPage"
+          :class="{ active: canNext }"
+        >
+          다음
+        </button>
       </div>
     </div>
 
@@ -278,42 +335,64 @@ function submitJoin() {
     <div v-if="showServiceModal" class="modal-overlay">
       <div class="modal">
         <!-- 닫기 버튼 -->
-        <font-awesome-icon icon="fa-solid fa-xmark" class="close-icon" @click="closeServiceModal" />
+        <font-awesome-icon
+          icon="fa-solid fa-xmark"
+          class="close-icon"
+          @click="closeServiceModal"
+        />
         <h2>서비스 이용약관</h2>
         <div class="modal-content">
           <p>
-            제 1 조 (목적) 본 약관은 [회사명](이하 “회사”라 함)이 제공하는 [서비스명](이하 “서비스”라 함)의 이용과
-            관련하여 회사와 회원 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다. 제 2 조
-            (용어의 정의) 1. "서비스"란 회사가 제공하는 온라인 플랫폼 및 이와 관련된 제반 서비스를 의미합니다.
-            2."회원"이란 본 약관에 동의하고 회원가입을 한 자로서, 회사가 제공하는 서비스를 이용할 수 있는 자를 말합니다.
-            3. "아이디(ID)"란 회원의 식별과 서비스 이용을 위하여 회원이 설정하고 회사가 승인한 문자와 숫자의 조합을
-            말합니다. 4. "비밀번호"란 회원의 동일성 확인과 회원의 권익 및 비밀 보호를 위하여 회원이 설정한 문자 및
-            숫자의 조합을 말합니다. 제 3 조 (약관의 효력 및 변경) 1. 본 약관은 서비스 화면에 게시하거나 기타의 방법으로
-            회원에게 공지함으로써 효력이 발생합니다. 2. 회사는 필요한 경우 관련 법령을 위배하지 않는 범위에서 본 약관을
-            변경할 수 있습니다. 3. 변경된 약관은 적용일자 및 개정사유를 명시하여 공지사항으로 게시하며, 회원에게 불리한
-            변경의 경우 7일 이상의 사전 유예기간을 두고 공지합니다. 4. 회원이 변경된 약관에 동의하지 않는 경우 서비스
-            이용을 중단하고 탈퇴할 수 있으며, 변경된 약관의 효력 발생일 이후에도 서비스를 계속 이용하는 경우 변경된
-            약관에 동의한 것으로 간주합니다. 제 4 조 (회원가입 및 계약의 성립) 1. 회원가입은 이용자가 약관에 동의하고
-            회사가 정한 절차에 따라 회원가입 신청을 완료함으로써 성립합니다. 2. 회사는 다음 각 호에 해당하는 경우
-            회원가입 신청을 승낙하지 않을 수 있습니다. (1) 타인의 명의로 신청한 경우 (2) 허위 정보를 기재하거나 필수
-            정보를 누락한 경우 (3) 기타 회사가 정한 기준에 부합하지 않는 경우 제 5 조 (서비스의 제공 및 변경) 1. 회사는
-            회원에게 아래와 같은 서비스를 제공합니다. (1) [서비스 주요 기능 명시] (2) 기타 회사가 정하는 서비스 2.
-            회사는 서비스의 품질 향상을 위하여 서비스의 내용, 운영상 또는 기술상 사항 등을 변경할 수 있습니다. 제6 조
-            (회원의 의무) 1. 회원은 다음 행위를 하여서는 안 됩니다. (1) 타인의 개인정보를 도용하거나 허위 정보를
-            입력하는 행위 (2) 회사 또는 제3자의 지적재산권을 침해하는 행위 (3) 서비스 운영을 방해하거나 시스템에 해를
-            끼치는 행위 2. 회원은 관계 법령, 약관의 규정, 회사의 이용안내 및 주의사항 등 회사가 통지하는 사항을
-            준수하여야 합니다. 제 7 조 (개인정보보호) 회사는 관련 법령이 정하는 바에 따라 회원의 개인정보를 보호하기
-            위해 노력합니다. 회원의 개인정보 보호 및 사용에 대해서는 회사의 개인정보처리방침이 적용됩니다. 제 8
-            조(서비스의 중단) 1. 회사는 다음 각 호에 해당하는 경우 서비스의 제공을 일시적으로 중단할 수 있습니다. (1)
-            시스템 점검, 보수, 교체 등의 경우 (2) 천재지변, 전쟁, 정전 등 불가항력적 사유가 있는 경우 2. 회사는 본 조에
-            따른 서비스 중단으로 발생한 손해에 대하여 책임을 지지 않습니다. 제 9 조 (계약 해지 및 이용제한) 1. 회원은
-            언제든지 서비스 내의 회원탈퇴 절차를 통하여 이용계약을 해지할 수 있습니다. 2. 회사는 회원이 약관을
-            위반하거나 서비스 운영을 방해하는 경우 사전 통지 없이 이용을 제한하거나 계약을 해지할 수 있습니다. 제 10 조
-            (면책조항) 1. 회사는 천재지변, 불가항력적 사유로 인한 서비스 제공 불가에 대해 책임을 지지 않습니다. 2.
-            회사는 회원의 귀책사유로 인한 서비스 이용 장애에 대하여 책임을 지지 않습니다. 제 11 조 (준거법 및 관할법원)
-            본 약관은 대한민국 법률에 따라 해석되며, 서비스 이용과 관련하여 회사와 회원 간에 발생한 분쟁에 대하여는
-            회사의 본사 소재지를 관할하는 법원을 제1심 관할법원으로 합니다. 부칙 1. 본 약관은 2025년 7월 16일부터
-            시행합니다.
+            제 1 조 (목적) 본 약관은 [회사명](이하 “회사”라 함)이 제공하는
+            [서비스명](이하 “서비스”라 함)의 이용과 관련하여 회사와 회원 간의
+            권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
+            제 2 조 (용어의 정의) 1. "서비스"란 회사가 제공하는 온라인 플랫폼 및
+            이와 관련된 제반 서비스를 의미합니다. 2."회원"이란 본 약관에
+            동의하고 회원가입을 한 자로서, 회사가 제공하는 서비스를 이용할 수
+            있는 자를 말합니다. 3. "아이디(ID)"란 회원의 식별과 서비스 이용을
+            위하여 회원이 설정하고 회사가 승인한 문자와 숫자의 조합을 말합니다.
+            4. "비밀번호"란 회원의 동일성 확인과 회원의 권익 및 비밀 보호를
+            위하여 회원이 설정한 문자 및 숫자의 조합을 말합니다. 제 3 조 (약관의
+            효력 및 변경) 1. 본 약관은 서비스 화면에 게시하거나 기타의 방법으로
+            회원에게 공지함으로써 효력이 발생합니다. 2. 회사는 필요한 경우 관련
+            법령을 위배하지 않는 범위에서 본 약관을 변경할 수 있습니다. 3.
+            변경된 약관은 적용일자 및 개정사유를 명시하여 공지사항으로 게시하며,
+            회원에게 불리한 변경의 경우 7일 이상의 사전 유예기간을 두고
+            공지합니다. 4. 회원이 변경된 약관에 동의하지 않는 경우 서비스 이용을
+            중단하고 탈퇴할 수 있으며, 변경된 약관의 효력 발생일 이후에도
+            서비스를 계속 이용하는 경우 변경된 약관에 동의한 것으로 간주합니다.
+            제 4 조 (회원가입 및 계약의 성립) 1. 회원가입은 이용자가 약관에
+            동의하고 회사가 정한 절차에 따라 회원가입 신청을 완료함으로써
+            성립합니다. 2. 회사는 다음 각 호에 해당하는 경우 회원가입 신청을
+            승낙하지 않을 수 있습니다. (1) 타인의 명의로 신청한 경우 (2) 허위
+            정보를 기재하거나 필수 정보를 누락한 경우 (3) 기타 회사가 정한
+            기준에 부합하지 않는 경우 제 5 조 (서비스의 제공 및 변경) 1. 회사는
+            회원에게 아래와 같은 서비스를 제공합니다. (1) [서비스 주요 기능
+            명시] (2) 기타 회사가 정하는 서비스 2. 회사는 서비스의 품질 향상을
+            위하여 서비스의 내용, 운영상 또는 기술상 사항 등을 변경할 수
+            있습니다. 제6 조 (회원의 의무) 1. 회원은 다음 행위를 하여서는 안
+            됩니다. (1) 타인의 개인정보를 도용하거나 허위 정보를 입력하는 행위
+            (2) 회사 또는 제3자의 지적재산권을 침해하는 행위 (3) 서비스 운영을
+            방해하거나 시스템에 해를 끼치는 행위 2. 회원은 관계 법령, 약관의
+            규정, 회사의 이용안내 및 주의사항 등 회사가 통지하는 사항을
+            준수하여야 합니다. 제 7 조 (개인정보보호) 회사는 관련 법령이 정하는
+            바에 따라 회원의 개인정보를 보호하기 위해 노력합니다. 회원의
+            개인정보 보호 및 사용에 대해서는 회사의 개인정보처리방침이
+            적용됩니다. 제 8 조(서비스의 중단) 1. 회사는 다음 각 호에 해당하는
+            경우 서비스의 제공을 일시적으로 중단할 수 있습니다. (1) 시스템 점검,
+            보수, 교체 등의 경우 (2) 천재지변, 전쟁, 정전 등 불가항력적 사유가
+            있는 경우 2. 회사는 본 조에 따른 서비스 중단으로 발생한 손해에
+            대하여 책임을 지지 않습니다. 제 9 조 (계약 해지 및 이용제한) 1.
+            회원은 언제든지 서비스 내의 회원탈퇴 절차를 통하여 이용계약을 해지할
+            수 있습니다. 2. 회사는 회원이 약관을 위반하거나 서비스 운영을
+            방해하는 경우 사전 통지 없이 이용을 제한하거나 계약을 해지할 수
+            있습니다. 제 10 조 (면책조항) 1. 회사는 천재지변, 불가항력적 사유로
+            인한 서비스 제공 불가에 대해 책임을 지지 않습니다. 2. 회사는 회원의
+            귀책사유로 인한 서비스 이용 장애에 대하여 책임을 지지 않습니다. 제
+            11 조 (준거법 및 관할법원) 본 약관은 대한민국 법률에 따라 해석되며,
+            서비스 이용과 관련하여 회사와 회원 간에 발생한 분쟁에 대하여는
+            회사의 본사 소재지를 관할하는 법원을 제1심 관할법원으로 합니다. 부칙
+            1. 본 약관은 2025년 7월 16일부터 시행합니다.
           </p>
         </div>
         <button class="agree-btn" @click="agreeService">동의</button>
@@ -322,18 +401,27 @@ function submitJoin() {
     <!-- 개인정보  -->
     <div v-if="showPersonalModal" class="modal-overlay">
       <div class="modal">
-        <font-awesome-icon icon="fa-solid fa-xmark" class="close-icon" @click="closePersonalModal" />
+        <font-awesome-icon
+          icon="fa-solid fa-xmark"
+          class="close-icon"
+          @click="closePersonalModal"
+        />
 
         <h2>개인정보 수집 및 이용 동의</h2>
         <div class="modal-content">
           <p>
-            [서비스명]은 회원가입 및 서비스 제공을 위해 아래와 같이 개인정보를 수집·이용합니다. ■ 개인정보의 수집 및
-            이용 목적 1. 회원관리: 본인 확인, 회원제 서비스 제공, 불량회원의 부정 이용 방지 2. 서비스 제공: 콘텐츠 제공,
-            맞춤형 서비스 제공 3. 민원 처리: 문의사항 처리, 공지사항 전달 ■ 수집하는 개인정보 항목 1. 필수항목: 이름,
-            아이디, 비밀번호, 이메일 주소, 휴대전화번호 2. 선택항목: 생년월일, 성별, 주소 ■ 개인정보의 보유 및 이용기간
-            - 회원 탈퇴 시 즉시 파기 - 단, 관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관 (예: 전자상거래법에
-            의한 계약·청약철회 기록 5년 등) ■ 동의 거부 권리 및 불이익 회원은 개인정보 수집 및 이용에 대한 동의를 거부할
-            권리가 있습니다. 다만, 필수 항목에 대한 동의를 거부할 경우 서비스 가입 및 이용이 제한될 수 있습니다.
+            [서비스명]은 회원가입 및 서비스 제공을 위해 아래와 같이 개인정보를
+            수집·이용합니다. ■ 개인정보의 수집 및 이용 목적 1. 회원관리: 본인
+            확인, 회원제 서비스 제공, 불량회원의 부정 이용 방지 2. 서비스 제공:
+            콘텐츠 제공, 맞춤형 서비스 제공 3. 민원 처리: 문의사항 처리,
+            공지사항 전달 ■ 수집하는 개인정보 항목 1. 필수항목: 이름, 아이디,
+            비밀번호, 이메일 주소, 휴대전화번호 2. 선택항목: 생년월일, 성별,
+            주소 ■ 개인정보의 보유 및 이용기간 - 회원 탈퇴 시 즉시 파기 - 단,
+            관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관 (예:
+            전자상거래법에 의한 계약·청약철회 기록 5년 등) ■ 동의 거부 권리 및
+            불이익 회원은 개인정보 수집 및 이용에 대한 동의를 거부할 권리가
+            있습니다. 다만, 필수 항목에 대한 동의를 거부할 경우 서비스 가입 및
+            이용이 제한될 수 있습니다.
           </p>
         </div>
         <button class="agree-btn" @click="agreePersonal">동의</button>
@@ -372,11 +460,16 @@ function submitJoin() {
 
       <!-- 비밀번호 -->
       <div class="passwd-wrapper">
-        <input :type="showPassword ? 'text' : 'password'" v-model="formData.password" placeholder="비밀번호" />
+        <input
+          :type="showPassword ? 'text' : 'password'"
+          v-model="formData.password"
+          placeholder="비밀번호"
+        />
         <font-awesome-icon
           :icon="showPassword ? ['fas', 'eye-slash'] : ['fas', 'eye']"
           class="toggle-icon"
-          @click="showPassword = !showPassword" />
+          @click="showPassword = !showPassword"
+        />
       </div>
 
       <!-- 비밀번호 조건-->
@@ -385,10 +478,18 @@ function submitJoin() {
           {{ isLengthOk ? '✔ 10자 이상 입력' : '✖ 10자 이상 입력' }}
         </li>
         <li :class="{ ok: isCompositionOk, fail: !isCompositionOk }">
-          {{ isCompositionOk ? '✔ 영문/숫자/특수문자 중 2개 이상 조합' : '✖ 영문/숫자/특수문자 중 2개 이상 조합' }}
+          {{
+            isCompositionOk
+              ? '✔ 영문/숫자/특수문자 중 2개 이상 조합'
+              : '✖ 영문/숫자/특수문자 중 2개 이상 조합'
+          }}
         </li>
         <li :class="{ ok: isNoTripleNumber, fail: !isNoTripleNumber }">
-          {{ isNoTripleNumber ? '✔ 동일한 숫자 3개 이상 연속 불가' : '✖ 동일한 숫자 3개 이상 연속 불가' }}
+          {{
+            isNoTripleNumber
+              ? '✔ 동일한 숫자 3개 이상 연속 불가'
+              : '✖ 동일한 숫자 3개 이상 연속 불가'
+          }}
         </li>
       </ul>
 
@@ -397,22 +498,32 @@ function submitJoin() {
         <input
           :type="showPasswordConfirm ? 'text' : 'password'"
           v-model="formData.confirmPassword"
-          placeholder="비밀번호 확인" />
+          placeholder="비밀번호 확인"
+        />
         <font-awesome-icon
           :icon="showPasswordConfirm ? ['fas', 'eye-slash'] : ['fas', 'eye']"
           class="toggle-icon"
-          @click="showPasswordConfirm = !showPasswordConfirm" />
+          @click="showPasswordConfirm = !showPasswordConfirm"
+        />
       </div>
 
       <!-- 이메일 -->
       <div class="email-wrapper">
-        <input type="email" v-model="formData.email" placeholder="이메일 주소" />
+        <input
+          type="email"
+          v-model="formData.email"
+          placeholder="이메일 주소"
+        />
         <button type="button" @click="sendVerificationCode">인증</button>
       </div>
 
       <!-- 인증 코드 입력 -->
       <div v-if="sentCode" class="verify-wrapper">
-        <input type="text" v-model="formData.verificationCode" placeholder="인증 코드 입력" />
+        <input
+          type="text"
+          v-model="formData.verificationCode"
+          placeholder="인증 코드 입력"
+        />
         <button type="button" @click="verifyCode">확인</button>
       </div>
       <p class="message" :style="{ color: isEmailVerified ? 'green' : 'red' }">
@@ -420,10 +531,18 @@ function submitJoin() {
       </p>
 
       <!-- 생년월일 -->
-      <input type="text" v-model="formData.birth" placeholder="생년월일(6자리)" />
+      <input
+        type="text"
+        v-model="formData.birth"
+        placeholder="생년월일(6자리)"
+      />
 
       <!-- 회원가입 버튼 -->
-      <button type="button" :class="{ 'active-btn': isFormValid, 'inactive-btn': !isFormValid }" @click="submitJoin">
+      <button
+        type="button"
+        :class="{ 'active-btn': isFormValid, 'inactive-btn': !isFormValid }"
+        @click="submitJoin"
+      >
         회원가입
       </button>
     </form>
