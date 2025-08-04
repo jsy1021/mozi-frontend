@@ -165,14 +165,30 @@ const form = reactive({
 onMounted(async () => {
   try {
     const profile = await profileAPI.getProfile();
-    if (profile) {
+
+    if (profile && profile.result) {
+      // BaseResponse 구조인 경우
+      const data = profile.result;
+      Object.assign(form, {
+        region: data.region || '',
+        age: data.age || null,
+        maritalStatus: data.marital_status || data.maritalStatus || '',
+        annualIncome: data.annual_income || data.annualIncome || null,
+        educationLevel: data.education_level || data.educationLevel || '',
+        employmentStatus: data.employment_status || data.employmentStatus || '',
+        major: data.major || '',
+        specialty: data.specialty || '',
+      });
+    } else if (profile) {
+      // 직접 프로필 객체인 경우
       Object.assign(form, {
         region: profile.region || '',
         age: profile.age || null,
-        maritalStatus: profile.marital_status || '',
-        annualIncome: profile.annual_income || null,
-        educationLevel: profile.education_level || '',
-        employmentStatus: profile.employment_status || '',
+        maritalStatus: profile.marital_status || profile.maritalStatus || '',
+        annualIncome: profile.annual_income || profile.annualIncome || null,
+        educationLevel: profile.education_level || profile.educationLevel || '',
+        employmentStatus:
+          profile.employment_status || profile.employmentStatus || '',
         major: profile.major || '',
         specialty: profile.specialty || '',
       });
@@ -227,7 +243,6 @@ async function onNext() {
 
 async function saveProfile() {
   try {
-    // enum 코드를 그대로 전송
     const profileData = {
       region: form.region,
       age: form.age,
@@ -238,8 +253,6 @@ async function saveProfile() {
       major: form.major,
       specialty: form.specialty,
     };
-
-    console.log('전송할 데이터:', profileData); // 디버깅용
 
     await profileAPI.saveProfile(profileData);
     alert('프로필이 저장되었습니다!');
