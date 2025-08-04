@@ -143,10 +143,12 @@ input[type='number'] {
   margin-right: 0;
 }
 .actions button:first-child {
-  background: #a0c4c1;
+  background: #ffffff;
+  color: #36c18c;
 }
 .actions button:last-child {
-  background: #398f80;
+  background: #36c18c;
+  color: #ffffff;
 }
 .actions button:disabled {
   background: #ccc;
