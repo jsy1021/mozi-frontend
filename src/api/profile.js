@@ -15,7 +15,12 @@ export const profileAPI = {
     return axios
       .post('/api/profile', data, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+        'Content-Type': 'application/json',
       })
-      .then((res) => res.data);
+      .then((res) => res.data)
+      .catch((err) => {
+        console.error('프로필 저장 실패:', err.response?.data || err.message);
+        throw err;
+      });
   },
 };
