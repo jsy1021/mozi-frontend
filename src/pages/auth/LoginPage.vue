@@ -14,6 +14,7 @@ const passwd = ref('');
 const showPassword = ref(false);
 const error = ref(''); // 에러 메시지
 const loading = ref(false);
+const kakaoLoading = ref(false);
 
 const canSubmit = computed(() => id.value.trim() && passwd.value.trim());
 
@@ -57,8 +58,28 @@ async function login() {
   }
 }
 
-function loginWithKakao() {
-  alert('카카오 로그인 시도');
+// 카카오 로그인
+async function loginWithKakao() {
+  try {
+    kakaoLoading.value = true;
+    error.value = '';
+
+    console.log('카카오 로그인 URL 요청 중...');
+
+    // 백엔드에서 카카오 로그인 URL 받기
+    const response = await api.get('/oauth/kakao/login-url');
+    const kakaoAuthUrl = response.result;
+
+    console.log('카카오 로그인 시작');
+
+    // 현재 창에서 카카오 로그인 페이지로 이동
+    // 카카오 인증 완료 후 자동으로 /oauth/callback 으로 돌아옴
+    window.location.href = kakaoAuthUrl;
+  } catch (err) {
+    console.error('카카오 로그인 URL 요청 실패:', err);
+    error.value = '카카오 로그인을 시작할 수 없습니다.';
+    kakaoLoading.value = false;
+  }
 }
 
 function loginWithNaver() {
@@ -119,7 +140,7 @@ function loginWithGoogle() {
         <a href="/join">회원가입</a>
       </div>
 
-      <!-- 소셜 로그인 -->
+      <!--소셜 로그인 -->
       <div class="social-login">
         <p class="social-title">또는 소셜 계정으로 로그인</p>
 
@@ -184,8 +205,7 @@ function loginWithGoogle() {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 45vh;
-  transform: translate(0%, 0%);
+  height: 35vh;
 }
 
 h1 {
