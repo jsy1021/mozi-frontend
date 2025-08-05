@@ -4,32 +4,43 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const form = ref({ name: '', phone: '', email: '' });
+const form = ref({ username: '', loginId: '', password: '', email: '', phoneNumber: '' });
 const loading = ref(false);
 const error = ref('');
 
-// 사용자 정보 불러오기
+// GET /api/mypage/edit → 기존 정보 불러오기
 onMounted(async () => {
   try {
-    const res = await axios.get('/api/me', {
+    const res = await axios.get('/api/mypage/edit', {
       headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
     });
-    form.value = res.data;
+    const data = res.data.result;
+
+    form.value.username = data.username;
+    form.value.loginId = data.loginId;
+    form.value.email = data.email;
+    form.value.phoneNumber = data.phoneNumber;
+    // password는 사용자가 직접 입력
   } catch (err) {
     error.value = '사용자 정보를 불러오는 데 실패했습니다.';
   }
 });
 
-// 저장
+// PUT /api/mypage/edit → 저장
 async function onSave() {
-  if (!form.value.name || !form.value.phone || !form.value.email) {
-    error.value = '모든 항목을 입력해주세요.';
+  const updatePayload = {};
+  if (form.value.password) updatePayload.password = form.value.password;
+  if (form.value.email) updatePayload.email = form.value.email;
+  if (form.value.phoneNumber) updatePayload.phoneNumber = form.value.phoneNumber;
+
+  if (Object.keys(updatePayload).length === 0) {
+    error.value = '변경된 항목이 없습니다.';
     return;
   }
 
   try {
     loading.value = true;
-    await axios.put('/api/me', form.value, {
+    await axios.put('/api/mypage/edit', updatePayload, {
       headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
     });
     alert('정보가 수정되었습니다.');
@@ -46,11 +57,19 @@ async function onSave() {
   <div class="container form-edit">
     <h2>기본 정보 수정</h2>
     <label>이름</label>
-    <input v-model="form.name" placeholder="이름 입력" />
-    <label>전화번호</label>
-    <input v-model="form.phone" placeholder="전화번호 입력" />
+    <input v-model="form.username" readonly />
+
+    <label>아이디</label>
+    <input v-model="form.loginId" readonly />
+
+    <label>새 비밀번호</label>
+    <input v-model="form.password" type="password" placeholder="새 비밀번호 입력" />
+
     <label>이메일</label>
     <input v-model="form.email" placeholder="이메일 입력" />
+
+    <label>전화번호</label>
+    <input v-model="form.phoneNumber" placeholder="전화번호 입력" />
 
     <div v-if="error" class="error-msg">{{ error }}</div>
 

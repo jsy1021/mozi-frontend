@@ -4,7 +4,7 @@
 
     <!-- Step 0: 기본 정보 -->
     <div v-if="currentStep === 0" class="step">
-      <label>관심지역</label>
+      <label>관심지역</label>q
       <select v-model="form.region" class="select-input">
         <option value="">지역을 선택하세요</option>
         <option v-for="option in regionOptions" :key="option.code" :value="option.code">

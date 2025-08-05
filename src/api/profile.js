@@ -1,11 +1,21 @@
-import api from './index.js';
+import axios from 'axios';
 
 export const profileAPI = {
-  // 프로필 조회
-  getProfile: () => api.get('/profile'),
+  // 사용자 프로필 조회
+  getProfile() {
+    return axios
+      .get('/api/profile', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+      })
+      .then((res) => res.data);
+  },
 
-  // 프로필 저장
-  saveProfile: (profileData) => api.post('/profile', profileData),
-  // 프로필 수정
-  updateProfile: (profileData) => api.put('/profile', profileData),
+  // 사용자 프로필 저장
+  saveProfile(data) {
+    return axios
+      .post('/api/profile', data, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+      })
+      .then((res) => res.data);
+  },
 };

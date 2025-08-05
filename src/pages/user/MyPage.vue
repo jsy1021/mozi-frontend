@@ -17,9 +17,9 @@ library.add(faCircleUser, faXmark);
 
 // 사용자 정보
 const userInfo = ref({
-  name: '김케비',
-  phone: '010-0000-0000',
-  email: 'IEQnek@naver.com',
+  name: '',
+  phone: '',
+  email: '',
 });
 
 // 모달 상태
@@ -48,7 +48,7 @@ async function verifyPassword() {
 
   try {
     const res = await axios.post(
-      '/api/verify-password',
+      '/api/mypage/confirm-password',
       { password: passwordInput.value },
       {
         headers: {
@@ -56,13 +56,13 @@ async function verifyPassword() {
         },
       }
     );
-    if (res.data.success) {
+    if (res.data.isSuccess) {
       router.push({ name: 'EditInfo' });
     } else {
-      passwordError.value = '비밀번호가 일치하지 않습니다.';
+      passwordError.value = res.data.message || '비밀번호가 일치하지 않습니다.';
     }
   } catch (e) {
-    passwordError.value = '비밀번호가 확인 중 오류가 발생했습니다.';
+    passwordError.value = '비밀번호 확인 중 오류가 발생했습니다.';
   }
 }
 
@@ -71,23 +71,34 @@ const savePersonalInfo = () => {
   router.push('/personal');
 };
 
-// 마운트 시 localStorage 불러오기
-onMounted(() => {
-  const saved = localStorage.getItem('personalForm');
-  if (saved) personalForm.value = JSON.parse(saved);
-});
+// 마이페이지 api 호출
+onMounted(async () => {
+  try {
+    const res = await axios.get('/api/mypage', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+    });
 
-// 쿼리 파라미터 갱신 감지
-watch(
-  () => route.query.updated,
-  (val) => {
-    if (val === 'true') {
-      const saved = localStorage.getItem('personalForm');
-      if (saved) personalForm.value = JSON.parse(saved);
-      router.replace({ query: {} });
+    if (res.data.isSuccess) {
+      const result = res.data.result;
+
+      userInfo.value = {
+        name: result.username,
+        phone: result.phone_number,
+        email: result.email,
+      };
+
+      personalForm.value = result.has_personal_info ? result.personal_info : null;
+
+      console.log('📦 personalForm:', personalForm.value);
+    } else {
+      console.error('마이페이지 조회 실패:', res.data.message);
     }
+  } catch (e) {
+    console.error('마이페이지 요청 오류:', e);
   }
-);
+});
 </script>
 
 <template>
@@ -144,12 +155,28 @@ watch(
           <h3>퍼스널 정보</h3>
           <div class="grid">
             <div class="item">
+              <span class="label">관심지역</span>
+              <span class="value">{{ personalForm.region }}</span>
+            </div>
+            <div class="item">
+              <span class="label">연령</span>
+              <span class="value">{{ personalForm.age }}</span>
+            </div>
+            <div class="item">
+              <span class="label">혼인여부</span>
+              <span class="value">{{ personalForm.marital_status }}</span>
+            </div>
+            <div class="item">
+              <span class="label">연소득</span>
+              <span class="value">{{ personalForm.annual_income }} 만원</span>
+            </div>
+            <div class="item">
               <span class="label">학력</span>
-              <span class="value">{{ personalForm.education }}</span>
+              <span class="value">{{ personalForm.education_level }}</span>
             </div>
             <div class="item">
               <span class="label">취업상태</span>
-              <span class="value">{{ personalForm.employment }}</span>
+              <span class="value">{{ personalForm.employment_status }}</span>
             </div>
             <div class="item">
               <span class="label">전공</span>
