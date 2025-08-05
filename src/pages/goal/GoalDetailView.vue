@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import RecommendSection from '@/components/goal/RecommendSection.vue';
 import GoalCompletePopup from '@/components/goal/GoalCompletePopup.vue';
@@ -177,6 +177,11 @@ function formatDate(dateStr) {
 const isExpanded = ref(false);
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
+  
+  // nextTick(() => {
+  //   // 강제 리플로우: scrollTop 읽기 같은 방법으로
+  //   document.body.scrollTop = document.body.scrollTop;
+  // });
 };
 
 // 삭제
@@ -248,12 +253,22 @@ function keywordToKorean(keyword) {
 
 // 초기 로드와 goalId 변경 감지
 onMounted(() => loadGoal(goalId));
+
 watch(
   () => route.params.goalId,
   (newId) => {
     loadGoal(newId);
   }
 );
+
+// watch(() => showDeleteModal, (val) => {
+//   if (val) {
+//     document.body.style.overflow = 'hidden';
+//   } else {
+//     document.body.style.overflow = '';
+//   }
+// });
+
 </script>
 
 <template>
@@ -374,7 +389,7 @@ watch(
       </div>
 
       <!-- 토글 아래 부분 -->
-      <div class="toggle-down" v-if="isExpanded">
+      <div class="toggle-down" v-show="isExpanded">
         <!-- 날짜 -->
         <div class="goal-date">
           <div class="goal-date-target">
@@ -464,17 +479,41 @@ watch(
     <!-- 목표 달성 여부에 따라 다른 추천 영역 -->
     <!-- 달성o : 자산관리 사이트 -->
     <div v-if="goalAchieved" class="asset-management">
-      <p style="font-size: 16px; font-weight: 500;">목표 달성! 자산 성장 모드 ON</p>
+    <div class="asset-header">
+      <p class="asset-title">🎉 목표 달성!</p>
+      <p class="asset-subtitle">자산 성장 모드 ON</p>
+      <p class="asset-description">KB 자산관리센터</p>
+    </div>
+    
+    <div class="asset-url-box">
       <div class="asset-manage-url">
-        <p><a href="#">사이트1</a></p>
+        <div class="asset-icon">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <p class="asset-link">
+          <a href="https://omoney.kbstar.com/quics?page=C056123" target="_blank">KBot SAM<br/>케이봇쌤</a>
+        </p>
       </div>
+      
       <div class="asset-manage-url">
-        <p><a href="#">사이트2</a></p>
+        <div class="asset-icon">
+          <i class="fa-solid fa-piggy-bank"></i>
+        </div>
+        <p class="asset-link">
+          <a href="https://omoney.kbstar.com/quics?page=C055442" target="_blank">연금관리</a>
+        </p>
       </div>
+      
       <div class="asset-manage-url">
-        <p><a href="#">사이트3</a></p>
+        <div class="asset-icon">
+          <i class="fa-solid fa-hand-holding-dollar"></i>
+        </div>
+        <p class="asset-link">
+          <a href="https://omoney.kbstar.com/quics?page=C065350" target="_blank">KB종합<br/>자산관리</a>
+        </p>
       </div>
     </div>
+  </div>
     <!-- 달성x : 맞춤형 추천 영역-->
     <div v-else>
       <RecommendSection />
@@ -585,7 +624,7 @@ watch(
   box-shadow: 0 4px 16px rgba(47, 155, 120, 0.2);
 }
 
-.goal-complete::before{
+/* .goal-complete::before{
     content: '';
   position: absolute;
   top: 0;
@@ -594,7 +633,7 @@ watch(
   height: 4px;
   background: linear-gradient(90deg, #2f9b78, #d2f5e9, #2f9b78);
   border-radius: 12px 12px 0 0;
-}
+} */
 
 .goal-complete > p {
   font-weight: 500;
@@ -618,7 +657,8 @@ watch(
   padding: 5px;
 }
 
-.asset-management {
+/* 목표 달성 후 -> 자산관리 */
+/* .asset-management {
   margin: 20px;
   border: 1px solid #d9d9d9;
   border-radius: 5px;
@@ -630,8 +670,212 @@ watch(
   align-items: center;
 }
 
+.asset-url-box{
+  display: flex;
+}
+
 .asset-manage-url{
-  width: 30%;
+  width: 50px;
+  border: 1px solid gray;
+  border-radius: 5px;
+  height: 80px;
+}
+
+.asset-manage-url>p>a{
+  text-decoration: none;
+  font-size: 12px;
+} */
+
+/* 목표 달성 후 자산관리 섹션 개선 */
+.asset-management {
+  margin: 20px;
+  border-radius: 16px;
+  text-align: center;
+  
+  /* 목표 완료 섹션과 동일한 그라디언트 적용 */
+  background: linear-gradient(135deg, #d2f5e9 0%, #ffffff 100%);
+  border: 2px solid #7bc4a4;
+  box-shadow: 0 6px 20px rgba(47, 155, 120, 0.15);
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 상단 빛나는 효과 */
+.asset-management::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2f9b78, #d2f5e9, #2f9b78);
+  border-radius: 14px 14px 0 0;
+}
+
+.asset-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.asset-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2f9b78;
+  margin: 0 0 8px 0;
+  text-shadow: 0 1px 2px rgba(47, 155, 120, 0.1);
+}
+
+.asset-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.asset-description {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* .asset-url-box {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+} */
+.asset-url-box {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  flex-direction: row !important;
+  gap: 16px; /* 기존 간격 유지 */
+  justify-content: center; /* 중앙 정렬 유지 */
+  flex-wrap: nowrap; /* 꼭 명시 */
+}
+
+
+
+.asset-manage-url {
+  width: 90px;
+  height: 100px;
+  border: 2px solid #e8f5f0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  box-shadow: 0 4px 12px rgba(47, 155, 120, 0.08);
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.asset-manage-url:hover {
+  transform: translateY(-4px);
+  border-color: #7bc4a4;
+  box-shadow: 0 8px 24px rgba(47, 155, 120, 0.15);
+  background: linear-gradient(135deg, #f8fffe 0%, #ffffff 100%);
+}
+
+.asset-manage-url:active {
+  transform: translateY(-2px);
+}
+
+.asset-icon {
+  margin-bottom: 8px;
+  color: #2f9b78;
+  font-size: 24px;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d2f5e9 0%, #e8f5f0 100%);
+  
+  transition: all 0.3s ease;
+}
+
+.asset-manage-url:hover .asset-icon {
+  color: #237a5f;
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #7bc4a4 0%, #2f9b78 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(47, 155, 120, 0.3);
+}
+
+.asset-link {
+  margin: 0;
+  line-height: 1.3;
+}
+
+.asset-link a {
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.2;
+  
+  transition: color 0.3s ease;
+}
+
+.asset-manage-url:hover .asset-link a {
+  color: #2f9b78;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .asset-url-box {
+    gap: 12px;
+  }
+  
+  .asset-manage-url {
+    width: 80px;
+    height: 90px;
+    padding: 10px 6px;
+  }
+  
+  .asset-icon {
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .asset-link a {
+    font-size: 10px;
+  }
+}
+
+/* 추가적인 애니메이션 효과 */
+@keyframes gentle-glow {
+  0%, 100% { 
+    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.15); 
+  }
+  50% { 
+    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.25); 
+  }
+}
+
+.asset-management {
+  animation: gentle-glow 4s ease-in-out infinite;
+}
+
+/* 호버 시 전체 섹션 효과 */
+.asset-management:hover {
+  border-color: #2f9b78;
+  background: linear-gradient(135deg, #e8f5f0 0%, #ffffff 100%);
 }
 
 /* 토글 */
