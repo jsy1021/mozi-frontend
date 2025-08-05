@@ -15,7 +15,7 @@
       </div>
   
       <!-- 추천 탭 -->
-      <ul class="nav nav-tabs mb-3">
+      <ul class="nav nav-tabs mb-3 full-width-tabs">
         <li class="nav-item" v-for="tab in tabs" :key="tab">
           <a
             href="#"
@@ -29,32 +29,10 @@
       </ul>
   
       <!-- 금융 상품 추천 -->
-      <div v-if="currentTab === '금융상품'">
-        <div v-if="financialRecommendations.length">
-          <div v-for="(item, index) in financialRecommendations" :key="index" class="card mb-2 p-2 shadow-sm">
-            <div class="d-flex align-items-center">
-              <img
-                :src="item.logoUrl"
-                alt="bank logo"
-                width="40"
-                height="40"
-                class="me-2"
-              />
-              <div>
-                <h6 class="mb-0">{{ item.productName }}</h6>
-                <small class="text-muted">{{ item.bankName }}</small>
-              </div>
-              <span class="ms-auto fw-bold text-success">
-                {{ item.rate }}%
-              </span>
-            </div>
-          </div>
-        </div>
-        <div v-else class="text-center text-muted py-4">
-          추천할 금융 상품이 없습니다.
-        </div>
-      </div>
-  
+    <FinancialRecommendTab
+      v-if="currentTab === '금융상품'"
+      :financial-recommendations="financialRecommendations"
+    />
       <!-- 청년 정책 추천 -->
       <div v-if="currentTab === '청년정책'">
         <div v-if="policyRecommendations.length">
@@ -72,6 +50,7 @@
   
   <script setup>
   import { ref } from 'vue';
+  import FinancialRecommendTab from '@/pages/recommend/FinancialRecommendTab.vue';
   
   const userName = '홍길동'; // 추후 로그인 사용자 이름과 연동
   
@@ -112,4 +91,16 @@
     border: none;
     border-radius: 12px;
   }
+  .full-width-tabs {
+  display: flex;
+}
+
+.full-width-tabs .nav-item {
+  flex: 1; /* 2개 탭을 동일하게 분할 */
+  text-align: center;
+}
+
+.full-width-tabs .nav-link {
+  width: 100%;
+}
   </style>
