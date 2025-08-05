@@ -454,8 +454,16 @@ watch(
     <!-- 목표 달성 여부에 따라 다른 추천 영역 -->
     <!-- 달성o : 자산관리 사이트 -->
     <div v-if="goalAchieved" class="asset-management">
-      <h3>목표 달성! 자산 성장 모드 ON</h3>
-      <p><a href="#">자산관리 사이트</a></p>
+      <p style="font-size: 16px; font-weight: 500;">목표 달성! 자산 성장 모드 ON</p>
+      <div class="asset-manage-url">
+        <p><a href="#">사이트1</a></p>
+      </div>
+      <div class="asset-manage-url">
+        <p><a href="#">사이트2</a></p>
+      </div>
+      <div class="asset-manage-url">
+        <p><a href="#">사이트3</a></p>
+      </div>
     </div>
     <!-- 달성x : 맞춤형 추천 영역-->
     <div v-else>
@@ -559,9 +567,25 @@ watch(
 .goal-complete {
   border-radius: 5px;
   padding: 10px 63px;
-  background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+  /* background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700); */
   margin-bottom: 10px;
+
+  background: linear-gradient(135deg, #d2f5e9 0%, #ffffff 100%);
+  border: 2px solid #7bc4a4;
+  box-shadow: 0 4px 16px rgba(47, 155, 120, 0.2);
 }
+
+.goal-complete::before{
+    content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2f9b78, #d2f5e9, #2f9b78);
+  border-radius: 12px 12px 0 0;
+}
+
 .goal-complete > p {
   font-weight: 500;
 }
@@ -590,9 +614,14 @@ watch(
   border-radius: 5px;
   text-align: center;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.asset-manage-url{
+  width: 30%;
 }
 
 /* 토글 */
