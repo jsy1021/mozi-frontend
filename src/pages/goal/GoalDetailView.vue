@@ -9,6 +9,19 @@ import { useGoalStore } from '@/stores/goalStore';
 import goalApi from '@/api/goalApi';
 import { getAccountsByGoal, getAccountList } from '@/api/accountApi';
 
+import { getBankSummary } from '@/api/accountApi';
+import { useBankStore } from '@/stores/bank';
+
+const bankStore = useBankStore();
+const banks = bankStore.banks;
+
+// 은행 로고 이미지
+const getBankLogoUrl = (bankCode) => {
+  const bank = banks.find((b) => b.code === bankCode);
+  return bank?.logo || '/images/financial/default.png';
+};
+
+//
 const route = useRoute();
 const router = useRouter();
 
@@ -172,6 +185,31 @@ const safeToLocaleString = (value) => {
   return isNaN(num) ? '0' : num.toLocaleString();
 };
 
+// 계좌 번호 *표시
+const maskAccountNumber = (accountNumber) => {
+  if (!accountNumber) return '';
+  const front = accountNumber.slice(0, 4);
+  const back = accountNumber.slice(-4);
+  const middleLength = accountNumber.length - 8;
+  const middle = '*'.repeat(Math.max(0, middleLength));
+  return `${front}${middle}${back}`;
+};
+
+// 키워드
+const keywords = [
+  { key: 'MARRIAGE', label: '결혼' },
+  { key: 'EMPLOYMENT', label: '취업' },
+  { key: 'HOME_PURCHASE', label: '내집마련' },
+  { key: 'TRAVEL', label: '여행' },
+  { key: 'EDUCATION_FUND', label: '학자금' },
+  { key: 'HOBBY', label: '취미' },
+];
+
+function keywordToKorean(keyword) {
+  const match = keywords.find(k => k.key === keyword);
+  return match ? match.label : keyword;
+}
+
 // 초기 로드와 goalId 변경 감지
 onMounted(() => loadGoal(goalId));
 watch(
@@ -277,7 +315,8 @@ watch(
 
       <!-- 키워드 -->
       <div class="goal-keyword">
-        <p>#{{ goal.keyword || '키워드 없음' }}</p>
+        <!-- <p>#{{ goal.keyword || '키워드 없음' }}</p> -->
+        <p>#{{ keywordToKorean(goal.keyword) || '키워드 없음'}}</p>
       </div>
 
       <!-- 목표 달성 여부에 따라 다른 안내 메시지 -->
@@ -320,31 +359,40 @@ watch(
           <p>{{ goal.memo || '메모가 없습니다.' }}</p>
         </div>
 
-        <!-- 선택 계좌 -->
+        <!-- 포함된 계좌 -->
         <div class="goal-account">
-          <p><span class="label">선택계좌</span></p>
+          <p><span class="label">포함된 계좌</span></p>
 
           <div v-if="linkedAccounts.length > 0" style="margin-bottom: 20px">
             <div
               v-for="acc in linkedAccounts"
               :key="acc.accountId"
-              style="margin-bottom: 10px"
+              style="margin-bottom: 10px; display: flex; justify-content: space-between;"
             >
-              <input
-                type="checkbox"
+              <!-- <input
+                type="text"
                 checked
                 @change="unlinkAccount(acc.accountId)"
-              />
-              {{ acc.bankName || '은행명 없음' }}<br />
-              ****-****-{{ (acc.accountNumber || '').slice(-4) }}<br />
-              {{ safeToLocaleString(acc.balance) }}원
+              /> -->
+              <div>
+                <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo"/>
+              </div>
+              <div style="padding-right: 0; padding-left: 0;">
+                <!-- {{ acc.bankName || acc.bankCode }}&nbsp; -->
+                <span class="account-name">{{ acc.accountName }}</span><br/>
+                <!-- {{ (acc.accountNumber || '').slice(0, 4) }}-****-{{ (acc.accountNumber || '').slice(-4) }}<br /> -->
+                <span class="account-number">{{ maskAccountNumber(acc.accountNumber) }}</span>
+              </div>
+              <div style="margin-top: 15px;">
+                <span class="account-balance">{{ safeToLocaleString(acc.balance) }}원</span>
+              </div>
             </div>
           </div>
           <div v-else>
             <p>연결된 계좌가 없습니다.</p>
           </div>
 
-          <hr />
+          <!-- <hr />
 
           <p style="margin-top: 10px">
             <span class="label">연결 가능한 계좌</span>
@@ -365,7 +413,7 @@ watch(
           </div>
           <div v-else>
             <p>연결 가능한 계좌가 없습니다.</p>
-          </div>
+          </div> -->
         </div>
 
         <!-- 토글 버튼 (접기)-->
@@ -493,17 +541,18 @@ watch(
 }
 
 .goal-guide {
-  border: 1px solid #d9d9d9;
+  /* border: 1px solid #d9d9d9; */
+  border: 2px solid #36C18C;
   border-radius: 5px;
   width: 310px;
-  background-color: rgba(100, 186, 170, 0.5);
+  /* background-color: rgba(100, 186, 170, 0.5); */
   margin-bottom: 10px;
 }
 .guide {
-  color: white;
+  color: #8E8E93;
 }
 .comment {
-  color: #3f3f3f;
+  color: #1A1A1A;
   font-weight: 500;
   padding: 5px;
 }
@@ -530,6 +579,11 @@ watch(
 }
 
 /* 토글 아래 내용 */
+.label {
+  color: #8E8E93;
+  margin-top: 5px;
+}
+
 .goal-date-target,
 .goal-date-expect,
 .goal-memo,
@@ -560,11 +614,29 @@ watch(
   width: 310px;
   margin-bottom: 20px;
   margin-left: 6px;
+  margin-top: 5px;
 }
 
-.label {
-  color: #bebebe;
+/* 은행 로고 이미지 */
+.bank-logo{
+  width: 36px;  
+  height: 36px;  
+  object-fit: contain;  
+  margin-right: 12px;
 }
+
+.account-name{
+  font-size: 16px;
+  font-weight: 400;
+}
+.account-number{
+  font-size: 12px;
+}
+.account-balance{
+  font-size: 14px;
+  color: #569FFF;
+}
+
 
 /* 모달 스타일 (삭제 버튼)*/
 .delete-btn {

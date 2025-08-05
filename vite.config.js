@@ -25,5 +25,6 @@ export default defineConfig({
     //'/Users/soohyun/Documents/mozi/src/main/webapp/resources',
     outDir: //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
     //'C:/KB_Fullstack/10_finalProject/mozi-backend/src/main/webapp/resources',
+    'C:/KB-PJT/goal/mozi-backend/src/main/webapp/resources',
   },
 });
