@@ -98,17 +98,17 @@ const loadGoal = async (id) => {
     //   return;
     // }
 
-    // // 예상 달성일 (에러가 발생해도 계속 진행)
-    // try {
-    //   const monthlyAmount = 1000000;
-    //   const data = await goalApi.getExpectedDate(numericId, monthlyAmount);
-    //   console.log('예상 달성일 API 응답:', data);
-    //   expectedDate.value =
-    //     typeof data === 'string' ? data : data?.expectedDate || null;
-    // } catch (error) {
-    //   console.error('예상 달성일 조회 실패:', error);
-    //   expectedDate.value = null;
-    // }
+    // 예상 달성일 (에러가 발생해도 계속 진행)
+    try {
+      const monthlyAmount = 1000000;
+      const data = await goalApi.getExpectedDate(numericId, monthlyAmount);
+      console.log('예상 달성일 API 응답:', data);
+      expectedDate.value =
+        typeof data === 'string' ? data : data?.expectedDate || null;
+    } catch (error) {
+      console.error('예상 달성일 조회 실패:', error);
+      expectedDate.value = null;
+    }
 
     // 계좌 목록 (에러가 발생해도 계속 진행)
     await loadAccounts(numericId);
