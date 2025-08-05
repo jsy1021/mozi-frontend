@@ -90,35 +90,29 @@ const loadGoal = async (id) => {
     loading.value = true;
     const numericId = Number(id);
 
-    // 목표 상세 조회
     await goalStore.getGoal(numericId);
+    if (!goal.value) return;
 
-    if (!goal.value) {
-      console.error('목표 데이터가 없습니다');
-      return;
-    }
+    // if (!goal.value) {
+    //   console.error('목표 데이터가 없습니다');
+    //   return;
+    // }
 
-    // 예상 달성일 (에러가 발생해도 계속 진행)
-    try {
-      const monthlyAmount = 1000000;
-      const data = await goalApi.getExpectedDate(numericId, monthlyAmount);
-      console.log('예상 달성일 API 응답:', data);
-      expectedDate.value =
-        typeof data === 'string' ? data : data?.expectedDate || null;
-    } catch (error) {
-      console.error('예상 달성일 조회 실패:', error);
-      expectedDate.value = null;
-    }
-
-    // 목표 달성 상태 확인
-    // if (goal.value && goal.value.goalStatus === false) {
-    //   showCompletePopup.value = true;
+    // // 예상 달성일 (에러가 발생해도 계속 진행)
+    // try {
+    //   const monthlyAmount = 1000000;
+    //   const data = await goalApi.getExpectedDate(numericId, monthlyAmount);
+    //   console.log('예상 달성일 API 응답:', data);
+    //   expectedDate.value =
+    //     typeof data === 'string' ? data : data?.expectedDate || null;
+    // } catch (error) {
+    //   console.error('예상 달성일 조회 실패:', error);
+    //   expectedDate.value = null;
     // }
 
     // 계좌 목록 (에러가 발생해도 계속 진행)
     await loadAccounts(numericId);
 
-    // 계좌 총합 (에러가 발생하면 0으로 설정)
     try {
       currentAmount.value = await goalApi.getCurrentAmountByGoal(numericId);
     } catch (error) {
@@ -126,24 +120,40 @@ const loadGoal = async (id) => {
       currentAmount.value = 0;
     }
 
-    // *** 수정된 부분: 실제 목표 달성 여부 확인 ***
-    // 현재 금액이 목표 금액 이상이면 목표 달성으로 판단
     const targetAmount =
       goal.value.targetAmount || goal.value.target_amount || 0;
-    const isGoalAchieved =
+    const currentGoalStatus = goal.value.goalStatus;
+    const shouldBeCompleted =
       currentAmount.value >= targetAmount && targetAmount > 0;
 
-    // 목표 달성 상태 확인 및 팝업 표시
-    if (isGoalAchieved) {
-      // 이미 한 번 팝업을 본 경우를 방지하기 위해 localStorage 체크 (선택사항)
-      const popupShownKey = `goal_popup_shown_${numericId}`;
-      const hasShownPopup = localStorage.getItem(popupShownKey);
+    // Case 1: 목표 달성했는데 아직 미완료 상태 → 완료로 변경
+    if (shouldBeCompleted && currentGoalStatus === true) {
+      try {
+        console.log('🎯 목표 달성! false로 변경');
+        await goalStore.updateGoalStatus(numericId, false);
+        goal.value.goalStatus = false;
 
-      if (!hasShownPopup) {
+        // 매번 팝업 표시 (localStorage 체크 제거)
         showCompletePopup.value = true;
-        // 팝업을 보여준 후 표시했다는 플래그 저장
-        localStorage.setItem(popupShownKey, 'true');
+      } catch (error) {
+        console.error('목표 상태 업데이트 실패:', error);
       }
+    }
+
+    // Case 2: 목표 미달성인데 완료 상태 → 미완료로 변경
+    else if (!shouldBeCompleted && currentGoalStatus === false) {
+      try {
+        console.log('📉 목표 미달성! true로 변경');
+        await goalStore.updateGoalStatus(numericId, true);
+        goal.value.goalStatus = true;
+      } catch (error) {
+        console.error('목표 상태 업데이트 실패:', error);
+      }
+    }
+
+    // Case 3: 이미 달성된 목표 - 매번 팝업 표시
+    else if (shouldBeCompleted && currentGoalStatus === false) {
+      showCompletePopup.value = true;
     }
   } catch (error) {
     console.error('목표 로딩 실패:', error);
