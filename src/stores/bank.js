@@ -5,12 +5,6 @@ export const useBankStore = defineStore('bank', {
   state: () => ({
     banks: [
       {
-        name: '산업은행',
-        code: '0002',
-        logo: '/resources/images/financial/kdbbank.png',
-        connected: false,
-      },
-      {
         name: '기업은행',
         code: '0003',
         logo: '/resources/images/financial/ibkbank.png',
@@ -26,12 +20,6 @@ export const useBankStore = defineStore('bank', {
         name: '우리은행',
         code: '0020',
         logo: '/resources/images/financial/wooribank.png',
-        connected: false,
-      },
-      {
-        name: '수협은행',
-        code: '0007',
-        logo: '/resources/images/financial/suhyupbank.png',
         connected: false,
       },
       {
@@ -59,24 +47,6 @@ export const useBankStore = defineStore('bank', {
         connected: false,
       },
       {
-        name: '부산은행',
-        code: '0032',
-        logo: '/resources/images/financial/bnkbank.png',
-        connected: false,
-      },
-      {
-        name: '광주은행',
-        code: '0034',
-        logo: '/resources/images/financial/gwangjubank.png',
-        connected: false,
-      },
-      {
-        name: '제주은행',
-        code: '0035',
-        logo: '/resources/images/financial/shinhanbank.png',
-        connected: false,
-      },
-      {
         name: '전북은행',
         code: '0037',
         logo: '/resources/images/financial/jeonbuk.png',
@@ -95,12 +65,6 @@ export const useBankStore = defineStore('bank', {
         connected: false,
       },
       {
-        name: '신협은행',
-        code: '0048',
-        logo: '/resources/images/financial/sinhyupbank.png',
-        connected: false,
-      },
-      {
         name: '우체국',
         code: '0071',
         logo: '/resources/images/financial/koreapostbank.png',
@@ -116,12 +80,6 @@ export const useBankStore = defineStore('bank', {
         name: '신한은행',
         code: '0088',
         logo: '/resources/images/financial/shinhanbank.png',
-        connected: false,
-      },
-      {
-        name: 'K뱅크',
-        code: '0089',
-        logo: '/resources/images/financial/kbank.png',
         connected: false,
       },
     ],
