@@ -106,8 +106,12 @@ const handleDeleteGoal = async (goalId) => {
   }
 };
 
+// 🎯 개선: 메인페이지에서 목표 상세보기로 이동 시 from=main 쿼리 추가
 const goToGoalDetail = (goalId) => {
-  router.push({ name: 'goalDetail', params: { goalId } });
+  router.push({
+    path: `/goal/${goalId}`,
+    query: { from: 'main' }, // 메인페이지에서 왔다는 정보 추가
+  });
 };
 
 // 은행 로고
