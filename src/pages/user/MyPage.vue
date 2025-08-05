@@ -15,6 +15,8 @@ const canSubmit = computed(() => passwordInput.value.trim() !== '');
 
 library.add(faCircleUser, faXmark);
 
+console.log('현재 라우트 경로:', route.path);
+
 // 사용자 정보
 const userInfo = ref({
   name: '',
@@ -65,11 +67,6 @@ async function verifyPassword() {
     passwordError.value = '비밀번호 확인 중 오류가 발생했습니다.';
   }
 }
-
-// 퍼스널 정보
-const savePersonalInfo = () => {
-  router.push('/personal');
-};
 
 // 마이페이지 api 호출
 onMounted(async () => {
@@ -127,24 +124,23 @@ onMounted(async () => {
           <h3>기본 정보</h3>
           <button class="edit-btn" @click="openPasswordModal">수정</button>
         </div>
-        <div class="user-info">
+        <div class="user-info-row">
           <div class="avatar">
-            <font-awesome-icon :icon="['far', 'circle-user']" size="2x" />
+            <font-awesome-icon :icon="['far', 'circle-user']" size="3x" />
           </div>
-        </div>
-
-        <div class="details">
-          <div class="row">
-            <span class="label">이름</span>
-            <span class="value">{{ userInfo.name }}</span>
-          </div>
-          <div class="row">
-            <span class="label">전화번호</span>
-            <span class="value">{{ userInfo.phone }}</span>
-          </div>
-          <div class="row">
-            <span class="label">이메일</span>
-            <span class="value">{{ userInfo.email }}</span>
+          <div class="user-text-info">
+            <div class="info-line">
+              <span class="label">이름</span>
+              <span class="value">{{ userInfo.name }}</span>
+            </div>
+            <div class="info-line">
+              <span class="label">전화번호</span>
+              <span class="value">{{ userInfo.phone }}</span>
+            </div>
+            <div class="info-line">
+              <span class="label">이메일</span>
+              <span class="value">{{ userInfo.email }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -187,7 +183,7 @@ onMounted(async () => {
               <span class="value">{{ personalForm.specialty }}</span>
             </div>
           </div>
-          <button class="edit-btn" @click="router.push('/user/personal')">퍼스널 정보 수정</button>
+          <button class="edit-btn" @click="router.push({ name: 'personal' })">퍼스널 정보 수정</button>
         </template>
         <template v-else>
           <h3>퍼스널 정보</h3>
@@ -212,6 +208,7 @@ onMounted(async () => {
   z-index: 1000;
   padding-inline: 16px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .modal {
@@ -219,7 +216,7 @@ onMounted(async () => {
   padding: 90px 24px 24px;
   border-radius: 10px;
   width: 320px;
-  max-height: 40vh;
+  max-height: 50vh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -231,7 +228,6 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-top: 0;
 }
 .modal-header h3 {
   font-size: 18px;
@@ -244,7 +240,7 @@ onMounted(async () => {
 }
 .desc {
   font-size: 14px;
-  margin-top: 8px;
+  margin-top: 10px;
   color: #555;
 }
 .pw-input {
@@ -260,7 +256,7 @@ onMounted(async () => {
   margin-top: 8px;
 }
 .btn-group {
-  margin-top: 40px;
+  margin-top: 24px;
 }
 .btn-group button {
   width: 100%;
@@ -272,71 +268,159 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.mypage-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 16px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
 /* 기본 정보 카드 */
 .info-card {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
+
 .info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-.edit-btn {
-  padding: 6px 12px;
-  font-size: 14px;
-  background-color: #36c18c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 12px;
+  margin-bottom: 16px;
 }
 
-/* 퍼스널 정보 카드 */
-.personal-card {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-}
-.personal-card h3 {
-  margin-bottom: 16px;
-  color: #36c18c;
-  font-size: 1.2rem;
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.item {
+.user-info-row {
   display: flex;
   align-items: center;
-  padding: 8px;
-  background: #f9f9f9;
-  border-radius: 6px;
+  gap: 20px;
+  margin-bottom: 12px;
 }
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  background-color: #f2f4f6;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.user-text-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-line {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
 .label {
-  font-weight: bold;
-  color: #555;
-  margin-right: 8px;
-  width: 90px;
+  color: #999;
+  font-size: 13px;
 }
+
 .value {
-  flex: 1;
   color: #333;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* 퍼스널 카드 */
+.personal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px 20px;
+  border: 1px solid #ddd;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 퍼스널 정보 미입력 시 */
+.personal-card .desc {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 20px;
+  min-height: 100px;
+}
+
+.save-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  background-color: #36c18c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* 퍼스널 정보 입력된 경우 그리드 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.item {
+  background: #f2f4f6;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 70px;
+  box-sizing: border-box;
+  justify-content: center;
+
+  word-wrap: break-word; /* 단어 줄바꿈 허용 */
+  word-break: break-word; /* 긴 단어도 줄바꿈 */
+  white-space: normal; /* 줄바꿈 허용 */
+  text-align: center;
+}
+.item .label {
+  font-size: 12px;
+  color: #777;
+}
+.item .value {
+  font-size: 14px;
+  font-weight: bold;
+  color: #111;
+}
+
+/* 퍼스널 정보 수정 버튼 */
+.personal-card .edit-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  background-color: #36c18c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+/* 전체 마이페이지 박스 */
+.mypage-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background-color: #f1f1f1;
+  flex: 1;
+  height: auto;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 </style>
