@@ -29,6 +29,16 @@ function goToTotalPage() {
   router.push('/account/BankSummaryPage');
 }
 
+function goToGoalPage() {
+  router.push('/goal');
+}
+function goToFinancialPage() {
+  router.push('/financialSearch/FinancialSearchPage');
+}
+function goToPolicyPage() {
+  router.push('/policySearch/PolicySearchPage');
+}
+
 // 목표 정렬 (1억 모으기 우선)
 const sortedGoals = computed(() => {
   return [...goalStore.goals].sort((a, b) => {
@@ -180,7 +190,7 @@ watch(
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"
-      @click="goToTotalPage"
+      @click="goToGoalPage"
       style="color: #d9d9d9; cursor: pointer; margin: 23px 0 5px 0"
     ></i>
   </div>
@@ -289,7 +299,7 @@ watch(
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"
-      @click="goToTotalPage"
+      @click="goToPolicyPage"
       style="color: #d9d9d9; cursor: pointer; margin: 23px 0 5px 0"
     ></i>
   </div>
@@ -313,7 +323,7 @@ watch(
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"
-      @click="goToTotalPage"
+      @click="goToFinancialPage"
       style="color: #d9d9d9; cursor: pointer; margin: 23px 0 5px 0"
     ></i>
   </div>
