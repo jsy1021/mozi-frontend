@@ -109,12 +109,6 @@ const loadGoal = async (id) => {
     // if (goal.value && goal.value.goalStatus === false) {
     //   showCompletePopup.value = true;
     // }
-    watch(goal, (newGoal) => {
-      if (newGoal && newGoal.goalStatus === false) {
-        showCompletePopup.value = true;
-      }
-    });
-
 
     // 계좌 목록 (에러가 발생해도 계속 진행)
     await loadAccounts(numericId);
@@ -373,23 +367,23 @@ watch(
             <div
               v-for="acc in linkedAccounts"
               :key="acc.accountId"
-              style="margin-bottom: 10px; display: flex; justify-content: space-between;"
+              style="margin-bottom: 10px; display: flex; justify-content: flex-start; gap: 0; align-items: center;"
             >
               <!-- <input
                 type="text"
                 checked
                 @change="unlinkAccount(acc.accountId)"
               /> -->
-              <div>
+              <div style="flex: 0 0 auto; padding: 0;margin-left: 5px;">
                 <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo"/>
               </div>
-              <div style="padding-right: 0; padding-left: 0;">
+              <div style="flex: 1; padding: 0; margin: 0;">
                 <!-- {{ acc.bankName || acc.bankCode }}&nbsp; -->
                 <span class="account-name">{{ acc.accountName }}</span><br/>
                 <!-- {{ (acc.accountNumber || '').slice(0, 4) }}-****-{{ (acc.accountNumber || '').slice(-4) }}<br /> -->
                 <span class="account-number">{{ maskAccountNumber(acc.accountNumber) }}</span>
               </div>
-              <div style="margin-top: 15px;">
+              <div style="margin-top: 25px; flex: 0 0 auto; margin: 0;padding: 0;margin-right: 5px;">
                 <span class="account-balance">{{ safeToLocaleString(acc.balance) }}원</span>
               </div>
             </div>
@@ -548,9 +542,10 @@ watch(
 
 .goal-guide {
   /* border: 1px solid #d9d9d9; */
-  border: 2px solid #36C18C;
+  /* border: 2px solid #36C18C; */
   border-radius: 5px;
   width: 310px;
+  background-color: #D2F5E9;
   /* background-color: rgba(100, 186, 170, 0.5); */
   margin-bottom: 10px;
 }
@@ -628,7 +623,7 @@ watch(
   width: 36px;  
   height: 36px;  
   object-fit: contain;  
-  margin-right: 12px;
+  /* margin-right: 12px; */
 }
 
 .account-name{
