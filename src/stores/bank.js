@@ -131,6 +131,11 @@ export const useBankStore = defineStore('bank', {
       const bank = this.banks.find((b) => b.code === code);
       if (bank) bank.connected = true;
     },
+    initializeConnectedBanks(connectedBankCodes) {
+      this.banks.forEach((b) => {
+        b.connected = connectedBankCodes.includes(b.code);
+      });
+    },
   },
   getters: {
     connectedCount: (state) => state.banks.filter((b) => b.connected).length,
