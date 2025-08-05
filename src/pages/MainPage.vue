@@ -7,6 +7,7 @@ import { useGoalStore } from '@/stores/goalStore';
 import PolicyCard from '@/pages/search/policySearch/policyCard.vue';
 import FinancialCard from '@/pages/search/financialSearch/financialCard.vue';
 import GoalCard from '@/components/goal/GoalCard.vue';
+import GoalEmptyCard from '@/components/goal/GoalEmptyCard.vue';
 import goalApi from '@/api/goalApi';
 
 const router = useRouter();
@@ -197,14 +198,13 @@ watch(
 
   <div class="goal-main-container">
     <div class="goals-container">
-      <div v-if="goalStore.goals.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <i class="fas fa-flag"></i>
-        </div>
-        <p>아직 설정된 목표가 없습니다.</p>
-        <p>첫 번째 목표를 설정해보세요!</p>
-      </div>
+      <!-- 목표가 없을 때: GoalEmptyCard 컴포넌트 사용 -->
+      <GoalEmptyCard
+        v-if="goalStore.goals.length === 0"
+        @click="goToGoalPage"
+      />
 
+      <!-- 목표가 있을 때: 기존 GoalCard -->
       <div v-else class="goals-grid">
         <GoalCard
           v-if="sortedGoals.length > 0"
@@ -373,23 +373,14 @@ watch(
   transform: scale(0.98);
   transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
+
 .goal-main-container {
   padding: 20px;
   background-color: #f8f9fa;
 }
+
 .goals-container {
   flex: 1;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #666;
-}
-.empty-icon {
-  font-size: 48px;
-  color: #ddd;
-  margin-bottom: 20px;
 }
 
 .goals-grid {
