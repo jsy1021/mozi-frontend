@@ -44,7 +44,12 @@ const showDeleteModal = ref(false);
 const showCompletePopup = ref(false);
 
 // 목표 달성 여부 (goal_status === false가 '달성 완료')
-const goalAchieved = computed(() => goal.value?.goalStatus === false);
+// computed로 목표 달성 여부도 수정
+const goalAchieved = computed(() => {
+  if (!goal.value) return false;
+  const targetAmount = goal.value.targetAmount || goal.value.target_amount || 0;
+  return currentAmount.value >= targetAmount && targetAmount > 0;
+});
 
 // 예상 달성일
 const expectedDate = ref(null);
@@ -120,6 +125,26 @@ const loadGoal = async (id) => {
       console.error('현재 금액 조회 실패:', error);
       currentAmount.value = 0;
     }
+
+    // *** 수정된 부분: 실제 목표 달성 여부 확인 ***
+    // 현재 금액이 목표 금액 이상이면 목표 달성으로 판단
+    const targetAmount =
+      goal.value.targetAmount || goal.value.target_amount || 0;
+    const isGoalAchieved =
+      currentAmount.value >= targetAmount && targetAmount > 0;
+
+    // 목표 달성 상태 확인 및 팝업 표시
+    if (isGoalAchieved) {
+      // 이미 한 번 팝업을 본 경우를 방지하기 위해 localStorage 체크 (선택사항)
+      const popupShownKey = `goal_popup_shown_${numericId}`;
+      const hasShownPopup = localStorage.getItem(popupShownKey);
+
+      if (!hasShownPopup) {
+        showCompletePopup.value = true;
+        // 팝업을 보여준 후 표시했다는 플래그 저장
+        localStorage.setItem(popupShownKey, 'true');
+      }
+    }
   } catch (error) {
     console.error('목표 로딩 실패:', error);
   } finally {
@@ -152,9 +177,10 @@ const confirmDelete = async () => {
   router.push('/goal');
 };
 
-// 팝업 닫기
+// 팝업 닫기 함수도 수정 (localStorage 플래그 고려)
 const closePopup = () => {
   showCompletePopup.value = false;
+  // 필요한 경우 여기서 목표 상태를 완료로 업데이트하는 API 호출 가능
 };
 
 // 계좌 연결 해제
