@@ -6,6 +6,15 @@ const router = useRouter();
 const goBack = () => {
   router.back();
 };
+import { useAuthStore } from '@/stores/auth';
+
+const authStore = useAuthStore();
+
+const handleLogout = () => {
+  authStore.logout();
+  // 로그아웃 후 로그인 페이지로 이동 (또는 앱에서 자동 처리)
+  router.push('/auth/LoginPage');
+};
 </script>
 
 <template>
@@ -48,11 +57,42 @@ const goBack = () => {
         <i class="fas fa-user"></i>
         <span>마이페이지</span>
       </router-link>
+
+      <!-- 로그아웃 버튼 -->
+      <button @click="handleLogout" class="menu-item logout-button">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>로그아웃</span>
+      </button>
     </nav>
   </div>
 </template>
 
 <style scoped>
+/* 구분선 */
+.menu-divider {
+  height: 1px;
+  background-color: var(--color-border, rgba(60, 60, 60, 0.12));
+  margin: 8px 0;
+}
+
+/* 로그아웃 버튼 스타일 */
+.logout-button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.logout-button:hover {
+  background-color: #e74c3c;
+  color: white;
+  transform: translateX(4px);
+}
+
+.logout-button:hover i {
+  transform: scale(1.1);
+}
 .hamburger-menu {
   width: 100%;
   background: var(--color-background, #ffffff);
