@@ -9,7 +9,6 @@ export default {
     return res.result ?? [];
   },
 
-  // ✅ 이 함수 추가!!
   async getAllRecommendedPolicies() {
     const res = await api.get(`${RECOMMEND_BASE_URL}/all`);
     return res.result ?? [];

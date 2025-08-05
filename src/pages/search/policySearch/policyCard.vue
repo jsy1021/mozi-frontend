@@ -22,23 +22,36 @@
           <span class="label">분야</span>
           <span class="value">{{ policy.mclsfNm || '정보 없음' }}</span>
         </div>
-        <div class="info-item">
-          <span class="label">연령</span>
 
-          <span
-            class="value"
-            v-if="policy.sprtTrgtMinAge || policy.sprtTrgtMaxAge"
-          >
-            만 {{ policy.sprtTrgtMinAge || '?' }}세 ~ 만
-            {{ policy.sprtTrgtMaxAge || '?' }}세
+        <!-- 연령 + 마감 -->
+        <div class="info-item deadline-row">
+          <div class="left-info">
+            <span class="label">연령</span>
+
+            <span
+              class="value"
+              v-if="policy.sprtTrgtMinAge || policy.sprtTrgtMaxAge"
+            >
+              만 {{ policy.sprtTrgtMinAge || '?' }}세 ~ 만
+              {{ policy.sprtTrgtMaxAge || '?' }}세
+            </span>
+            <span class="value" v-else>누구나</span>
+          </div>
+
+          <!-- 마감 뱃지 -->
+          <span v-if="isClosed(policy.aplyYmd)" class="inline-closed-badge">
+            마감
           </span>
-          <span class="value" v-else>누구나</span>
         </div>
       </div>
     </div>
 
     <div class="bottom-section">
       <div class="keywords-section">
+        <!-- 소득제한 키워드가 있을 경우 먼저 추가 -->
+        <span v-if="hasIncomeCondition" class="keyword-tag income"
+          >소득제한</span
+        >
         <span
           class="keyword-tag"
           v-for="(kw, i) in (policy.plcyKywdNm || '').split(',')"
@@ -79,6 +92,14 @@ const bookmarked = ref(props.isScrapped);
 
 // 하드코딩된 유저 ID
 const userId = 1; // TODO: 로그인 연동 시 교체
+
+function isClosed(aplyYmd) {
+  if (!aplyYmd || !aplyYmd.includes('~')) return false;
+  const end = aplyYmd.split('~')[1].trim(); // "20250806"
+  const today = new Date();
+  const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, ''); // "20250805"
+  return end < yyyyMMdd;
+}
 
 const toggleBookmark = async () => {
   try {
@@ -222,5 +243,30 @@ const toggleBookmark = async () => {
   display: inline-block;
   line-height: 20px;
   margin-left: 8px;
+}
+
+.deadline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left-info {
+  display: flex;
+  align-items: center;
+}
+
+.inline-closed-badge {
+  color: #d32f2f;
+  font-size: 0.8rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.keyword-tag.income {
+  background: #ffecec;
+  color: #d32f2f;
+  border: 1px solid #f5c6cb;
+  font-weight: bold;
 }
 </style>
