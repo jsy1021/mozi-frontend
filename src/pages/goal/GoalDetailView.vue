@@ -251,6 +251,21 @@ function keywordToKorean(keyword) {
   return match ? match.label : keyword;
 }
 
+// 목표 달성 가이드
+const achievementRate = computed(() => {
+  if (!goal.value || !goal.value.targetAmount) return 0;
+  return (currentAmount.value / goal.value.targetAmount) * 100;
+});
+
+const guideMessage = computed(() => {
+  const rate = achievementRate.value;
+  if (rate >= 100) return '축하해요! 목표를 달성했어요 🎉';
+  if (rate >= 76) return '눈앞에 있어요! 끝까지!';
+  if (rate >= 51) return '거의 다 왔어요! 조금만 더!';
+  if (rate >= 26) return '절반 도달! 아주 좋아요';
+  return '시작이 반! 꾸준히 해봐요';
+});
+
 // 초기 로드와 goalId 변경 감지
 onMounted(() => loadGoal(goalId));
 
@@ -379,7 +394,8 @@ watch(
       <div v-else class="goal-guide">
         <p class="guide">💡목표 달성 가이드</p>
         <p class="comment">
-          조금씩 꾸준히, 목표 자산에 가까워지고 있어요. 오늘도 한 발짝!
+          <!-- 조금씩 꾸준히, 목표 자산에 가까워지고 있어요. 오늘도 한 발짝! -->
+           {{ guideMessage }}
         </p>
       </div>
 
