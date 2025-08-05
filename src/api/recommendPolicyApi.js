@@ -8,4 +8,10 @@ export default {
     console.log('RECOMMENDED POLICIES:', res); // 전체 응답 객체 로그
     return res.result ?? [];
   },
+
+  // ✅ 이 함수 추가!!
+  async getAllRecommendedPolicies() {
+    const res = await api.get(`${RECOMMEND_BASE_URL}/all`);
+    return res.result ?? [];
+  },
 };
