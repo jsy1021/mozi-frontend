@@ -106,9 +106,15 @@ const loadGoal = async (id) => {
     }
 
     // 목표 달성 상태 확인
-    if (goal.value && goal.value.goalStatus === false) {
-      showCompletePopup.value = true;
-    }
+    // if (goal.value && goal.value.goalStatus === false) {
+    //   showCompletePopup.value = true;
+    // }
+    watch(goal, (newGoal) => {
+      if (newGoal && newGoal.goalStatus === false) {
+        showCompletePopup.value = true;
+      }
+    });
+
 
     // 계좌 목록 (에러가 발생해도 계속 진행)
     await loadAccounts(numericId);
