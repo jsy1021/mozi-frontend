@@ -42,6 +42,13 @@ const routes = [
     component: () => import('@/pages/user/MyPage.vue'),
     beforeEnter: requiresAuth,
   },
+  {
+    path: '/oauth/callback',
+    name: 'oauthCallback',
+    component: () => import('../pages/auth/OAuthCallbackPage.vue'),
+    meta: { isHeader: false, isFooter: false },
+  },
+
   // {
   //   path: '/user/personal',
   //   name: 'PersonalStep',
