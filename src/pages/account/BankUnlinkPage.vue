@@ -82,6 +82,16 @@ onMounted(() => {
 
     <!-- 은행 목록 -->
     <div class="bank-box">
+      <!-- 은행 목록 없을때 -->
+      <div class="no-bank" v-if="bankList.length === 0">
+        <img
+          src="/images/unlinkAccountEmpty.png"
+          style="height: 100px; margin-right: 0.5rem"
+        />
+        <div>해지할 은행이 없습니다.</div>
+      </div>
+
+      <!-- 은행 목록 있을때 -->
       <div
         v-for="bank in bankList"
         :key="bank.code"
@@ -112,7 +122,7 @@ onMounted(() => {
       :disabled="selectedBanks.size === 0"
       @click="showConfirm = true"
       :style="{
-        backgroundColor: selectedBanks.size > 0 ? '#e34c4c' : '#d9d9d9',
+        backgroundColor: selectedBanks.size > 0 ? '#e34c4c' : '#e34c4c80',
         cursor: selectedBanks.size > 0 ? 'pointer' : 'not-allowed',
       }"
     >
@@ -235,5 +245,13 @@ onMounted(() => {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+.no-bank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #757575;
 }
 </style>

@@ -60,9 +60,13 @@ onMounted(async () => {
         </div>
         <p class="title">계좌 연동</p>
       </div>
-
-      <p class="section-title">불러올 계좌 선택하기</p>
-      <p class="section-subtitle">은행</p>
+      <!-- 
+      <div
+        class="section-subtitle"
+        style="font-size: 18px; margin-bottom: -10px"
+      >
+        은행
+      </div> -->
 
       <!-- 은행 리스트 -->
       <div class="bank-list">
@@ -74,15 +78,24 @@ onMounted(async () => {
         >
           <div class="bank-info">
             <img :src="bank.logo" class="bank-logo" />
-            <span>{{ bank.name }}</span>
+            <p
+              style="
+                font-size: 16px;
+                font-weight: 550;
+                color: #585858;
+                margin-top: 16px;
+              "
+            >
+              {{ bank.name }}
+            </p>
           </div>
           <button
             class="badge-link"
             @click.stop="handleConnect(bank)"
             :disabled="bank.connected"
             :style="{
-              backgroundColor: bank.connected ? '#d9d9d9' : '#776e6e',
-              color: 'white',
+              backgroundColor: bank.connected ? '#F2F4F6' : '#36C18C',
+              color: bank.connected ? '#6B7684' : '#FFFFFF',
               cursor: bank.connected ? 'default' : 'pointer',
             }"
           >
@@ -95,7 +108,10 @@ onMounted(async () => {
       <button
         class="agree-btn"
         :disabled="!hasConnectedBank"
-        :style="{ backgroundColor: hasConnectedBank ? '#4CAF50' : '#d9d9d9' }"
+        :style="{
+          color: '#FFFFFF',
+          backgroundColor: hasConnectedBank ? '#36C18C' : '#36C18C80',
+        }"
         @click="handleAgree"
       >
         동의하기
@@ -139,6 +155,7 @@ onMounted(async () => {
 .title {
   font-size: 18px;
   font-weight: 550;
+  margin: 0 auto;
   color: #585858;
 }
 .section-title,
@@ -148,11 +165,12 @@ onMounted(async () => {
   font-weight: 550;
   color: #585858;
   margin-left: 5px;
-  margin-bottom: 4px;
+  margin-bottom: 0px;
 }
 .bank-list {
   display: flex;
   flex-direction: column;
+  margin-top: -20px;
 }
 .bank-card {
   display: flex;
@@ -160,7 +178,7 @@ onMounted(async () => {
   align-items: center;
   background-color: #ffffff;
   padding: 10px;
-  margin: 0;
+  margin: 5px 0 -28px 0;
   cursor: pointer;
   border-radius: 6px;
 }
@@ -194,8 +212,8 @@ onMounted(async () => {
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
 }
 .badge-link:disabled {
-  box-shadow: none;
-  transform: none;
+  transform: scale(0.95);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
 }
 .agree-btn {
   display: block;

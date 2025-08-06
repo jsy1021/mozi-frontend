@@ -130,19 +130,35 @@ async function connect() {
   justify-content: space-between;
 }
 .connect-btn {
-  background-color: #4caf50;
+  background-color: #36c18c;
   color: white;
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.2s;
+}
+
+.connect-btn:active {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* 그림자 작게, 눌린 느낌 */
+  background: #36c18c; /* 더 어둡게 */
+  transform: scale(0.98); /* 살짝 작아짐 */
+  transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
 .cancel-btn {
   background-color: #ddd;
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
+  box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
   cursor: pointer;
+}
+.cancel-btn:active {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* 그림자 작게, 눌린 느낌 */
+  background: #ddd; /* 더 어둡게 */
+  transform: scale(0.98); /* 살짝 작아짐 */
+  transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
 .spinner {
   margin: 10px 0;
