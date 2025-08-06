@@ -144,7 +144,14 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
         <div class="back-btn" @click="goBack">
           <i class="fa-solid fa-angle-left"></i>
         </div>
-        <p style="font-size: 18px; font-weight: 550; color: #585858">
+        <p
+          style="
+            font-size: 18px;
+            font-weight: 550;
+            color: #585858;
+            margin-top: 10px;
+          "
+        >
           약관 동의
         </p>
       </div>
@@ -224,7 +231,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
       <button
         class="Agreecard-btn"
         :style="{
-          backgroundColor: requiredAgreeChecked ? '#4CAF50' : '#d9d9d9',
+          backgroundColor: requiredAgreeChecked ? '#36C18C' : '#36C18C80',
         }"
         :disabled="!requiredAgreeChecked"
         @click="handleAgree"
@@ -240,7 +247,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
       <div class="modal-scroll">
         <pre>{{ modalContent }}</pre>
       </div>
-      <button @click="closeModal">닫기</button>
+      <button @click="closeModal" class="modal-botton">닫기</button>
     </div>
   </div>
 </template>
@@ -265,7 +272,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 30px 0 20px 0;
+  margin: 40px 0 40px 0;
   /* gap: 100px; 버튼과 h1 사이 간격 */
 }
 
@@ -309,6 +316,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   align-items: center;
   padding: 4px 0;
   cursor: pointer;
+  margin-left: 20px;
 }
 
 .agree-item-row i {
@@ -333,7 +341,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   background: white;
   padding: 20px;
   border-radius: 10px;
-  width: 50%;
+  width: 70%;
   max-width: 400px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   text-align: left;
@@ -353,14 +361,14 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
 .TotalAgreeCard-btn {
   font-size: 13px;
   font-weight: 450;
-  color: #776e6e;
+  color: #36c18c;
 
   display: block;
   width: 100%;
   margin: 0px 0 0 0;
   padding: 10px 0;
-  border-radius: 4px;
-  border: 1.5px solid #776e6e;
+  border-radius: 6px;
+  border: 2.3px solid #36c18c;
   background: #fafafa;
   box-shadow: 0 4px 2px rgba(0, 0, 0, 0.4);
   cursor: pointer;
@@ -377,11 +385,12 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
 .Agreecard-btn {
   display: block;
   width: 100%;
-  margin: 100px 0 0 0;
+  margin: 200px 0 0 0;
   padding: 10px 0;
   border-radius: 4px;
   border: 0 solid white;
-  background: #d9d9d9;
+  /* background: #36c18c; */
+  color: #ffffff;
   box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
   font-size: 16px;
   cursor: pointer;
@@ -391,6 +400,30 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* 그림자 작게, 눌린 느낌 */
   background: #bdbdbd; /* 더 어둡게 */
   transform: scale(0.98); /* 살짝 작아짐 */
+  transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
+}
+
+/* 모달 카드 스타일 버튼 */
+.modal-botton {
+  font-size: 13px;
+  font-weight: 450;
+  color: #ffff;
+
+  display: block;
+  width: 100%;
+  margin: 0px 0 0 0;
+  padding: 10px 0;
+  border-radius: 6px;
+  border: 2.3px solid #36c18c;
+  background: #36c18c;
+  box-shadow: 0 4px 2px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.modal-botton:active {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* 그림자 작게, 눌린 느낌 */
+  background: #36c18c; /* 배경색 살짝 어둡게 */
+  transform: scale(0.98); /* 버튼이 살짝 작아짐 */
   transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
 </style>
