@@ -9,16 +9,14 @@ import FinancialCard from '@/pages/search/financialSearch/financialCard.vue';
 import GoalCard from '@/components/goal/GoalCard.vue';
 import GoalEmptyCard from '@/components/goal/GoalEmptyCard.vue';
 import goalApi from '@/api/goalApi';
-<<<<<<< HEAD
+
 import policyApi from '@/api/policyApi';
 import recommendCarousel from './recommend/policy/recommendCarousel.vue';
-=======
 import { getTopSavings, getTopDeposits } from '@/api/financialApi';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
->>>>>>> 451966481539ec0f66cd9d5ffbf5e4c2002cfe9a
 
 const router = useRouter();
 const route = useRoute();
@@ -214,8 +212,8 @@ onMounted(async () => {
 
     // 데이터 합치기 (type 필드 추가)
     products.value = [
-      ...depositData.map(d => ({ ...d, type: '예금' })),
-      ...savingData.map(s => ({ ...s, type: '적금' }))
+      ...depositData.map((d) => ({ ...d, type: '예금' })),
+      ...savingData.map((s) => ({ ...s, type: '적금' })),
     ];
   } catch (err) {
     console.error('금융 상품 불러오기 실패:', err);
@@ -368,33 +366,25 @@ watch(
     ></i>
   </div>
 
-<<<<<<< HEAD
-  <!-- 샘플 상품 -->
-  <div style="margin: 0 20px 20px 20px">
-    <FinancialCard
-      v-for="(item, index) in sampleProductList"
-      :key="index"
-      :deposit="item"
-      :productType="currentCategory"
-    />
-  </div>
-=======
   <!-- 예, 적금 우대 금리 상위 2개 상품 출력 -->
   <div style="margin: 20px">
-<Swiper
-  v-if="products.length > 0"
-  :slides-per-view="'auto'"
-  :space-between="16"
-  :pagination="{ clickable: true }"
-  :modules="[Pagination]"
-  class="financial-swiper"
->
-  <SwiperSlide v-for="(item, index) in products" :key="index" class="financial-slide">
-    <FinancialCard :deposit="item" :productType="item.type" />
-  </SwiperSlide>
-</Swiper>
-</div>
->>>>>>> 451966481539ec0f66cd9d5ffbf5e4c2002cfe9a
+    <Swiper
+      v-if="products.length > 0"
+      :slides-per-view="'auto'"
+      :space-between="16"
+      :pagination="{ clickable: true }"
+      :modules="[Pagination]"
+      class="financial-swiper"
+    >
+      <SwiperSlide
+        v-for="(item, index) in products"
+        :key="index"
+        class="financial-slide"
+      >
+        <FinancialCard :deposit="item" :productType="item.type" />
+      </SwiperSlide>
+    </Swiper>
+  </div>
 </template>
 
 <style scoped>
