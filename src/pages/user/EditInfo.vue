@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { onUnmounted } from 'vue';
 
 const router = useRouter();
 const form = ref({ username: '', loginId: '', password: '', email: '', phoneNumber: '' });
@@ -27,6 +28,9 @@ function toggleShowPassword() {
 }
 
 const passwordError = ref('');
+
+const resendCooldown = ref(0);
+let countdownTimer = null;
 
 function validatePassword() {
   if (!form.value.password) {
@@ -63,15 +67,38 @@ async function sendVerificationCode() {
   }
 
   try {
-    const res = await axios.post('/api/email/send', { email: form.value.email });
+    const res = await axios.post('/api/users/password/send-email-code', null, {
+      params: { email: form.value.email },
+    });
     sentCode.value = res.data.result; // 서버에서 전송된 코드 (실제 앱에서는 사용자에게만 이메일 발송)
     verificationMessage.value = '인증 코드가 이메일로 전송되었습니다.';
     verifyStep.value = 1; // 인증 단계 전환
     emailError.value = '';
+
+    startCooldown();
   } catch (err) {
     emailError.value = '이메일 인증 요청 실패';
   }
 }
+
+function startCooldown() {
+  resendCooldown.value = 300; // 5분 = 300초
+
+  if (countdownTimer) clearInterval(countdownTimer);
+
+  countdownTimer = setInterval(() => {
+    resendCooldown.value -= 1;
+
+    if (resendCooldown.value <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+  }, 1000);
+}
+
+onUnmounted(() => {
+  if (countdownTimer) clearInterval(countdownTimer);
+});
 
 // 인증코드 확인
 async function verifyCode() {
@@ -107,9 +134,9 @@ onMounted(async () => {
     const data = res.data.result;
 
     form.value.username = data.username;
-    form.value.loginId = data.loginId;
+    form.value.loginId = data.login_id;
     form.value.email = data.email;
-    form.value.phoneNumber = data.phoneNumber;
+    form.value.phoneNumber = data.phone_number;
     // password는 사용자가 직접 입력
   } catch (err) {
     error.value = '사용자 정보를 불러오는 데 실패했습니다.';
@@ -179,24 +206,39 @@ async function onSave() {
     <label>이메일</label>
     <div class="email-row">
       <input v-model="form.email" :readonly="isEmailVerified" placeholder="이메일 입력" class="email-input" />
-      <button class="email-btn" @click="sendVerificationCode" v-if="verifyStep === 0">인증</button>
+      <button class="email-btn" @click="sendVerificationCode" :disabled="resendCooldown > 0">
+        {{ verifyStep === 0 ? '인증' : '재전송' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- 인증 코드 섹션 -->
+  <div v-if="verifyStep === 1" class="verify-section full-width">
+    <!--남은 시간 텍스트 표시 -->
+    <div v-if="resendCooldown > 0" class="cooldown-text">
+      {{ Math.floor(resendCooldown / 60) }}:{{ (resendCooldown % 60).toString().padStart(2, '0') }} 뒤에 재시도 가능
     </div>
 
-    <div v-if="verifyStep === 1">
-      <label>인증 코드</label>
-      <div class="input-row">
-        <input v-model="verificationCode" placeholder="인증 코드 입력" />
-        <button @click="verifyCode">확인</button>
-      </div>
-      <div v-if="verificationError" class="error-text">{{ verificationError }}</div>
+    <label>인증 코드</label>
+    <div class="input-row">
+      <input v-model="verificationCode" placeholder="인증 코드 입력" class="verification-input" />
+      <button @click="verifyCode" class="confirm-btn">확인</button>
     </div>
+    <div v-if="verificationError" class="error-text">{{ verificationError }}</div>
+  </div>
 
-    <label>전화번호</label>
-    <input v-model="form.phoneNumber" placeholder="전화번호 입력" />
+  <!-- 전화번호 입력 -->
+  <label>전화번호</label>
+  <input v-model="form.phoneNumber" placeholder="전화번호 입력" class="full-width" />
 
-    <div v-if="error" class="error-msg">{{ error }}</div>
+  <!-- 에러 메시지 -->
+  <div v-if="error" class="error-msg">{{ error }}</div>
 
-    <button :disabled="loading" @click="onSave">{{ loading ? '저장 중...' : '저장' }}</button>
+  <!-- 저장 버튼 -->
+  <div class="button-wrapper">
+    <button :disabled="loading" @click="onSave">
+      {{ loading ? '저장 중...' : '저장' }}
+    </button>
   </div>
 </template>
 
@@ -341,5 +383,62 @@ button.small {
   white-space: nowrap;
   padding: 0;
   margin-top: 3px;
+}
+.email-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+/* 인증코드 영역 간격 및 정렬 */
+.verify-section {
+  margin-top: 12px;
+}
+
+/* 타이머 텍스트 위치 조정 */
+.cooldown-text {
+  font-size: 13px;
+  color: #36c18c;
+  margin-bottom: 4px;
+  margin-left: 2px;
+}
+
+/* 입력 필드 너비 제한 */
+.full-width {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: block;
+}
+
+.verification-input {
+  flex: 1;
+  height: 40px;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.confirm-btn {
+  width: 64px;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: #36c18c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 저장 버튼 중앙 정렬 및 고정 너비 */
+.button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.button-wrapper button {
+  width: 100%;
+  max-width: 400px;
 }
 </style>
