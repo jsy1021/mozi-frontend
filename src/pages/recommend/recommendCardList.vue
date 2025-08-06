@@ -12,8 +12,7 @@
 </template>
 
 <script setup>
-import RecommendPolicyCard from './recommendPolicyCard.vue';
-// import RecommendFinancialCard from './recommendFinancialCard.vue'; // 추후 금융 카드 추가용
+import RecommendPolicyCard from './policy/recommendPolicyCard.vue';
 
 const props = defineProps({
   cards: Array,
