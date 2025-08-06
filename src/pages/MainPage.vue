@@ -168,16 +168,6 @@ const props = defineProps({
   },
 });
 
-// // 샘플 정책 데이터 (예시용)
-// const samplePolicies = ref([
-//   {
-//     plcyNo: 1,
-//     title: '청년 지원 정책',
-//     description: '청년을 위한 다양한 지원 사업입니다.',
-//     bookmarked: true,
-//   },
-// ]);
-
 // 샘플 금융상품 데이터 (예시용)
 const sampleProductList = ref([
   {
