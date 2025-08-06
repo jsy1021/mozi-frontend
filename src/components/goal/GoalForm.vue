@@ -29,14 +29,20 @@
           type="text"
           v-model="form.goalName"
           placeholder="목표명을 입력하세요"
-          :readonly="!!presetData?.goalName"
-          :class="{ 'preset-input': !!presetData?.goalName }"
+          :readonly="!!presetData?.goalName || (isEdit && isBillionGoal)"
+          :class="{ 
+            'preset-input': !!presetData?.goalName || (isEdit && isBillionGoal)
+          }"
           required
         />
+        <!-- 1억 모으기 수정 시 안내 메시지 -->
+        <div v-if="isEdit && isBillionGoal" class="preset-info">
+          <i class="fas fa-lock"></i>
+          <span>1억 모으기 목표명은 변경할 수 없습니다</span>
+        </div>
       </div>
 
-      <!-- 목표 금액 -->
-      <div class="form-group">
+        <div class="form-group">
         <label for="targetAmount">목표 금액</label>
         <div class="amount-input">
           <input
@@ -45,16 +51,24 @@
             v-model="form.targetAmount"
             placeholder="0"
             min="0"
-            :readonly="!!presetData?.targetAmount"
-            :class="{ 'preset-input': !!presetData?.targetAmount }"
-            class="no-spinner"
+            :readonly="!!presetData?.targetAmount || (isEdit && isBillionGoal)"
+            :class="{ 
+              'preset-input': !!presetData?.targetAmount || (isEdit && isBillionGoal),
+              'no-spinner': true
+            }"
             required
           />
           <span class="currency">원</span>
         </div>
-        <div v-if="presetData?.targetAmount" class="preset-info">
+        <!-- 프리셋 또는 1억 모으기 수정 시 안내 메시지 -->
+        <div v-if="presetData?.targetAmount || (isEdit && isBillionGoal)" class="preset-info">
           <i class="fas fa-lock"></i>
-          <span>프리셋으로 설정된 금액입니다</span>
+          <span>
+            {{ presetData?.targetAmount 
+                ? '프리셋으로 설정된 금액입니다' 
+                : '1억 모으기 목표 금액은 변경할 수 없습니다' 
+            }}
+          </span>
         </div>
       </div>
 
@@ -237,6 +251,12 @@ import { useBankStore } from '@/stores/bank';
 const bankStore = useBankStore();
 const banks = bankStore.banks;
 
+// 1억 모으기 목표인지 판별하는 computed
+const isBillionGoal = computed(() => {
+  return props.isEdit && 
+         props.goalData?.name === '1억 모으기' && 
+         props.goalData?.targetAmount === 100000000;
+});
 // 은행 로고 이미지
 const getBankLogoUrl = (bankCode) => {
   const bank = banks.find((b) => b.code === bankCode);
