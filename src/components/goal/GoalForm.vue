@@ -4,7 +4,7 @@
       <h1 class="page-title">
         {{ presetData?.goalName ? `${presetData.goalName} 설정` : '나의 목표' }}
       </h1>
-      <!-- 1억 모으기 프리셋일 때 특별한 아이콘 표시 -->
+      <!-- 1억 모우기 프리셋일 때 특별한 아이콘 표시 -->
       <div v-if="presetData?.goalName === '1억 모으기'" class="billion-icon">
         <i class="fas fa-star"></i>
       </div>
@@ -47,6 +47,7 @@
             min="0"
             :readonly="!!presetData?.targetAmount"
             :class="{ 'preset-input': !!presetData?.targetAmount }"
+            class="no-spinner"
             required
           />
           <span class="currency">원</span>
@@ -54,26 +55,6 @@
         <div v-if="presetData?.targetAmount" class="preset-info">
           <i class="fas fa-lock"></i>
           <span>프리셋으로 설정된 금액입니다</span>
-        </div>
-      </div>
-
-      <!-- 현재 금액 (수정 모드일 때만 표시) -->
-      <div v-if="isEdit" class="form-group">
-        <label for="currentAmount">현재 금액</label>
-        <div class="amount-input">
-          <input
-            id="currentAmount"
-            type="number"
-            v-model="form.currentAmount"
-            placeholder="0"
-            min="0"
-            readonly
-          />
-          <span class="currency">원</span>
-        </div>
-        <div class="preset-info">
-          <i class="fas fa-info-circle"></i>
-          <span>연결된 계좌 잔액의 합계입니다</span>
         </div>
       </div>
 
@@ -131,6 +112,21 @@
           maxlength="50"
         ></textarea>
         <div class="char-count">{{ form.memo.length }}/50</div>
+      </div>
+
+      <!-- 현재 금액 카드는 여기에 하나만 있습니다 -->
+      <!-- 현재 금액 정보 카드 (계좌가 선택되었을 때 표시) -->
+      <div v-if="form.selectedAccountNumbers.length > 0" class="current-amount-card">
+        <div class="current-amount-content">
+          <div class="current-amount-header">
+            <i class="fas fa-wallet"></i>
+            <span class="current-amount-label">현재 모은 금액</span>
+           <i class="fas fa-info-circle tooltip-icon" data-tooltip="연결된 계좌 잔액의 합계입니다"></i>
+          </div>
+          <div class="current-amount-value">
+            {{ formatAmount(form.currentAmount) }}
+          </div>
+        </div>
       </div>
 
       <!-- 포함된 계좌 -->
@@ -298,15 +294,13 @@ const form = reactive({
 
 //  선택된 계좌들의 잔액 합계 계산
 const updateCurrentAmount = () => {
-  if (props.isEdit) {
-    const selectedAccounts = accountList.value.filter((account) =>
-      form.selectedAccountNumbers.includes(account.accountNumber)
-    );
-    form.currentAmount = selectedAccounts.reduce(
-      (sum, account) => sum + (account.balance || 0),
-      0
-    );
-  }
+  const selectedAccounts = accountList.value.filter((account) =>
+    form.selectedAccountNumbers.includes(account.accountNumber)
+  );
+  form.currentAmount = selectedAccounts.reduce(
+    (sum, account) => sum + (account.balance || 0),
+    0
+  );
 };
 
 // 계좌별 연결된 목표 정보 조회
@@ -588,6 +582,18 @@ onMounted(() => {
   border-color: #2f9b78;
 }
 
+/* 목표 금액 input의 화살표 제거 */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spinner[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;  /* 표준 속성 추가 */
+}
+
 .preset-input {
   background-color: #d2f5e9 !important;
   border-color: #2f9b78 !important;
@@ -618,6 +624,120 @@ onMounted(() => {
   transform: translateY(-50%);
   color: #666;
   font-size: 14px;
+}
+
+/* 현재 금액 카드 스타일 */
+.current-amount-card {
+  background: #f8fffe;
+  border: 1px solid #2f9b78;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.current-amount-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.current-amount-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.current-amount-header i.fas.fa-wallet {
+  color: #2f9b78;
+  font-size: 13px;
+}
+
+.current-amount-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2f9b78;
+}
+
+.tooltip-icon {
+  color: #a0a6b1;
+  font-size: 11px;
+  cursor: help;
+  margin-left: 6px;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+  background: rgba(107, 118, 132, 0.1);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.tooltip-icon:hover {
+  color: #2f9b78  !important;    /* !important 추가 */
+  opacity: 1;
+  background: #d2f5e9;
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(47, 155, 120, 0.4);
+}
+
+/* 커스텀 툴팁 스타일 */
+.tooltip-icon:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f8fffe;     /* 현재 모인 금액 카드 배경색 */
+  color: #2f9b78;         /* 현재 모인 금액 카드 글자색 */
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(47, 155, 120, 0.2);
+  border: 1px solid #2f9b78;  /* 카드와 같은 테두리 추가 */
+  animation: tooltipFadeIn 0.2s ease;
+}
+
+/* FontAwesome 아이콘이 제대로 표시되도록 강제 */
+.tooltip-icon::before {
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900 !important;
+  content: "\f05a" !important;  /* info-circle 아이콘 코드 */
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+.current-amount-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2f9b78;
+  white-space: nowrap;
 }
 
 .keyword-buttons {
@@ -700,11 +820,8 @@ onMounted(() => {
 
 .checkbox-label {
   display: flex;
-  /* align-items: center; */
   cursor: pointer;
-  /* gap: 12px; */
   flex-direction: column;
-  /* gap: 6px; */
   padding: 8px 0;
 }
 
@@ -719,22 +836,7 @@ onMounted(() => {
 .top-row{
   display: flex;
   align-items: center;
-  /* gap: 12px; */
 }
-
-/* .bottom-row{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-left: 30px;
-} */
-
-/* .account-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-} */
 
 .bank-name {
   font-weight: 500;
@@ -746,7 +848,6 @@ onMounted(() => {
   width: 36px;
   height: 36px;
   object-fit: contain;
-  /* margin-right: 12px; */
   margin-left: 8px;
 }
 
