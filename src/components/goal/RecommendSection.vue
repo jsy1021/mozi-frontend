@@ -77,11 +77,11 @@ onBeforeUnmount(() => {
           <div class="card-title">
             <p>맞춤형 정책 제안</p>
           </div>
-          <div class="plusbtn">
+          <!-- <div class="plusbtn">
             <router-link :to="`/goal/${goalId}/recommendations?tab=policy`">
               <i class="fa-solid fa-plus"></i>
             </router-link>
-          </div>
+          </div> -->
         </div>
 
         <!-- 정책 카드 -->
@@ -119,11 +119,11 @@ onBeforeUnmount(() => {
           <div class="card-title">
             <p>맞춤형 금융 상품</p>
           </div>
-          <div class="plusbtn">
+          <!-- <div class="plusbtn">
             <router-link :to="`/goal/${goalId}/recommendations?tab=product`">
               <i class="fa-solid fa-plus"></i>
             </router-link>
-          </div>
+          </div> -->
         </div>
 
         <!-- 금융 카드 -->

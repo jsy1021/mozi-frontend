@@ -159,39 +159,42 @@
             ]"
           >
             <label class="checkbox-label">
-              <input
-                type="checkbox"
-                :value="account.accountNumber"
-                v-model="form.selectedAccountNumbers"
-                @change="updateCurrentAmount"
-                :disabled="
-                  accountGoalInfo[account.accountNumber] &&
-                  !form.selectedAccountNumbers.includes(account.accountNumber)
-                "
-              />
-              <span class="checkmark"></span>
-              <div class="account-info">
-                <span class="bank-name">{{
-                  account.bankName || account.bankCode
-                }}</span>
-                <span class="account-number">{{
-                  maskAccountNumber(account.accountNumber)
-                }}</span>
-                <span class="balance">{{
-                  formatAmount(account.balance || 0)
-                }}</span>
-                <!-- 다른 목표에 연결된 계좌 표시 -->
-                <div
-                  v-if="accountGoalInfo[account.accountNumber]"
-                  class="linked-goal-info"
-                >
-                  <i class="fas fa-link"></i>
-                  <span
-                    >"{{ accountGoalInfo[account.accountNumber].goalName }}"에
-                    연결됨</span
-                  >
-                </div>
+              <div class="top-row">
+                <input
+                  type="checkbox"
+                  :value="account.accountNumber"
+                  v-model="form.selectedAccountNumbers"
+                  @change="updateCurrentAmount"
+                  :disabled="
+                    accountGoalInfo[account.accountNumber] &&
+                    !form.selectedAccountNumbers.includes(account.accountNumber)
+                  "
+                />
+                <span class="checkmark"></span>
+
+                <!-- <div class="account-info"> -->
+                <span class="bank-name">
+                  <!-- {{account.bankName || account.bankCode}} -->
+                  <img :src="getBankLogoUrl(account.bankCode)" class="bank-logo" />
+                </span>
+                <span class="account-name">{{ account.accountName }}</span>
               </div>
+
+              <!-- <div class="bottom-row"> -->
+                <span class="account-number">{{ maskAccountNumber(account.accountNumber) }}</span><br></br>
+                <span class="balance">{{ formatAmount(account.balance || 0) }}</span>
+              <!-- </div> -->
+
+              <!-- 다른 목표에 연결된 계좌 표시 -->
+              <div
+                v-if="accountGoalInfo[account.accountNumber]"
+                class="linked-goal-info"
+              >
+                <i class="fas fa-link"></i>
+                <span>"{{ accountGoalInfo[account.accountNumber].goalName }}"에 연결됨</span>
+              </div>
+
+              <!-- </div> -->
             </label>
             <div
               v-if="form.selectedAccountNumbers.includes(account.accountNumber)"
@@ -232,6 +235,17 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue';
+
+import { useBankStore } from '@/stores/bank';
+
+const bankStore = useBankStore();
+const banks = bankStore.banks;
+
+// 은행 로고 이미지
+const getBankLogoUrl = (bankCode) => {
+  const bank = banks.find((b) => b.code === bankCode);
+  return bank?.logo || '/images/financial/default.png';
+};
 
 // Props 정의
 const props = defineProps({
@@ -686,9 +700,12 @@ onMounted(() => {
 
 .checkbox-label {
   display: flex;
-  align-items: center;
+  /* align-items: center; */
   cursor: pointer;
-  gap: 12px;
+  /* gap: 12px; */
+  flex-direction: column;
+  /* gap: 6px; */
+  padding: 8px 0;
 }
 
 .checkbox-label input[type='checkbox'] {
@@ -699,27 +716,57 @@ onMounted(() => {
   accent-color: #2f9b78;
 }
 
-.account-info {
+.top-row{
+  display: flex;
+  align-items: center;
+  /* gap: 12px; */
+}
+
+/* .bottom-row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 30px;
+} */
+
+/* .account-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
   flex: 1;
-}
+} */
 
 .bank-name {
   font-weight: 500;
   color: #333;
 }
 
+/* 은행별 로고 */
+.bank-logo{
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  /* margin-right: 12px; */
+  margin-left: 8px;
+}
+
+.account-name {
+  font-weight: 500;
+  color: #333;
+  margin-left: 6px;
+}
+
 .account-number {
   font-size: 12px;
   color: #666;
+  margin-left: 30px;
 }
 
 .balance {
   font-size: 13px;
   color: #2f9b78;
   font-weight: 500;
+  margin-left: 30px;
 }
 
 .account-item.linked-to-other {
@@ -744,6 +791,7 @@ onMounted(() => {
   font-size: 11px;
   color: #6c757d;
   font-style: italic;
+  padding-left: 30px;
 }
 
 .linked-goal-info i {

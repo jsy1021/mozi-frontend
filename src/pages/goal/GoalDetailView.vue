@@ -470,25 +470,11 @@ watch(
                 <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo" />
               </div>
               <div style="flex: 1; padding: 0; margin: 0">
-                <!-- {{ acc.bankName || acc.bankCode }}&nbsp; -->
-                <span class="account-name">{{ acc.accountName }}</span
-                ><br />
-                <!-- {{ (acc.accountNumber || '').slice(0, 4) }}-****-{{ (acc.accountNumber || '').slice(-4) }}<br /> -->
-                <span class="account-number">{{
-                  maskAccountNumber(acc.accountNumber)
-                }}</span>
+                <span class="account-name">{{ acc.accountName }}</span><br />
+                <span class="account-number">{{ maskAccountNumber(acc.accountNumber)}}</span>
               </div>
-              <div
-                style="
-                  margin-top: 25px;
-                  flex: 0 0 auto;
-                  margin: 0;
-                  padding: 0;
-                  margin-right: 5px;
-                "
-              >
-                <span class="account-balance"
-                  >{{ safeToLocaleString(acc.balance) }}원</span
+              <div style="margin-top: 25px; flex: 0 0 auto; margin: 0; padding: 0;  margin-right: 5px;">
+                <span class="account-balance">{{ safeToLocaleString(acc.balance) }}원</span
                 >
               </div>
             </div>
