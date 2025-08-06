@@ -37,8 +37,16 @@
 
     <div class="bottom-section">
       <div class="keywords-section">
-        <!-- 점수 태그 -->
-        <span class="keyword-tag score-tag"> {{ policy.score }}점 </span>
+        <!-- 점수 or D-day 조건부 출력 -->
+        <span class="keyword-tag score-tag">
+          {{
+            props.showDday
+              ? dDayText || 'D-day 계산 불가'
+              : props.policy.score != null
+              ? props.policy.score + '점'
+              : '점수 없음'
+          }}
+        </span>
 
         <!-- 기존 키워드 태그들 -->
         <span
@@ -60,12 +68,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { scrapPolicy, cancelScrap } from '@/api/scrapApi';
 
 const props = defineProps({
   policy: Object,
   isScrapped: Boolean,
+  showDday: {
+    type: Boolean,
+    default: false, // 기본은 점수 출력
+  },
 });
 
 const bookmarked = ref(props.isScrapped);
@@ -83,6 +95,41 @@ const toggleBookmark = async () => {
     console.error('스크랩 오류', err);
   }
 };
+
+// D-day 계산
+const dDayText = computed(() => {
+  const aplyYmd = props.policy?.aplyYmd;
+  if (!aplyYmd || typeof aplyYmd !== 'string') return null;
+
+  const parts = aplyYmd.split('~');
+  if (parts.length !== 2) return null;
+
+  const rawEnd = parts[1].trim(); // "20250806"
+  if (rawEnd.length !== 8 || isNaN(Number(rawEnd))) return null;
+
+  const formatted = `${rawEnd.slice(0, 4)}-${rawEnd.slice(4, 6)}-${rawEnd.slice(
+    6,
+    8
+  )}`;
+  const endDate = new Date(formatted);
+  const today = new Date();
+
+  if (isNaN(endDate.getTime())) return null;
+
+  const diffTime = endDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays > 0) return `D-${diffDays}`;
+  if (diffDays === 0) return 'D-day';
+  return '마감';
+});
+
+onMounted(() => {
+  console.log('🔍 정책명:', props.policy?.plcyNm);
+  console.log('🔍 showDday:', props.showDday);
+  console.log('🔍 aplyYmd:', props.policy?.aplyYmd);
+  console.log('🔍 dDayText:', dDayText.value);
+});
 </script>
 
 <style scoped>
@@ -209,6 +256,6 @@ const toggleBookmark = async () => {
   background: #ffe3e3;
   color: #ff3b3b;
   font-weight: bold;
-  font-family: 'Caveat', cursive; /* 필기체 느낌 */
+  /* font-family: 'Caveat', cursive; 필기체 느낌 */
 }
 </style>

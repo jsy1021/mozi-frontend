@@ -9,6 +9,8 @@ import FinancialCard from '@/pages/search/financialSearch/financialCard.vue';
 import GoalCard from '@/components/goal/GoalCard.vue';
 import GoalEmptyCard from '@/components/goal/GoalEmptyCard.vue';
 import goalApi from '@/api/goalApi';
+import policyApi from '@/api/policyApi';
+import recommendCarousel from './recommend/policy/recommendCarousel.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -21,6 +23,8 @@ const isMainBank = ref(false);
 const isLoading = ref(true);
 
 const banks = bankStore.banks;
+
+const deadlinePolicies = ref([]);
 
 function goToAccountAuth() {
   router.push('/account/AccountAgreementPage');
@@ -136,15 +140,32 @@ const loadSummary = async () => {
   }
 };
 
-// 샘플 정책 데이터 (예시용)
-const samplePolicies = ref([
-  {
-    plcyNo: 1,
-    title: '청년 지원 정책',
-    description: '청년을 위한 다양한 지원 사업입니다.',
-    bookmarked: true,
+const loadDeadlinePolicies = async () => {
+  try {
+    const result = await policyApi.getDeadlinePolicies(31);
+    console.log('🔥 마감 임박 정책:', result); // ← 이거 찍히는지 확인
+    deadlinePolicies.value = result;
+  } catch (error) {
+    console.error('🔥 마감 임박 정책 로딩 실패:', error);
+  }
+};
+
+const props = defineProps({
+  deadlinePolicies: {
+    type: Array,
+    required: true,
   },
-]);
+});
+
+// // 샘플 정책 데이터 (예시용)
+// const samplePolicies = ref([
+//   {
+//     plcyNo: 1,
+//     title: '청년 지원 정책',
+//     description: '청년을 위한 다양한 지원 사업입니다.',
+//     bookmarked: true,
+//   },
+// ]);
 
 // 샘플 금융상품 데이터 (예시용)
 const sampleProductList = ref([
@@ -168,6 +189,7 @@ const sampleProductList = ref([
 onMounted(() => {
   loadSummary();
   loadGoals();
+  loadDeadlinePolicies();
 });
 
 watch(
@@ -290,12 +312,12 @@ watch(
     </div>
   </div>
 
-  <!-- 인기 정책 -->
+  <!-- 마감임박 정책 -->
   <div style="display: flex">
     <p
-      style="margin: 10px 10px -30px 25px; color: #6b7684; font-weight: bolder"
+      style="margin: 10px 10px -10px 25px; color: #6b7684; font-weight: bolder"
     >
-      인기 정책
+      마감 임박 정책
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"
@@ -303,21 +325,15 @@ watch(
       style="color: #d9d9d9; cursor: pointer; margin: 23px 0 5px 0"
     ></i>
   </div>
-
-  <!-- 샘플 정책 -->
-  <div style="margin: 20px">
-    <PolicyCard
-      v-for="policy in samplePolicies"
-      :key="policy.plcyNo"
-      :policy="policy"
-      :isScrapped="policy.bookmarked"
-    />
+  <!-- 정책 카드뷰 -->
+  <div style="margin: 0 20px 10px 20px">
+    <recommendCarousel :cards="deadlinePolicies" :showDday="true" />
   </div>
 
   <!-- 금융 상품 -->
   <div style="display: flex">
     <p
-      style="margin: 10px 10px -30px 25px; color: #6b7684; font-weight: bolder"
+      style="margin: 10px 10px -10px 25px; color: #6b7684; font-weight: bolder"
     >
       금융 상품
     </p>
@@ -329,7 +345,7 @@ watch(
   </div>
 
   <!-- 샘플 상품 -->
-  <div style="margin: 20px">
+  <div style="margin: 0 20px 20px 20px">
     <FinancialCard
       v-for="(item, index) in sampleProductList"
       :key="index"
