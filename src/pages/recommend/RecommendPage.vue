@@ -66,7 +66,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import policyRecommendTab from './policyRecommendTab.vue';
+import policyRecommendTab from './policy/policyRecommendTab.vue';
 
 const userName = '홍길동'; // 추후 로그인 사용자 이름과 연동
 

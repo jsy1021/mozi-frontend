@@ -23,8 +23,17 @@ export default {
     return data;
   },
 
+  // 필터 정책 조회
   async filterPolicies(filterData) {
-    const { data } = await api.post(`/policy/filter`, filterData);
+    const { data } = await api.post(`${POLICY_BASE_URL}/filter`, filterData);
     return data;
+  },
+
+  // ✅ 마감 임박 정책 조회 (추가된 부분)
+  async getDeadlinePolicies(days = 31) {
+    const { data } = await api.get(`${POLICY_BASE_URL}/deadline`, {
+      params: { days },
+    });
+    return data.result;
   },
 };

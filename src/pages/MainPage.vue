@@ -9,6 +9,9 @@ import FinancialCard from '@/pages/search/financialSearch/financialCard.vue';
 import GoalCard from '@/components/goal/GoalCard.vue';
 import GoalEmptyCard from '@/components/goal/GoalEmptyCard.vue';
 import goalApi from '@/api/goalApi';
+
+import policyApi from '@/api/policyApi';
+import recommendCarousel from './recommend/policy/recommendCarousel.vue';
 import { getTopSavings, getTopDeposits } from '@/api/financialApi';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
@@ -27,6 +30,8 @@ const isLoading = ref(true);
 const products = ref([]);
 
 const banks = bankStore.banks;
+
+const deadlinePolicies = ref([]);
 
 function goToAccountAuth() {
   router.push('/account/AccountAgreementPage');
@@ -146,22 +151,29 @@ const loadSummary = async () => {
   }
 };
 
-// 샘플 정책 데이터 (예시용)
-const samplePolicies = ref([
-  {
-    plcyNo: 1,
-    title: '청년 지원 정책',
-    description: '청년을 위한 다양한 지원 사업입니다.',
-    bookmarked: true,
+const loadDeadlinePolicies = async () => {
+  try {
+    const result = await policyApi.getDeadlinePolicies(31);
+    console.log('🔥 마감 임박 정책:', result); // ← 이거 찍히는지 확인
+    deadlinePolicies.value = result;
+  } catch (error) {
+    console.error('🔥 마감 임박 정책 로딩 실패:', error);
+  }
+};
+
+const props = defineProps({
+  deadlinePolicies: {
+    type: Array,
+    required: true,
   },
-]);
+});
 
 // 샘플 금융상품 데이터 (예시용)
 const sampleProductList = ref([
   {
     savingId: 1, // 적금 ID (depositId 대신 savingId 등 명확히)
     productName: '청년 희망 적금',
-    bankCode: 'KB', // 은행 코드 (로고 출력용)
+    bankCode: '0010927', // 은행 코드 (로고 출력용)
     bankName: '국민은행',
     options: [
       {
@@ -178,6 +190,7 @@ const sampleProductList = ref([
 onMounted(() => {
   loadSummary();
   loadGoals();
+  loadDeadlinePolicies();
 });
 
 onMounted(async () => {
@@ -189,8 +202,8 @@ onMounted(async () => {
 
     // 데이터 합치기 (type 필드 추가)
     products.value = [
-      ...depositData.map(d => ({ ...d, type: '예금' })),
-      ...savingData.map(s => ({ ...s, type: '적금' }))
+      ...depositData.map((d) => ({ ...d, type: '예금' })),
+      ...savingData.map((s) => ({ ...s, type: '적금' })),
     ];
   } catch (err) {
     console.error('금융 상품 불러오기 실패:', err);
@@ -255,17 +268,10 @@ watch(
     ></i>
   </div>
 
-  <div>
-    <div v-if="isUnlinked" class="card">
-      <div style="font-size: 10px">연동시 더 많은 기능을</div>
-      <div style="font-size: 10px">이용할 수 있어요!</div>
-      <button
-        class="card-btn"
-        @click="goToAccountAuth"
-        style="position: relative; bottom: 7px"
-      >
-        <div style="font-size: 10px; color: #6b7684">계좌연동</div>
-      </button>
+  <div style="margin: 20px">
+    <div v-if="isUnlinked" class="card card-unlinked">
+      <div class="card-text">연동시 더 많은 기능을 이용할 수 있어요!</div>
+      <button class="card-btn" @click="goToAccountAuth">계좌연동</button>
     </div>
 
     <div v-else-if="bankSummaryList" class="card">
@@ -274,14 +280,15 @@ watch(
           display: flex;
           align-items: center;
           justify-content: space-between;
+          height: 100%;
         "
       >
         <img
           :src="bankLogoUrl"
           alt="은행 로고"
-          style="height: 64px; margin: 0; align-self: flex-start"
+          style="height: 47px; margin: 0"
         />
-        <div style="text-align: left; margin: 10px 0 25px -80px">
+        <div style="text-align: left; margin: 20px 0 25px -80px">
           <div style="font-size: 16px; font-weight: 500; margin-bottom: -3px">
             {{
               bankSummaryList?.totalBalance
@@ -289,7 +296,7 @@ watch(
                 : '0'
             }}원
           </div>
-          <div style="font-size: 12px; color: #555">
+          <div style="font-size: 12px; color: #555; margin-top: 3px">
             {{ bankSummaryList?.representativeAccountName }}외
             {{ (bankSummaryList?.accountCount || 1) - 1 }}개 계좌
           </div>
@@ -305,7 +312,7 @@ watch(
           <span v-if="isMainBank">
             <i
               class="fa-solid fa-star"
-              style="color: #ffd43b; position: relative; top: -30px; left: 8px"
+              style="color: #ffd43b; position: relative; top: -20px; left: 4px"
             ></i>
           </span>
         </div>
@@ -317,12 +324,12 @@ watch(
     </div>
   </div>
 
-  <!-- 인기 정책 -->
+  <!-- 마감임박 정책 -->
   <div style="display: flex">
     <p
-      style="margin: 10px 10px -30px 25px; color: #6b7684; font-weight: bolder"
+      style="margin: 10px 10px -10px 25px; color: #6b7684; font-weight: bolder"
     >
-      인기 정책
+      마감 임박 정책
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"
@@ -330,21 +337,15 @@ watch(
       style="color: #d9d9d9; cursor: pointer; margin: 23px 0 5px 0"
     ></i>
   </div>
-
-  <!-- 샘플 정책 -->
-  <div style="margin: 20px">
-    <PolicyCard
-      v-for="policy in samplePolicies"
-      :key="policy.plcyNo"
-      :policy="policy"
-      :isScrapped="policy.bookmarked"
-    />
+  <!-- 정책 카드뷰 -->
+  <div style="margin: 0 20px 10px 20px">
+    <recommendCarousel :cards="deadlinePolicies" :showDday="true" />
   </div>
 
   <!-- 금융 상품 -->
   <div style="display: flex">
     <p
-      style="margin: 10px 10px -30px 25px; color: #6b7684; font-weight: bolder"
+      style="margin: 10px 10px -10px 25px; color: #6b7684; font-weight: bolder"
     >
       금융 상품
     </p>
@@ -357,54 +358,78 @@ watch(
 
   <!-- 예, 적금 우대 금리 상위 2개 상품 출력 -->
   <div style="margin: 20px">
-<Swiper
-  v-if="products.length > 0"
-  :slides-per-view="'auto'"
-  :space-between="16"
-  :pagination="{ clickable: true }"
-  :modules="[Pagination]"
-  class="financial-swiper"
->
-  <SwiperSlide v-for="(item, index) in products" :key="index" class="financial-slide">
-    <FinancialCard :deposit="item" :productType="item.type" />
-  </SwiperSlide>
-</Swiper>
-</div>
+    <Swiper
+      v-if="products.length > 0"
+      :slides-per-view="'auto'"
+      :space-between="16"
+      :pagination="{ clickable: true }"
+      :modules="[Pagination]"
+      class="financial-swiper"
+    >
+      <SwiperSlide
+        v-for="(item, index) in products"
+        :key="index"
+        class="financial-slide"
+      >
+        <FinancialCard :deposit="item" :productType="item.type" />
+      </SwiperSlide>
+    </Swiper>
+  </div>
 </template>
 
 <style scoped>
 .card {
-  width: 350px;
+  width: 100%;
   height: 80px;
   margin: auto;
-  padding: 8px 16px;
+  padding: 0px 16px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   background: #fff;
   text-align: center;
   border: 1px solid #e0e0e0;
 }
+.card-unlinked {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  gap: 8px;
+}
 
+.card-text {
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
 .card-btn {
-  display: block;
-  width: 200px;
-  height: 30px;
-  margin: 10px auto 0 auto;
-  padding: 6px 0;
-  border-radius: 8px;
-  border: 1.5px solid #f2f4f6;
   background: #f2f4f6;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  font-size: 14px;
+  color: #6b7684;
+  border: 1.5px solid #f2f4f6;
+  border-radius: 18px;
+  padding: 6px 16px;
+  font-size: 11px; /* 목표 버튼과 동일 */
+  font-weight: 600;
+  width: 105px; /* 목표 버튼 기준 정확히 일치 (or 100%면 wrapper로 통일) */
+  height: 25px; /* 명시적 높이 부여 */
+  line-height: 1;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: box-shadow 0.2s;
+  transition: all 0.3s ease;
+}
+
+.card-btn:hover {
+  transform: translateY(-2px);
+  background: #e0e0e0;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .card-btn:active {
-  box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.12);
-  background: #e0e0e0;
   transform: scale(0.98);
-  transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
+  transition: transform 0.1s ease;
 }
 
 .goal-main-container {
