@@ -177,7 +177,7 @@ function formatDate(dateStr) {
 const isExpanded = ref(false);
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
-  
+
   // nextTick(() => {
   //   // 강제 리플로우: scrollTop 읽기 같은 방법으로
   //   document.body.scrollTop = document.body.scrollTop;
@@ -247,7 +247,7 @@ const keywords = [
 ];
 
 function keywordToKorean(keyword) {
-  const match = keywords.find(k => k.key === keyword);
+  const match = keywords.find((k) => k.key === keyword);
   return match ? match.label : keyword;
 }
 
@@ -266,6 +266,25 @@ const guideMessage = computed(() => {
   return '시작이 반! 꾸준히 해봐요';
 });
 
+// 🎯 개선 1: 뒤로가기 로직 개선
+const goBack = () => {
+  // 쿼리 파라미터에서 from 값을 확인
+  const from = route.query.from;
+
+  if (from === 'main') {
+    // 메인페이지에서 온 경우 메인페이지로
+    router.push('/');
+  } else {
+    // 그 외의 경우는 목표 페이지로 (기본값)
+    router.push('/goal');
+  }
+};
+
+// 🎯 개선 2: 자산관리 링크 클릭 핸들러
+const openAssetManagement = (url) => {
+  window.open(url, '_blank');
+};
+
 // 초기 로드와 goalId 변경 감지
 onMounted(() => loadGoal(goalId));
 
@@ -283,7 +302,6 @@ watch(
 //     document.body.style.overflow = '';
 //   }
 // });
-
 </script>
 
 <template>
@@ -291,9 +309,10 @@ watch(
   <div class="top">
     <!-- 뒤로가기 -->
     <div class="top-backbtn">
-      <router-link to="/goal">
+      <!-- 🎯 개선: 고정된 링크 대신 함수 호출 -->
+      <button @click="goBack" class="back-btn">
         <i class="fa-solid fa-chevron-left"></i>
-      </router-link>
+      </button>
     </div>
     <!-- 제목 -->
     <div class="top-title">
@@ -382,7 +401,7 @@ watch(
       <!-- 키워드 -->
       <div class="goal-keyword">
         <!-- <p>#{{ goal.keyword || '키워드 없음' }}</p> -->
-        <p>#{{ keywordToKorean(goal.keyword) || '키워드 없음'}}</p>
+        <p>#{{ keywordToKorean(goal.keyword) || '키워드 없음' }}</p>
       </div>
 
       <!-- 목표 달성 여부에 따라 다른 안내 메시지 -->
@@ -395,7 +414,7 @@ watch(
         <p class="guide">💡목표 달성 가이드</p>
         <p class="comment">
           <!-- 조금씩 꾸준히, 목표 자산에 가까워지고 있어요. 오늘도 한 발짝! -->
-           {{ guideMessage }}
+          {{ guideMessage }}
         </p>
       </div>
 
@@ -434,24 +453,29 @@ watch(
             <div
               v-for="acc in linkedAccounts"
               :key="acc.accountId"
-              style="margin-bottom: 10px; display: flex; justify-content: flex-start; gap: 0; align-items: center;"
+              style="
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: flex-start;
+                gap: 0;
+                align-items: center;
+              "
             >
               <!-- <input
                 type="text"
                 checked
                 @change="unlinkAccount(acc.accountId)"
               /> -->
-              <div style="flex: 0 0 auto; padding: 0;margin-left: 5px;">
-                <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo"/>
+              <div style="flex: 0 0 auto; padding: 0; margin-left: 5px">
+                <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo" />
               </div>
-              <div style="flex: 1; padding: 0; margin: 0;">
-                <!-- {{ acc.bankName || acc.bankCode }}&nbsp; -->
-                <span class="account-name">{{ acc.accountName }}</span><br/>
-                <!-- {{ (acc.accountNumber || '').slice(0, 4) }}-****-{{ (acc.accountNumber || '').slice(-4) }}<br /> -->
-                <span class="account-number">{{ maskAccountNumber(acc.accountNumber) }}</span>
+              <div style="flex: 1; padding: 0; margin: 0">
+                <span class="account-name">{{ acc.accountName }}</span><br />
+                <span class="account-number">{{ maskAccountNumber(acc.accountNumber)}}</span>
               </div>
-              <div style="margin-top: 25px; flex: 0 0 auto; margin: 0;padding: 0;margin-right: 5px;">
-                <span class="account-balance">{{ safeToLocaleString(acc.balance) }}원</span>
+              <div style="margin-top: 25px; flex: 0 0 auto; margin: 0; padding: 0;  margin-right: 5px;">
+                <span class="account-balance">{{ safeToLocaleString(acc.balance) }}원</span
+                >
               </div>
             </div>
           </div>
@@ -495,41 +519,51 @@ watch(
     <!-- 목표 달성 여부에 따라 다른 추천 영역 -->
     <!-- 달성o : 자산관리 사이트 -->
     <div v-if="goalAchieved" class="asset-management">
-    <div class="asset-header">
-      <p class="asset-title">🎉 목표 달성!</p>
-      <p class="asset-subtitle">자산 성장 모드 ON</p>
-      <p class="asset-description">KB 자산관리센터</p>
+      <div class="asset-header">
+        <p class="asset-title">🎉 목표 달성!</p>
+        <p class="asset-subtitle">자산 성장 모드 ON</p>
+        <p class="asset-description">KB 자산관리센터</p>
+      </div>
+
+      <div class="asset-url-box">
+        <!-- 🎯 개선: 아이콘과 텍스트 모두 클릭 가능하도록 수정 -->
+        <div
+          class="asset-manage-url"
+          @click="
+            openAssetManagement('https://omoney.kbstar.com/quics?page=C056123')
+          "
+        >
+          <div class="asset-icon">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <p class="asset-link">KBot SAM<br />케이봇쌤</p>
+        </div>
+
+        <div
+          class="asset-manage-url"
+          @click="
+            openAssetManagement('https://omoney.kbstar.com/quics?page=C055442')
+          "
+        >
+          <div class="asset-icon">
+            <i class="fa-solid fa-piggy-bank"></i>
+          </div>
+          <p class="asset-link">연금관리</p>
+        </div>
+
+        <div
+          class="asset-manage-url"
+          @click="
+            openAssetManagement('https://omoney.kbstar.com/quics?page=C065350')
+          "
+        >
+          <div class="asset-icon">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+          <p class="asset-link">KB종합<br />자산관리</p>
+        </div>
+      </div>
     </div>
-    
-    <div class="asset-url-box">
-      <div class="asset-manage-url">
-        <div class="asset-icon">
-          <i class="fa-solid fa-chart-line"></i>
-        </div>
-        <p class="asset-link">
-          <a href="https://omoney.kbstar.com/quics?page=C056123" target="_blank">KBot SAM<br/>케이봇쌤</a>
-        </p>
-      </div>
-      
-      <div class="asset-manage-url">
-        <div class="asset-icon">
-          <i class="fa-solid fa-piggy-bank"></i>
-        </div>
-        <p class="asset-link">
-          <a href="https://omoney.kbstar.com/quics?page=C055442" target="_blank">연금관리</a>
-        </p>
-      </div>
-      
-      <div class="asset-manage-url">
-        <div class="asset-icon">
-          <i class="fa-solid fa-hand-holding-dollar"></i>
-        </div>
-        <p class="asset-link">
-          <a href="https://omoney.kbstar.com/quics?page=C065350" target="_blank">KB종합<br/>자산관리</a>
-        </p>
-      </div>
-    </div>
-  </div>
     <!-- 달성x : 맞춤형 추천 영역-->
     <div v-else>
       <RecommendSection />
@@ -568,6 +602,20 @@ watch(
 .top-backbtn {
   margin-left: 23px;
   margin-top: 2px;
+}
+
+/* 🎯 개선: 뒤로가기 버튼 스타일 */
+.back-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font-size: inherit;
+}
+
+.back-btn:hover {
+  opacity: 0.7;
 }
 
 .top-title {
@@ -660,59 +708,30 @@ watch(
   /* border: 2px solid #36C18C; */
   border-radius: 5px;
   width: 310px;
-  background-color: #D2F5E9;
+  background-color: #d2f5e9;
   /* background-color: rgba(100, 186, 170, 0.5); */
   margin-bottom: 10px;
 }
 .guide {
-  color: #8E8E93;
+  color: #8e8e93;
 }
 .comment {
-  color: #1A1A1A;
+  color: #1a1a1a;
   font-weight: 500;
   padding: 5px;
 }
-
-/* 목표 달성 후 -> 자산관리 */
-/* .asset-management {
-  margin: 20px;
-  border: 1px solid #d9d9d9;
-  border-radius: 5px;
-  text-align: center;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.asset-url-box{
-  display: flex;
-}
-
-.asset-manage-url{
-  width: 50px;
-  border: 1px solid gray;
-  border-radius: 5px;
-  height: 80px;
-}
-
-.asset-manage-url>p>a{
-  text-decoration: none;
-  font-size: 12px;
-} */
 
 /* 목표 달성 후 자산관리 섹션 개선 */
 .asset-management {
   margin: 20px;
   border-radius: 16px;
   text-align: center;
-  
+
   /* 목표 완료 섹션과 동일한 그라디언트 적용 */
   background: linear-gradient(135deg, #d2f5e9 0%, #ffffff 100%);
   border: 2px solid #7bc4a4;
   box-shadow: 0 6px 20px rgba(47, 155, 120, 0.15);
-  
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -760,12 +779,6 @@ watch(
   font-weight: 500;
 }
 
-/* .asset-url-box {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: wrap;
-} */
 .asset-url-box {
   display: flex !important;
   flex-wrap: nowrap !important;
@@ -775,8 +788,6 @@ watch(
   flex-wrap: nowrap; /* 꼭 명시 */
 }
 
-
-
 .asset-manage-url {
   width: 90px;
   height: 100px;
@@ -784,13 +795,13 @@ watch(
   border-radius: 16px;
   background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
   box-shadow: 0 4px 12px rgba(47, 155, 120, 0.08);
-  
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 12px 8px;
-  
+
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
@@ -811,16 +822,16 @@ watch(
   margin-bottom: 8px;
   color: #2f9b78;
   font-size: 24px;
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  
+
   border-radius: 12px;
   background: linear-gradient(135deg, #d2f5e9 0%, #e8f5f0 100%);
-  
+
   transition: all 0.3s ease;
 }
 
@@ -835,19 +846,20 @@ watch(
 .asset-link {
   margin: 0;
   line-height: 1.3;
+  cursor: pointer;
 }
 
-.asset-link a {
+.asset-link {
   text-decoration: none;
   font-size: 11px;
   font-weight: 600;
   color: #1a1a1a;
   line-height: 1.2;
-  
+
   transition: color 0.3s ease;
 }
 
-.asset-manage-url:hover .asset-link a {
+.asset-manage-url:hover .asset-link {
   color: #2f9b78;
 }
 
@@ -856,31 +868,32 @@ watch(
   .asset-url-box {
     gap: 12px;
   }
-  
+
   .asset-manage-url {
     width: 80px;
     height: 90px;
     padding: 10px 6px;
   }
-  
+
   .asset-icon {
     font-size: 20px;
     width: 36px;
     height: 36px;
   }
-  
-  .asset-link a {
+
+  .asset-link {
     font-size: 10px;
   }
 }
 
 /* 추가적인 애니메이션 효과 */
 @keyframes gentle-glow {
-  0%, 100% { 
-    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.15); 
+  0%,
+  100% {
+    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.15);
   }
-  50% { 
-    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.25); 
+  50% {
+    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.25);
   }
 }
 
@@ -906,7 +919,7 @@ watch(
 
 /* 토글 아래 내용 */
 .label {
-  color: #8E8E93;
+  color: #8e8e93;
   margin-top: 5px;
 }
 
@@ -944,25 +957,24 @@ watch(
 }
 
 /* 은행 로고 이미지 */
-.bank-logo{
-  width: 36px;  
-  height: 36px;  
-  object-fit: contain;  
+.bank-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
   /* margin-right: 12px; */
 }
 
-.account-name{
+.account-name {
   font-size: 16px;
   font-weight: 400;
 }
-.account-number{
+.account-number {
   font-size: 12px;
 }
-.account-balance{
+.account-balance {
   font-size: 14px;
-  color: #569FFF;
+  color: #569fff;
 }
-
 
 /* 모달 스타일 (삭제 버튼)*/
 .delete-btn {
