@@ -1,21 +1,24 @@
 <template>
   <div class="container py-3">
     <!-- 상단 타이틀 -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="fw-bold mb-0">추천</h4>
-      <i class="fa-solid fa-gear fa-lg" style="cursor: pointer"></i>
+    <div class="position-relative d-flex align-items-center mb-3">
+      <!-- 뒤로가기 버튼 -->
+      <button class="back-btn" @click="goBack">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+
+      <!-- 타이틀 가운데 정렬 -->
+      <h4 class="fw-bold mb-0 title-center">추천</h4>
     </div>
 
     <!-- 추천 인트로 -->
     <div class="p-3 rounded bg-light mb-3 text-center">
-      <p class="mb-1 fw-semibold">{{ userName }}님을 위한 맞춤 추천</p>
-      <small class="text-muted"
-        >목표와 프로필을 기반으로 추천을 제공합니다.</small
-      >
+      <p class="mb-1 fw-semibold">{{ userId }}님을 위한 맞춤 추천</p>
+      <small class="text-muted">목표와 프로필을 기반으로 추천을 제공합니다.</small>
     </div>
 
     <!-- 추천 탭 -->
-    <ul class="nav nav-tabs mb-3">
+    <ul class="nav nav-tabs recommend-tabs mb-3">
       <li class="nav-item" v-for="tab in tabs" :key="tab">
         <a
           href="#"
@@ -30,31 +33,7 @@
 
     <!-- 금융 상품 추천 -->
     <div v-if="currentTab === '금융상품'">
-      <div v-if="financialRecommendations.length">
-        <div
-          v-for="(item, index) in financialRecommendations"
-          :key="index"
-          class="card mb-2 p-2 shadow-sm"
-        >
-          <div class="d-flex align-items-center">
-            <img
-              :src="item.logoUrl"
-              alt="bank logo"
-              width="40"
-              height="40"
-              class="me-2"
-            />
-            <div>
-              <h6 class="mb-0">{{ item.productName }}</h6>
-              <small class="text-muted">{{ item.bankName }}</small>
-            </div>
-            <span class="ms-auto fw-bold text-success"> {{ item.rate }}% </span>
-          </div>
-        </div>
-      </div>
-      <div v-else class="text-center text-muted py-4">
-        추천할 금융 상품이 없습니다.
-      </div>
+      <FinancialRecommendTab :user-id="userId" :goal-id="goalId" />
     </div>
 
     <!-- 청년 정책 추천 -->
@@ -65,163 +44,79 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import policyRecommendTab from './policy/policyRecommendTab.vue';
+import { ref, computed, onMounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import policyRecommendTab from './policyRecommendTab.vue';
+import FinancialRecommendTab from './FinancialRecommendTab.vue';
+import { useRouter } from 'vue-router';
 
-const userName = '홍길동'; // 추후 로그인 사용자 이름과 연동
+const router = useRouter();
+const authStore = useAuthStore();
 
-const userId = 1; // 추후 연동
-const goalId = 2; // 추후 연동
+const goBack = () => {
+  router.back();
+};
+
+onMounted(() => {
+  authStore.initializeAuth(); // 새로고침 시 사용자 정보 복원
+});
+
+// 로그인한 사용자 ID를 가져오기
+const userId = computed(() => authStore.user?.login_id || '사용자');
+const goalId = 2;
 
 const tabs = ['금융상품', '청년정책'];
 const currentTab = ref('금융상품');
-
-// 금융 상품 추천 예시 데이터
-const financialRecommendations = ref([
-  {
-    productName: '고금리 정기예금',
-    bankName: '토스뱅크',
-    rate: 4.2,
-    logoUrl: '/images/financial/tossbank.png',
-  },
-  {
-    productName: '청년 우대 적금',
-    bankName: '국민은행',
-    rate: 3.8,
-    logoUrl: '/images/financial/kbbank.png',
-  },
-]);
-
-// 청년 정책 추천 예시 데이터
-const policyRecommendations = ref([
-  {
-    policyName: '청년 전세 이자 지원',
-    region: '서울특별시',
-  },
-  {
-    policyName: '청년 취업 지원금',
-    region: '경기도',
-  },
-]);
 </script>
 
 <style scoped>
-.policy-card {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px #0001;
-  padding: 16px 18px 12px 18px;
-  margin-bottom: 16px;
-  width: 100%;
+.position-relative {
   position: relative;
 }
 
-/* 그라디언트 왼쪽 바 - 투명도 70% */
-.policy-card::before {
-  content: '';
+.back-btn {
   position: absolute;
-  top: 0;
   left: 0;
-  width: 6px;
-  height: 100%;
-  background: linear-gradient(to bottom, #ff0000 0%, #000dff 55%);
-  opacity: 0.7;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.policy-icon {
-  width: 32px;
-  height: 32px;
-  margin-right: 8px;
-}
-
-.policy-title {
-  font-weight: bold;
-  font-size: 14px;
-  color: #222;
-  flex: 1;
-}
-
-.bookmark {
-  color: #bdbdbd;
+  background: none;
+  border: none;
   font-size: 1.2rem;
-  margin-left: 8px;
-  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.bookmark.scraped {
-  color: #569fff;
-
-  font-weight: 900;
-}
-
-.card-body {
-  font-size: 0.97rem;
-  color: #444;
-  margin-bottom: 8px;
-}
-
-.info-section {
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.info-item {
-  margin-bottom: 2px;
-}
-
-.info-item .label {
-  color: #888;
-  font-weight: 600;
-}
-
-.info-item .value {
-  color: #444;
-  margin-left: 4px;
-}
-
-.bottom-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.keywords-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+.title-center {
   flex: 1;
+  text-align: center;
+  font-weight: bold;
 }
 
-.keyword-tag {
-  background: #f5f5f5;
-  color: #666;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 10px;
+.settings-icon {
+  position: absolute;
+  right: 0;
+  cursor: pointer;
+}
+
+.recommend-tabs {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.recommend-tabs .nav-item {
+  flex: 1; /* 각 탭 동일 너비 */
+  text-align: center;
+}
+
+.recommend-tabs .nav-link {
+  width: 100%;
+  text-align: center;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6b7684; /* 글씨 색상 고정 */
   font-weight: 500;
 }
 
-.detail-btn {
-  background: #f5f5f5;
-  color: #aaa;
-  border: none;
-  border-radius: 6px;
-  padding: 2px 10px;
-  font-size: 0.85rem;
-  min-height: 24px;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  line-height: 20px;
-  margin-left: 8px;
+.recommend-tabs .nav-link.active {
+  border-bottom: 2px solid #36C18C; /* ✅ 활성 탭 하단 border 색상 변경 */
+  color: #6b7684; /* 글씨 색상 그대로 유지 */
 }
 </style>
