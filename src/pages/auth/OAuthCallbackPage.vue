@@ -9,15 +9,56 @@ const loading = ref(true);
 const error = ref('');
 const message = ref('로그인 처리 중...');
 
+// OAuth 제공자별 설정
+const oauthProviders = {
+  kakao: {
+    name: '카카오',
+    endpoint: '/oauth/kakao/callback',
+    cancelMessage: '카카오 로그인이 취소되었습니다.',
+  },
+  naver: {
+    name: '네이버',
+    endpoint: '/oauth/naver/callback',
+    cancelMessage: '네이버 로그인이 취소되었습니다.',
+  },
+  google: {
+    name: '구글',
+    endpoint: '/oauth/google/callback',
+    cancelMessage: '구글 로그인이 취소되었습니다.',
+  },
+};
+
+// 현재 경로에서 OAuth 제공자 확인
+function detectOAuthProvider() {
+  const path = route.path;
+
+  if (path.includes('/oauth/kakao/callback')) return 'kakao';
+  if (path.includes('/oauth/naver/callback')) return 'naver';
+  if (path.includes('/oauth/google/callback')) return 'google';
+
+  // 범용 콜백인 경우 state나 다른 파라미터로 판단 가능
+  return 'kakao'; // 기본값
+}
+
 onMounted(async () => {
   try {
+    const provider = detectOAuthProvider();
+    const providerConfig = oauthProviders[provider];
+
     const code = route.query.code;
     const error_code = route.query.error;
+    const state = route.query.state;
 
-    console.log('콜백 파라미터:', { code: code, error: error_code });
+    console.log(`${providerConfig.name} 콜백 파라미터:`, {
+      code: code,
+      error: error_code,
+      state: state,
+      provider: provider,
+    });
 
+    // 에러 처리
     if (error_code) {
-      error.value = '카카오 로그인이 취소되었습니다.';
+      error.value = providerConfig.cancelMessage;
       message.value = '로그인 페이지로 이동합니다...';
       setTimeout(() => {
         router.push({ name: 'loginPage' });
@@ -25,6 +66,7 @@ onMounted(async () => {
       return;
     }
 
+    // 인증 코드 확인
     if (!code) {
       error.value = '인증 코드를 받지 못했습니다.';
       message.value = '로그인 페이지로 이동합니다...';
@@ -34,37 +76,41 @@ onMounted(async () => {
       return;
     }
 
-    console.log('OAuth 콜백 수신 - code:', code.substring(0, 10) + '...');
+    console.log(
+      `${providerConfig.name} OAuth 콜백 수신 - code:`,
+      code.substring(0, 10) + '...'
+    );
+    message.value = `${providerConfig.name} 로그인 처리 중...`;
 
-    const response = await api.get(`/oauth/kakao/callback?code=${code}`);
+    // OAuth 제공자별 콜백 API 호출
+    const response = await api.get(
+      `${providerConfig.endpoint}?code=${code}${state ? `&state=${state}` : ''}`
+    );
 
-    console.log('백엔드 응답 전체:', response);
-    console.log('응답 타입:', typeof response);
-    console.log('응답 키들:', Object.keys(response));
+    console.log(`${providerConfig.name} 백엔드 응답:`, response);
 
-    let authResult;
+    // BaseResponse 처리 (api 인터셉터에서 이미 처리됨)
+    let authResult = response;
+
+    // 혹시 response.result가 있다면 그것을 사용 (인터셉터를 통과하지 않은 경우)
     if (response.result) {
       authResult = response.result;
-    } else if (response.token) {
-      authResult = response;
-    } else {
-      console.error('예상치 못한 응답 형태:', response);
-      throw new Error('응답 형태를 인식할 수 없습니다.');
     }
 
     console.log('추출된 인증 결과:', authResult);
 
+    // 토큰과 사용자 정보 확인
     if (authResult.token && authResult.user) {
       localStorage.setItem('accessToken', authResult.token);
       localStorage.setItem('userInfo', JSON.stringify(authResult.user));
 
       console.log('토큰 저장 완료:', authResult.token.substring(0, 20) + '...');
 
-      message.value = '로그인 성공! 메인 페이지로 이동합니다...';
+      message.value = `${providerConfig.name} 로그인 성공! 메인 페이지로 이동합니다...`;
 
       setTimeout(() => {
         router.push({ name: 'mainPage' });
-      }, 1000);
+      }, 1500);
     } else {
       console.error('토큰 또는 사용자 정보 없음:', {
         hasToken: !!authResult.token,
@@ -82,12 +128,15 @@ onMounted(async () => {
       data: err.response?.data,
     });
 
+    // 에러 메시지 설정
     if (err.response?.status === 404) {
       error.value = '백엔드 API를 찾을 수 없습니다.';
     } else if (err.response?.status === 500) {
       error.value = '서버 내부 오류가 발생했습니다.';
     } else if (err.response?.data?.message) {
       error.value = err.response.data.message;
+    } else if (err.message) {
+      error.value = err.message;
     } else {
       error.value = '로그인 처리 중 오류가 발생했습니다.';
     }
