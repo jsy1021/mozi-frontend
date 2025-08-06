@@ -24,7 +24,7 @@ export default defineConfig({
   build: {
     //'/Users/soohyun/Documents/mozi/src/main/webapp/resources',
     //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
-  
+
     outDir:
       //'/Users/soohyun/Documents/mozi/src/main/webapp/resources',
       //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
