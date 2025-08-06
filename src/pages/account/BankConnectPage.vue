@@ -42,8 +42,7 @@ function goBack() {
 onMounted(async () => {
   try {
     const response = await getConnectedBanks();
-    const connectedCodes = response.bankCodeList;
-    console.log(connectedCodes); // ex) ['0004', '0011']
+    const connectedCodes = response.bankCodeList; // ex) ['0004', '0011']
     bankStore.initializeConnectedBanks(connectedCodes);
   } catch (e) {
     console.error('연결된 은행 조회 실패:', e);

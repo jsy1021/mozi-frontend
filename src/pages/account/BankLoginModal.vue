@@ -30,7 +30,6 @@ const props = defineProps({
   bank: Object,
 });
 
-console.log('modal bank:', props.bank);
 const emit = defineEmits(['close']);
 const id = ref('');
 const password = ref('');
