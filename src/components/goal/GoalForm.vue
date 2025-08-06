@@ -171,9 +171,13 @@
               />
               <span class="checkmark"></span>
               <div class="account-info">
-                <span class="bank-name">{{
-                  account.bankName || account.bankCode
-                }}</span>
+                <span class="bank-name">
+                  <!-- {{account.bankName || account.bankCode}} -->
+                   <img :src="getBankLogoUrl(account.bankCode)" class="bank-logo" />
+                </span>
+                <span class="account-name">
+                  {{ account.accountName }}
+                </span>
                 <span class="account-number">{{
                   maskAccountNumber(account.accountNumber)
                 }}</span>
@@ -232,6 +236,17 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue';
+
+import { useBankStore } from '@/stores/bank';
+
+const bankStore = useBankStore();
+const banks = bankStore.banks;
+
+// 은행 로고 이미지
+const getBankLogoUrl = (bankCode) => {
+  const bank = banks.find((b) => b.code === bankCode);
+  return bank?.logo || '/images/financial/default.png';
+};
 
 // Props 정의
 const props = defineProps({
@@ -709,6 +724,14 @@ onMounted(() => {
 .bank-name {
   font-weight: 500;
   color: #333;
+}
+
+/* 은행사 이미지 */
+.bank-logo{
+    width: 36px;
+  height: 36px;
+  object-fit: contain;
+  /* margin-right: 12px; */
 }
 
 .account-number {
