@@ -66,7 +66,7 @@ onMounted(fetchAccounts);
 <style scoped>
 .wrapper {
   padding: 16px;
-  background-color: #f5f5f5;
+  background-color: #fff;
   min-height: 100vh;
 }
 
@@ -95,8 +95,8 @@ onMounted(fetchAccounts);
 .bank-code {
   font-size: 16px;
   font-weight: 600;
-  margin: 8px 0 16px;
-  text-align: center;
+  margin: 16px 0 16px;
+  padding-left: 5px;
 }
 
 .account-list {
@@ -106,13 +106,18 @@ onMounted(fetchAccounts);
 }
 
 .account-card {
-  background: #fff;
+  background: #fff; /* 흰 배경 유지 */
   padding: 14px;
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  /* ✅ 경계선 */
+  border: 1px solid #e0e0e0;
+
+  /* ✅ 입체감 주는 그림자 */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .account-info {
