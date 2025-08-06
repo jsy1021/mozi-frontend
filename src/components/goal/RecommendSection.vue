@@ -1,68 +1,69 @@
 <script setup>
 import RecommendCard from './RecommendCard.vue';
-import db from '@/data/db.json'
+import db from '@/data/db.json';
 
-import { useRoute } from 'vue-router'
+import { useRoute } from 'vue-router';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
-const route = useRoute()
-const goalId = route.params.goalId
+const route = useRoute();
+const goalId = route.params.goalId;
 
 // < 정책 >
 // const policies = db.YouthPolicy
 
 // 특정 정책 ID로 하나만 추출
-const selectedPolicyId = 1
-const policy = db.YouthPolicy.find(p => p.policy_id === selectedPolicyId)
+const selectedPolicyId = 1;
+const policy = db.YouthPolicy.find((p) => p.policy_id === selectedPolicyId);
 
 // < 금융 >
-const depositProduct = db.DepositProduct.find(p => p.deposit_id === 1)
-const depositOption = db.DepositOption.find(o => o.deposit_id === 1)
+const depositProduct = db.DepositProduct.find((p) => p.deposit_id === 1);
+const depositOption = db.DepositOption.find((o) => o.deposit_id === 1);
 
-const productData = depositProduct ? {
-  ...depositProduct,
-  intr_rate: depositOption?.intr_rate ?? null,
-  intr_rate2: depositOption?.intr_rate2 ?? null,
-} : null
-
+const productData = depositProduct
+  ? {
+      ...depositProduct,
+      intr_rate: depositOption?.intr_rate ?? null,
+      intr_rate2: depositOption?.intr_rate2 ?? null,
+    }
+  : null;
 
 // < 슬라이드 관련 >
 // 여러 정책 데이터 예시 (3개만 사용)
-const policies = db.YouthPolicy.slice(0, 3)
+const policies = db.YouthPolicy.slice(0, 3);
 
 // 여러 금융 상품 예시
-const productList = db.DepositProduct.slice(0, 3).map(prod => {
-  const option = db.DepositOption.find(o => o.deposit_id === prod.deposit_id)
+const productList = db.DepositProduct.slice(0, 3).map((prod) => {
+  const option = db.DepositOption.find((o) => o.deposit_id === prod.deposit_id);
   return {
     ...prod,
     intr_rate: option?.intr_rate ?? null,
     intr_rate2: option?.intr_rate2 ?? null,
-  }
-})
+  };
+});
 
 // 상태
-const currentPolicyIndex = ref(0)
-const currentProductIndex = ref(0)
+const currentPolicyIndex = ref(0);
+const currentProductIndex = ref(0);
 
-let policyTimer = null
-let productTimer = null
+let policyTimer = null;
+let productTimer = null;
 
 // 자동 슬라이드
 onMounted(() => {
   policyTimer = setInterval(() => {
-    currentPolicyIndex.value = (currentPolicyIndex.value + 1) % policies.length
-  }, 5000)
+    currentPolicyIndex.value = (currentPolicyIndex.value + 1) % policies.length;
+  }, 5000);
 
   productTimer = setInterval(() => {
-    currentProductIndex.value = (currentProductIndex.value + 1) % productList.length
-  }, 5000)
-})
+    currentProductIndex.value =
+      (currentProductIndex.value + 1) % productList.length;
+  }, 5000);
+});
 
 onBeforeUnmount(() => {
-  clearInterval(policyTimer)
-  clearInterval(productTimer)
-})
-
+  clearInterval(policyTimer);
+  clearInterval(productTimer);
+});
 </script>
 
 <template>
@@ -92,7 +93,11 @@ onBeforeUnmount(() => {
             class="carousel-track"
             :style="{ transform: `translateX(-${currentPolicyIndex * 100}%)` }"
           >
-            <div v-for="(p, index) in policies" :key="p.policy_id" class="carousel-slide">
+            <div
+              v-for="(p, index) in policies"
+              :key="p.policy_id"
+              class="carousel-slide"
+            >
               <RecommendCard type="policy" :policy="p" />
             </div>
           </div>
@@ -105,7 +110,6 @@ onBeforeUnmount(() => {
               @click="currentPolicyIndex = index"
             ></span>
           </div>
-
         </div>
       </div>
 
@@ -121,7 +125,7 @@ onBeforeUnmount(() => {
             </router-link>
           </div>
         </div>
-        
+
         <!-- 금융 카드 -->
         <!-- <RecommendCard/> -->
         <!-- <RecommendCard type="product" :product="productData" /> -->
@@ -131,7 +135,11 @@ onBeforeUnmount(() => {
             class="carousel-track"
             :style="{ transform: `translateX(-${currentProductIndex * 100}%)` }"
           >
-            <div v-for="(prod, index) in productList" :key="prod.deposit_id" class="carousel-slide">
+            <div
+              v-for="(prod, index) in productList"
+              :key="prod.deposit_id"
+              class="carousel-slide"
+            >
               <RecommendCard type="product" :product="prod" />
             </div>
           </div>
@@ -145,24 +153,20 @@ onBeforeUnmount(() => {
             ></span>
           </div>
         </div>
-
-
       </div>
     </div>
-
   </div>
-
 </template>
 
 <style scoped>
-.goal-recommend{
+.goal-recommend {
   margin: 20px;
   border: 1px solid #d9d9d9;
   border-radius: 5px;
   text-align: center;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
-.goal-recommend>div{
+.goal-recommend > div {
   margin: 10px;
   /* border: 1px solid #d9d9d9; */
   border-radius: 5px;
@@ -175,20 +179,21 @@ onBeforeUnmount(() => {
 }
 
 /* 카드 */
-.card-top{
-  display: flex; 
-  text-align: center; 
+.card-top {
+  display: flex;
+  text-align: center;
   margin-left: 100px;
 }
 
-.card-title{}
+.card-title {
+}
 
-.card-title>p{
+.card-title > p {
   font-size: 16px;
   font-weight: 400;
 }
 
-.plusbtn{
+.plusbtn {
   /* margin-top: 15px;  */
   margin-left: 80px;
 }
@@ -236,5 +241,4 @@ onBeforeUnmount(() => {
 .indicators span.active {
   background-color: #333;
 }
-
 </style>

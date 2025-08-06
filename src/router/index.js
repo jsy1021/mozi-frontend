@@ -43,8 +43,20 @@ const routes = [
     beforeEnter: requiresAuth,
   },
   {
-    path: '/oauth/callback',
-    name: 'oauthCallback',
+    path: '/oauth/kakao/callback',
+    name: 'kakaoCallback',
+    component: () => import('../pages/auth/OAuthCallbackPage.vue'),
+    meta: { isHeader: false, isFooter: false },
+  },
+  {
+    path: '/oauth/naver/callback',
+    name: 'naverCallback',
+    component: () => import('../pages/auth/OAuthCallbackPage.vue'),
+    meta: { isHeader: false, isFooter: false },
+  },
+  {
+    path: '/oauth/google/callback',
+    name: 'googleCallback',
     component: () => import('../pages/auth/OAuthCallbackPage.vue'),
     meta: { isHeader: false, isFooter: false },
   },

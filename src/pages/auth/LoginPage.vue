@@ -14,7 +14,11 @@ const passwd = ref('');
 const showPassword = ref(false);
 const error = ref(''); // 에러 메시지
 const loading = ref(false);
-const kakaoLoading = ref(false);
+const socialLoading = ref({
+  kakao: false,
+  naver: false,
+  google: false,
+});
 
 const canSubmit = computed(() => id.value.trim() && passwd.value.trim());
 
@@ -61,33 +65,58 @@ async function login() {
 // 카카오 로그인
 async function loginWithKakao() {
   try {
-    kakaoLoading.value = true;
+    socialLoading.value.kakao = true;
     error.value = '';
 
-    console.log('카카오 로그인 URL 요청 중...');
-
-    // 백엔드에서 카카오 로그인 URL 받기
     const response = await api.get('/oauth/kakao/login-url');
     const kakaoAuthUrl = response.result;
 
-    console.log('카카오 로그인 시작');
-
-    // 현재 창에서 카카오 로그인 페이지로 이동
-    // 카카오 인증 완료 후 자동으로 /oauth/callback 으로 돌아옴
     window.location.href = kakaoAuthUrl;
   } catch (err) {
     console.error('카카오 로그인 URL 요청 실패:', err);
     error.value = '카카오 로그인을 시작할 수 없습니다.';
-    kakaoLoading.value = false;
+    socialLoading.value.kakao = false;
   }
 }
 
-function loginWithNaver() {
-  alert('네이버 로그인 시도');
+// 네이버 로그인
+async function loginWithNaver() {
+  try {
+    socialLoading.value.naver = true;
+    error.value = '';
+
+    console.log('네이버 로그인 URL 요청 중...');
+
+    const response = await api.get('/oauth/naver/login-url');
+    const naverAuthUrl = response.result;
+
+    console.log('네이버 로그인 시작');
+    window.location.href = naverAuthUrl;
+  } catch (err) {
+    console.error('네이버 로그인 URL 요청 실패:', err);
+    error.value = '네이버 로그인을 시작할 수 없습니다.';
+    socialLoading.value.naver = false;
+  }
 }
 
-function loginWithGoogle() {
-  alert('구글 로그인 시도');
+// 구글 로그인
+async function loginWithGoogle() {
+  try {
+    socialLoading.value.google = true;
+    error.value = '';
+
+    console.log('구글 로그인 URL 요청 중...');
+
+    const response = await api.get('/oauth/google/login-url');
+    const googleAuthUrl = response.result;
+
+    console.log('구글 로그인 시작');
+    window.location.href = googleAuthUrl;
+  } catch (err) {
+    console.error('구글 로그인 URL 요청 실패:', err);
+    error.value = '구글 로그인을 시작할 수 없습니다.';
+    socialLoading.value.google = false;
+  }
 }
 </script>
 
