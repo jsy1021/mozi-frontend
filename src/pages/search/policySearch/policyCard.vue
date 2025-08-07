@@ -88,10 +88,10 @@ const hasIncomeCondition = computed(() => {
   return ['0043002', '0043003'].includes(code);
 });
 
-const bookmarked = ref(props.isScrapped);
+const bookmarked = ref(props.isScrapped); // ✅ 초기 상태는 props에서 받아옴
 
-// 하드코딩된 유저 ID
-const userId = 1; // TODO: 로그인 연동 시 교체
+// ✅ 이 줄이 없으면 emit은 undefined 에러 남!
+const emit = defineEmits(['updateBookmark']);
 
 function isClosed(aplyYmd) {
   if (!aplyYmd || !aplyYmd.includes('~')) return false;
@@ -101,28 +101,38 @@ function isClosed(aplyYmd) {
   return end < yyyyMMdd;
 }
 
+// 북마크 토글
 const toggleBookmark = async () => {
   try {
+    const plcyNo = props.policy.plcyNo;
+
     console.log('📌 북마크 클릭됨:', {
-      현재상태: bookmarked.value,
-      정책ID: props.policy.plcyNo,
-      유저ID: userId,
+      현재상태: props.isScrapped,
+      정책ID: plcyNo,
     });
 
-    if (bookmarked.value) {
-      await cancelScrap(userId, props.policy.plcyNo);
+    if (props.isScrapped) {
+      await cancelScrap(plcyNo);
       console.log('❌ 스크랩 해제 요청 보냄');
+      emit('updateBookmark', { plcyNo, value: false });
     } else {
-      await scrapPolicy(userId, props.policy.plcyNo);
+      await scrapPolicy(plcyNo);
       console.log('✅ 스크랩 등록 요청 보냄');
+      emit('updateBookmark', { plcyNo, value: true });
     }
-
-    bookmarked.value = !bookmarked.value;
-    console.log('🔄 북마크 상태 변경 →', bookmarked.value);
   } catch (err) {
     console.error('⚠️ 스크랩 처리 오류:', err);
   }
 };
+
+import { watch } from 'vue';
+
+watch(
+  () => props.isScrapped,
+  (newVal) => {
+    bookmarked.value = newVal;
+  }
+);
 </script>
 
 <style scoped>

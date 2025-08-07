@@ -61,58 +61,98 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getRecommendations, getFinanceScraps, addFinanceScrap, removeFinanceScrap } from '@/api/recommendFinanceApi';
+import axios from 'axios';
 import { getBankLogoUrl } from '../search/financialSearch/util/bankLogo.js';
+import api from '@/api'; // axios 인스턴스 사용
 
 const router = useRouter();
 const recommendations = ref([]);
 const scrapedProducts = ref([]);
+const token = localStorage.getItem('accessToken');
 
-// 추천 상품 불러오기
-onMounted(async () => {
+// ✅ 추천 상품만 불러오는 함수
+const fetchRecommendationsOnly = async () => {
   try {
-    recommendations.value = await getRecommendations();
-    await checkScrapStatus(); // 스크랩 상태 확인
+    const response = await axios.get('/api/recommend/finance', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    recommendations.value = Array.isArray(response.data) ? response.data : [];
+    console.log(' 추천 상품:', recommendations.value);
   } catch (error) {
-    console.error('추천 상품 불러오기 실패:', error);
+    console.error(' 추천 상품 불러오기 실패:', error);
     recommendations.value = [];
-  }
-});
-
-const checkScrapStatus = async () => {
-  try {
-    const scraps = await getFinanceScraps();
-    scrapedProducts.value = scraps.map(scrap =>
-      scrap.productType === 'SAVING' ? scrap.product.savingId : scrap.product.depositId
-    );
-  } catch (error) {
-    console.error('스크랩 상태 확인 실패:', error);
   }
 };
 
+// 스크랩 상태 확인
+const fetchScrapStatus = async () => {
+  try {
+    const response = await axios.get('/api/scrap/finance', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const scraps = Array.isArray(response.data) ? response.data : [];
+
+    scrapedProducts.value = scraps
+      .map(scrap =>
+        scrap.productType === 'SAVING' ? scrap.product?.savingId : scrap.product?.depositId
+      )
+      .filter(Boolean); // null 또는 undefined 제거
+  } catch (error) {
+    console.error('스크랩 상태 확인 실패:', error);
+    scrapedProducts.value = [];
+  }
+};
+
+
+// ✅ 페이지 마운트 시 함께 호출
+onMounted(async () => {
+  await fetchRecommendationsOnly();
+  await fetchScrapStatus();
+});
+
+const isScraped = (product) => scrapedProducts.value.includes(product.productId);
+
 const toggleScrap = async (product) => {
   const productId = product.productId;
-  const productType = product.productType;
 
-  if (!productId) {
-    console.error('상품 ID가 없습니다.');
+  // 🔥 명확하게 타입 지정
+  const productType =
+    product.productType === 'SAVINGS' ? 'SAVING'
+    : product.productType === 'DEPOSITS' ? 'DEPOSIT'
+    : product.productType; // 이미 올바르게 되어 있으면 그대로 사용
+
+  if (!productId || !productType) {
+    console.error('상품 ID 또는 타입이 유효하지 않습니다.');
     return;
   }
 
   try {
     if (isScraped(product)) {
-      await removeFinanceScrap(productType, productId);
-      scrapedProducts.value = scrapedProducts.value.filter(id => id !== productId);
+      await axios.delete('/api/scrap/finance', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { productType, productId },
+      });
+      console.log('스크랩 삭제 완료');
     } else {
-      await addFinanceScrap(productType, productId);
-      scrapedProducts.value.push(productId);
+      await axios.post('/api/scrap/finance', null, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { productType, productId },
+      });
+      console.log('스크랩 추가 완료');
     }
+
+    // 최신 상태 동기화
+    await fetchScrapStatus();
   } catch (error) {
-    console.error('스크랩 토글 실패:', error);
+    console.error('스크랩 토글 중 오류 발생:', error.response?.data || error.message);
+    alert('스크랩 처리 중 오류가 발생했습니다.');
   }
 };
-
-const isScraped = (product) => scrapedProducts.value.includes(product.productId);
 
 function goToDetail(product) {
   const productType = product.productType === 'SAVINGS' ? 'saving' : 'deposit';
@@ -123,6 +163,7 @@ function goToGoalPage() {
   router.push('/goal');
 }
 </script>
+
 
 <style scoped>
 .recommendations {

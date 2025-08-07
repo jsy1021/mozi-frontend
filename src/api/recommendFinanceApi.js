@@ -3,7 +3,7 @@ import api from "./index.js"; // ← 인터셉터가 설정된 api 사용
 // 추천 상품 조회
 export const getRecommendations = async () => {
   try {
-    const response = await api.get("/recommendations");
+    const response = await api.get("/recommend/finance");
     return response.data;
   } catch (error) {
     console.error("추천 상품 불러오기 실패:", error);

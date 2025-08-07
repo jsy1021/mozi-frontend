@@ -36,6 +36,10 @@
         <h2>한눈에 보는 정책</h2>
         <div class="info-list">
           <div class="info-row">
+            <span class="label">주관기관명</span>
+            <span>{{ policy.sprvsnInstCdNm }}</span>
+          </div>
+          <div class="info-row">
             <span class="label">정책번호</span>
             <span>{{ policy.plcyNo }}</span>
           </div>
@@ -48,10 +52,18 @@
             <span>{{ policy.plcySprtCn }}</span>
           </div>
           <div class="info-row">
-            <span class="label">신청기간</span>
+            <span class="label">운영기간</span>
             <span>{{
               formatPeriod(policy.bizPrdBgngYmd, policy.bizPrdEndYmd)
             }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">신청기간</span>
+            <span>{{ policy.aplyYmd }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">지원 규모(명)</span>
+            <span>{{ policy.sprtSclCnt }}</span>
           </div>
         </div>
       </section>
@@ -72,7 +84,7 @@
             <span>{{ formatZipCode() }}</span>
           </div>
           <div class="info-row">
-            <span class="label">소득조건</span>
+            <span class="label">소득</span>
             <span>{{ convertLabel(policy.earnCndSeCd, 'income') }}</span>
           </div>
           <div
@@ -110,21 +122,49 @@
             <span class="label">특화 분야</span>
             <span>{{ convertLabel(policy.sBizCd, 'specialty') }}</span>
           </div>
+          <div class="info-row">
+            <span class="label">참여 제한 대상</span>
+            <span>{{ policy.ptcpPrpTrgtCn }}</span>
+          </div>
         </div>
       </section>
 
-      <!-- 신청 정보 -->
+      <!-- 신청 방법 -->
       <section class="section card">
-        <h2>신청 정보</h2>
-        <p class="link">
-          <a
-            :href="policy.aplyUrlAddr"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ policy.aplyUrlAddr }}
-          </a>
-        </p>
+        <h2>신청 방법</h2>
+        <div class="info-row">
+          <span class="label">신청 방법</span>
+          <span>{{ policy.plcyAplyMthdCn }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">심사 내용</span>
+          <span>{{ policy.srngMthdCn }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">신청 URL</span>
+          <p class="link">
+            <a
+              :href="policy.aplyUrlAddr"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ policy.aplyUrlAddr }}
+            </a>
+          </p>
+        </div>
+        <div class="info-row">
+          <span class="label">참고 URL</span>
+          <p class="link">
+            <a
+              :href="policy.aplyUrlAddr"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ policy.refUrlAddr1 }}
+            </a>
+          </p>
+        </div>
       </section>
     </main>
   </div>
