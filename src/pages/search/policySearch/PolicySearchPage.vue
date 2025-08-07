@@ -57,7 +57,6 @@
       :toggleFilter="toggleFilter"
       v-model:customIncome="customIncome"
       v-model:customAge="customAge"
-      v-model:usePersonalInfo="usePersonalInfo"
       :regionNameMap="regionNameMap"
       :user-profile="userProfile"
     />
