@@ -22,7 +22,8 @@ const getBankLogoUrl = (bankCode) => {
 const goBack = () => router.back();
 const goToDeletePage = () => router.push('/account/BankUnlinkPage');
 const goToBankMainSetting = () => router.push('/account/BankMainSettingPage');
-const goToConnectPage = () => router.push('/account/BankConnectPage');
+const goToConnectPage = () =>
+  router.push({ path: '/account/BankConnectPage', query: { from: 'summary' } });
 
 const refreshAccountData = async () => {
   try {
