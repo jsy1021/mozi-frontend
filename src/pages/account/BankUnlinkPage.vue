@@ -78,7 +78,9 @@ onMounted(() => {
       </div>
     </div>
 
-    <p>해지할 은행을 선택해주세요 (복수 선택 가능)</p>
+    <p style="padding-left: 10px; font-size: 15px">
+      해지할 은행을 선택해주세요
+    </p>
 
     <!-- 은행 목록 -->
     <div class="bank-box">
@@ -154,12 +156,18 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 110px;
+  margin-bottom: 25px;
 }
 .back-btn {
-  font-size: 18px;
+  font-size: 18px; /* 크기 맞춤 */
+  color: #757575; /* 텍스트 색과 동일하게 */
   cursor: pointer;
   user-select: none;
-  color: #a0a0a0;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: #555555; /* 살짝 어두운 hover 효과 */
 }
 .bank-box {
   border: 1px solid #ddd;
