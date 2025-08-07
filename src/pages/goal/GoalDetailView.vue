@@ -302,6 +302,7 @@ watch(
 //     document.body.style.overflow = '';
 //   }
 // });
+
 // 1. <script setup> 섹션에 추가할 코드
 
 // 은행별 자산관리 정보 (기존 은행 관련 코드 아래에 추가)
@@ -318,7 +319,7 @@ const bankAssetManagement = {
         description: 'AI 자산관리 상담',
       },
       {
-        name: '연금관리',
+        name: '연금 관리\n\n',
         url: 'https://omoney.kbstar.com/quics?page=C055442',
         icon: 'fa-solid fa-piggy-bank',
         description: '연금 통합관리',
@@ -331,78 +332,28 @@ const bankAssetManagement = {
       },
     ],
   },
-  '0081': {
-    // KEB하나은행
-    name: 'KEB하나은행',
-    hasAssetManagement: true,
-    services: [
-      {
-        name: '하나자산관리',
-        url: 'https://www.kebhana.com/',
-        icon: 'fa-solid fa-chart-line',
-        description: '하나은행 자산관리',
-      },
-      {
-        name: '하나펀드',
-        url: 'https://www.kebhana.com/',
-        icon: 'fa-solid fa-coins',
-        description: '펀드 투자관리',
-      },
-      {
-        name: '하나WM',
-        url: 'https://www.kebhana.com/',
-        icon: 'fa-solid fa-briefcase',
-        description: '프라이빗뱅킹',
-      },
-    ],
-  },
-  '0088': {
-    // 신한은행
-    name: '신한은행',
-    hasAssetManagement: true,
-    services: [
-      {
-        name: '신한자산관리',
-        url: 'https://www.shinhan.com/index.jsp',
-        icon: 'fa-solid fa-chart-line',
-        description: '신한은행 자산관리',
-      },
-      {
-        name: '신한투자',
-        url: 'https://www.shinhan.com/index.jsp',
-        icon: 'fa-solid fa-chart-line-up',
-        description: '투자상품 관리',
-      },
-      {
-        name: '신한WM',
-        url: 'https://www.shinhan.com/index.jsp',
-        icon: 'fa-solid fa-university',
-        description: '프라이빗뱅킹',
-      },
-    ],
-  },
   '0020': {
     // 우리은행
     name: '우리은행',
     hasAssetManagement: true,
     services: [
       {
-        name: '우리자산관리',
+        name: '자산 관리\n\n',
         url: 'https://spot.wooribank.com/pot/Dream?withyou=wa',
         icon: 'fa-solid fa-chart-line',
-        description: '우리은행 자산관리',
+        description: '우리은행 My자산 진단',
       },
       {
-        name: '우리펀드',
-        url: 'https://spot.wooribank.com/pot/Dream?withyou=wa',
+        name: '펀드\n포트폴리오',
+        url: 'https://spot.wooribank.com/pot/Dream?withyou=WAFND0014',
         icon: 'fa-solid fa-chart-pie',
-        description: '펀드 투자관리',
+        description: '우리은행 펀드 포트폴리오',
       },
       {
-        name: '스팟뱅킹',
-        url: 'https://spot.wooribank.com/pot/Dream?withyou=wa',
+        name: '미래 설계\n\n',
+        url: 'https://spot.wooribank.com/pot/Dream?withyou=WAAPL0011',
         icon: 'fa-solid fa-mobile-alt',
-        description: '모바일 자산관리',
+        description: '우리은행 미래설계',
       },
     ],
   },
@@ -452,7 +403,22 @@ const bankAssetManagement = {
     hasAssetManagement: false,
     homepage: 'https://www.epostbank.go.kr/IHDMDM0000.do',
   },
+  '0081': {
+    name: 'KEB하나은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.kebhana.com/',
+  },
+  '0088': {
+    name: '신한은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.shinhan.com/index.jsp',
+  },
 };
+
+// 줄바꿈 처리
+function formatName(name) {
+  return name.replace(/\n/g, '<br>');
+}
 
 // 주거래 은행 판단 함수 (기존 openAssetManagement 함수 위에 추가)
 const getPrimaryBank = (linkedAccounts) => {
@@ -532,6 +498,44 @@ const openPrimaryBankHomepage = () => {
     window.open(data.primaryBankHomepage, '_blank');
   }
 };
+
+// 금액 포맷팅 함수
+const formatCurrency = (amount) => {
+  // amount가 undefined나 null인 경우 처리
+  if (amount == null || amount === undefined) {
+    return '0원';
+  }
+
+  // 숫자가 아닌 경우 처리
+  const numAmount = Number(amount);
+  if (isNaN(numAmount)) {
+    return '0원';
+  }
+
+  if (numAmount >= 100000000) {
+    return `${(numAmount / 100000000).toFixed(1)}억원`;
+  } else if (numAmount >= 10000) {
+    return `${(numAmount / 10000).toFixed(0)}만원`;
+  } else {
+    return `${numAmount.toLocaleString()}원`;
+  }
+};
+
+// D-Day 계산
+function getDDay(dateStr) {
+  if (!dateStr) return '';
+  const today = new Date();
+  const goalDate = new Date(dateStr.split('T')[0]); // "yyyy-mm-dd"
+
+  const diff = goalDate.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0);
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+  if (days > 0) return `D-${days}`;
+  else if (days === 0) return 'D-DAY';
+  else return `D+${Math.abs(days)}`;
+}
+
+
 </script>
 
 <template>
@@ -562,7 +566,7 @@ const openPrimaryBankHomepage = () => {
       <div class="goal-top">
         <div class="mygoal">
           <p class="goalName">
-            나의 목표 : {{ goal.goalName || '목표명 없음' }}
+            {{ goal.goalName || '목표명 없음' }}
           </p>
         </div>
 
@@ -627,9 +631,11 @@ const openPrimaryBankHomepage = () => {
 
         <!-- 계좌 총액 / 목표 금액 형식 -->
         <p class="account-sum">
-          {{ safeToLocaleString(currentAmount) }}
+          <!-- {{ safeToLocaleString(currentAmount) }} -->
+            {{ formatCurrency(currentAmount) }}
           /
-          {{ safeToLocaleString(goal.targetAmount || goal.target_amount) }} 원
+          <!-- {{ safeToLocaleString(goal.targetAmount || goal.target_amount) }} 원 -->
+            {{ formatCurrency(goal.targetAmount) }}
         </p>
       </div>
 
@@ -658,20 +664,18 @@ const openPrimaryBankHomepage = () => {
         <!-- <div class="goal-date"> -->
         <div class="goal-date-target">
           <p><span class="label">목표 달성일</span></p>
-          <p>{{ formatDate(goal.goalDate) || '날짜 없음' }}</p>
+          <p class="txt">
+            {{ formatDate(goal.goalDate) || '날짜 없음' }}
+            <span v-if="goal.goalDate" class="d-day">
+              {{ getDDay(goal.goalDate) }}
+            </span>
+          </p>
         </div>
-        <!-- <div class="goal-date-expect">
-            <p><span class="label">예상 달성일</span></p>
-            <p>
-              {{ expectedDate ? formatDate(expectedDate) : '계산 중...' }}
-            </p>
-          </div> -->
-        <!-- </div> -->
 
         <!-- 메모 -->
         <div class="goal-memo">
           <p><span class="label">메모</span></p>
-          <p>{{ goal.memo || '메모가 없습니다.' }}</p>
+          <p class="txt">{{ goal.memo || '메모가 없습니다.' }}</p>
         </div>
 
         <!-- 포함된 계좌 -->
@@ -690,20 +694,12 @@ const openPrimaryBankHomepage = () => {
                 align-items: center;
               "
             >
-              <!-- <input
-                type="text"
-                checked
-                @change="unlinkAccount(acc.accountId)"
-              /> -->
               <div style="flex: 0 0 auto; padding: 0; margin-left: 5px">
                 <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo" />
               </div>
               <div style="flex: 1; padding: 0; margin: 0">
-                <span class="account-name">{{ acc.accountName }}</span
-                ><br />
-                <span class="account-number">{{
-                  maskAccountNumber(acc.accountNumber)
-                }}</span>
+                <span class="account-name">{{ acc.accountName }}</span><br />
+                <span class="account-number">{{ maskAccountNumber(acc.accountNumber)}}</span>
               </div>
               <div
                 style="
@@ -814,23 +810,23 @@ const openPrimaryBankHomepage = () => {
   text-align: center;
   height: 40px;
   margin-top: 1rem;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .top-backbtn {
   margin-left: 23px;
-  margin-top: 2px;
+  margin-bottom: 4px;
 }
 
 .back-btn {
   border: none;
   background: none;
-  padding: 8px;
   cursor: pointer;
-  color: #36c18c;
-  font-size: 18px;
+  color: #6b7684;
+  font-size: 16px;
   border-radius: 8px;
   transition: all 0.2s ease;
+  margin-bottom: 4px;
 }
 
 .back-btn:hover {
@@ -844,9 +840,10 @@ const openPrimaryBankHomepage = () => {
 }
 
 .top-title > p {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #2c3e50;
+  margin: 0;
 }
 
 /* 내용 시작 */
@@ -856,7 +853,7 @@ const openPrimaryBankHomepage = () => {
 }
 
 .goal-info {
-  margin: 0 20px 20px 20px;
+  margin: 0 20px 10px 20px;
   border: 1px solid #e8f5f0;
   border-radius: 16px;
   text-align: center;
@@ -877,7 +874,8 @@ const openPrimaryBankHomepage = () => {
 .goal-top {
   display: flex;
   height: 30px;
-  margin-top: 16px;
+  margin-top: 6px;
+  margin-bottom: 6px;
   width: 100%;
   justify-content: space-between;
   align-items: center;
@@ -893,6 +891,7 @@ const openPrimaryBankHomepage = () => {
   font-size: 14px;
   font-weight: 600;
   color: #2c3e50;
+  margin: 0;
 }
 
 .icon {
@@ -904,7 +903,7 @@ const openPrimaryBankHomepage = () => {
 .update {
   color: #6b7684;
   font-size: 14px;
-  padding: 6px;
+  padding: 0;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -924,11 +923,11 @@ const openPrimaryBankHomepage = () => {
 
 .goal-keyword > p {
   display: inline-block;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #36c18c 0%, #2f9b78 100%);
-  color: white;
+  padding: 6px 14px;
+  background: #f5f5f5;
+  color: #aaa;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 500;
   line-height: 1;
   margin-bottom: 0;
@@ -1128,6 +1127,7 @@ const openPrimaryBankHomepage = () => {
   font-weight: 600;
   color: #2c3e50;
   transition: color 0.3s ease;
+  white-space: pre-line; /* 줄바꿈 */
 }
 
 .asset-manage-url:hover .asset-link {
@@ -1137,12 +1137,12 @@ const openPrimaryBankHomepage = () => {
 /* 토글 */
 .toggle-arrow {
   cursor: pointer;
-  margin: 4px 0;
+  margin: 0 0;
   font-weight: bold;
   text-align: center;
   color: #6b7684;
   user-select: none;
-  padding: 6px;
+  padding: 0;
   border-radius: 8px;
   transition: all 0.2s ease;
 }
@@ -1162,6 +1162,10 @@ const openPrimaryBankHomepage = () => {
   color: #6b7684;
   margin-top: 5px;
   font-weight: 500;
+  font-size: 14px;
+}
+
+.txt{
   font-size: 14px;
 }
 
@@ -1185,6 +1189,17 @@ const openPrimaryBankHomepage = () => {
   border-color: #d2f5e9;
   box-shadow: 0 4px 16px rgba(54, 193, 140, 0.1);
 }
+
+.d-day {
+  margin-left: 8px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #2f9b78, #68e8c7); /* 그라데이션 */
+  color: #FFF;
+  font-size: 12px;
+  padding: 2px 6px;
+  display: inline-block;
+}
+
 
 /* 은행 로고 이미지 */
 .bank-logo {
@@ -1218,7 +1233,7 @@ const openPrimaryBankHomepage = () => {
   background: none;
   color: #6b7684;
   font-size: 14px;
-  padding: 6px;
+  padding: 0;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
