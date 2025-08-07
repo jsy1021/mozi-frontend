@@ -26,7 +26,7 @@ export default defineConfig({
     //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
 
     outDir:
-      'C:/KB_Fullstack/10_finalProject/mozi-backend/src/main/webapp/resources',
+      // 'C:/KB_Fullstack/10_finalProject/mozi-backend/src/main/webapp/resources',
     // 'C:/KB_Fullstack/accountConnect/mozi_4_backend/src/main/webapp/resources',
     //'/Users/soohyun/Documents/mozi/src/main/webapp/resources',
     //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
