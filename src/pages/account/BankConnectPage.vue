@@ -143,7 +143,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 30px 0 20px 0;
+  margin: 30px 0 30px 0;
 }
 .back-btn {
   position: absolute;
@@ -151,12 +151,15 @@ onMounted(async () => {
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
+  color: #a0a0a0;
+  font-size: 18px;
+  cursor: pointer;
 }
 .title {
   font-size: 18px;
   font-weight: 550;
   margin: 0 auto;
-  color: #585858;
+  color: #757575;
 }
 .section-title,
 .section-subtitle {
@@ -178,7 +181,7 @@ onMounted(async () => {
   align-items: center;
   background-color: #ffffff;
   padding: 10px;
-  margin: 5px 0 -28px 0;
+  margin: 5px 0 -30px 0;
   cursor: pointer;
   border-radius: 6px;
 }
