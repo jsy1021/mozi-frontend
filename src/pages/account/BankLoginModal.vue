@@ -1,16 +1,22 @@
 <template>
   <div class="modal-overlay" @click.self="close">
-    <div class="my-modal">
+    <div class="my-modal" :class="{ 'modal-disabled': loading }">
       <div class="modal-header">
         <img :src="bank.logo" class="bank-logo" />
         <h2>{{ bank.name }} 연동</h2>
       </div>
-      <input v-model="id" placeholder="아이디" class="input" />
+      <input
+        v-model="id"
+        placeholder="아이디"
+        class="input"
+        :disabled="loading"
+      />
       <input
         v-model="password"
         type="password"
         placeholder="비밀번호"
         class="input"
+        :disabled="loading"
       />
       <p v-if="error" class="error">{{ error }}</p>
       <div class="badge-container">
@@ -18,10 +24,14 @@
       </div>
       <div class="modal-actions">
         <button @click="connect" class="connect-btn" :disabled="loading">
-          {{ loading ? '연동 중...' : '연동' }}
+          연동
         </button>
 
         <button @click="close" class="cancel-btn">취소</button>
+      </div>
+      <div v-if="loading" class="modal-spinner-wrap">
+        <div class="spinner"></div>
+        <p class="spinner-text">연동 중입니다...</p>
       </div>
     </div>
   </div>
@@ -94,6 +104,7 @@ async function connect() {
   z-index: 999;
 }
 .my-modal {
+  position: relative;
   background: white;
   padding: 20px;
   width: 300px;
@@ -160,11 +171,6 @@ async function connect() {
   transform: scale(0.98); /* 살짝 작아짐 */
   transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
-.spinner {
-  margin: 10px 0;
-  font-size: 14px;
-  color: #4caf50;
-}
 .badge-container {
   display: flex;
   justify-content: flex-end; /* 또는 margin-left: auto 방식 */
@@ -184,5 +190,49 @@ async function connect() {
 
 .badge:hover {
   background-color: #d0eaff;
+}
+
+.modal-disabled {
+  pointer-events: none;
+  /* opacity: 0.6; */
+}
+
+.modal-spinner-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #36c18c;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1.2s linear infinite;
+}
+
+.spinner-text {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 450;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
