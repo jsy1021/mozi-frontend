@@ -15,7 +15,12 @@
       >
         <a
           href="#"
-          :class="['nav-link', activeTab === (tab === '정책' ? 'policy' : 'finance') ? 'active' : '']"
+          :class="[
+            'nav-link',
+            activeTab === (tab === '정책' ? 'policy' : 'finance')
+              ? 'active'
+              : '',
+          ]"
           @click.prevent="changeTab(tab === '정책' ? 'policy' : 'finance')"
           style="padding: 6px 4px"
         >
@@ -27,12 +32,15 @@
     <!-- 정책 스크랩 리스트 -->
     <div v-if="activeTab === 'policy'">
       <policyCard
-        v-for="policy in policyScraps"
+        v-for="policy in policyScraps || []"
         :key="policy.policyId"
         :policy="policy"
         :isScrapped="true"
       />
-      <div v-if="policyScraps.length === 0" class="text-muted text-center">
+      <div
+        v-if="policyScraps && policyScraps.length === 0"
+        class="text-muted text-center"
+      >
         스크랩한 정책이 없습니다 🥲
       </div>
     </div>
@@ -93,8 +101,22 @@ const fetchFinanceScraps = async () => {
 
     // createdAt 기준 내림차순 정렬
     scrapDetails.sort((a, b) => {
-      const dateA = new Date(a.createdAt[0], a.createdAt[1] - 1, a.createdAt[2], a.createdAt[3], a.createdAt[4], a.createdAt[5]);
-      const dateB = new Date(b.createdAt[0], b.createdAt[1] - 1, b.createdAt[2], b.createdAt[3], b.createdAt[4], b.createdAt[5]);
+      const dateA = new Date(
+        a.createdAt[0],
+        a.createdAt[1] - 1,
+        a.createdAt[2],
+        a.createdAt[3],
+        a.createdAt[4],
+        a.createdAt[5]
+      );
+      const dateB = new Date(
+        b.createdAt[0],
+        b.createdAt[1] - 1,
+        b.createdAt[2],
+        b.createdAt[3],
+        b.createdAt[4],
+        b.createdAt[5]
+      );
       return dateB - dateA;
     });
 
@@ -107,8 +129,10 @@ const fetchFinanceScraps = async () => {
 };
 
 onMounted(async () => {
-  policyScraps.value = await getScrappedPolicies();
-
+  console.log('📣 정책 스크랩 요청 시작');
+  const scrapped = await getScrappedPolicies();
+  console.log('🎯 받아온 정책 스크랩 목록:', scrapped);
+  policyScraps.value = scrapped;
   // 초기 탭이 금융이면 데이터 로드
   if (activeTab.value === 'finance') {
     await fetchFinanceScraps();
