@@ -1,19 +1,23 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import api from '@/api/index.js'; // Auth Store 대신 직접 API 호출
 
 library.add(faEye, faEyeSlash);
+
 const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
 
 const id = ref('');
 const passwd = ref('');
 const showPassword = ref(false);
 const error = ref(''); // 에러 메시지
-const loading = ref(false);
+const loading = ref(false); // 누락된 loading 변수 추가
 const socialLoading = ref({
   kakao: false,
   naver: false,
@@ -22,102 +26,73 @@ const socialLoading = ref({
 
 const canSubmit = computed(() => id.value.trim() && passwd.value.trim());
 
+// 리다이렉트 경로 확인
+onMounted(() => {
+  const redirectPath = route.query.redirect;
+  if (redirectPath) {
+    console.log('로그인 후 이동할 경로:', redirectPath);
+  }
+});
+
 function toggleShow() {
   showPassword.value = !showPassword.value;
 }
 
 async function login() {
-  error.value = ''; // 이전 에러 메시지 초기화
+  error.value = '';
   loading.value = true;
-
   try {
-    const response = await api.post('/auth/login', {
+    const result = await authStore.login({
       loginId: id.value.trim(),
       password: passwd.value.trim(),
     });
-
-    console.log('로그인 성공:', response);
-
-    // 성공 시 토큰 저장
-    if (response.token && response.user) {
-      localStorage.setItem('accessToken', response.token);
-      localStorage.setItem('userInfo', JSON.stringify(response.user));
-      await router.push({ name: 'mainPage' });
+    if (result.success) {
+      // redirect 처리
+      const redirectPath = route.query.redirect;
+      if (redirectPath && redirectPath !== '/auth/LoginPage') {
+        console.log('로그인 후 원래 페이지로 이동:', redirectPath);
+        await router.push(redirectPath);
+      } else {
+        await router.push({ name: 'mainPage' });
+      }
     } else {
-      error.value = '로그인 응답이 올바르지 않습니다.';
+      error.value = result.message;
     }
   } catch (err) {
-    console.log('로그인 실패:', err);
-
-    // 에러 메시지 설정
-    if (err.response?.status === 401) {
-      error.value = '아이디 또는 비밀번호가 일치하지 않습니다.';
-    } else if (err.response?.data?.message) {
-      error.value = err.response.data.message;
-    } else {
-      error.value = '로그인 중 오류가 발생했습니다.';
-    }
+    console.error('로그인 처리 실패:', err);
+    error.value = '로그인 처리 중 오류가 발생했습니다.';
   } finally {
     loading.value = false;
   }
 }
-
-// 카카오 로그인
-async function loginWithKakao() {
+// 소셜 로그인 공통 처리
+const handleSocialLogin = async (provider) => {
   try {
-    socialLoading.value.kakao = true;
     error.value = '';
+    console.log(`${provider} 로그인 URL 요청 중...`);
 
-    const response = await api.get('/oauth/kakao/login-url');
-    const kakaoAuthUrl = response.result;
+    const response = await api.get(`/oauth/${provider}/login-url`);
+    const authUrl = response.result;
 
-    window.location.href = kakaoAuthUrl;
+    console.log(`${provider} 로그인 시작`);
+
+    // redirect 파라미터를 OAuth 인증 후에도 유지
+    const redirectPath = route.query.redirect;
+    if (redirectPath) {
+      authStore.setOAuthRedirect(redirectPath);
+    }
+
+    window.location.href = authUrl;
   } catch (err) {
-    console.error('카카오 로그인 URL 요청 실패:', err);
-    error.value = '카카오 로그인을 시작할 수 없습니다.';
-    socialLoading.value.kakao = false;
+    console.error(`${provider} 로그인 URL 요청 실패:`, err);
+    error.value = `${provider} 로그인을 시작할 수 없습니다.`;
   }
-}
+};
 
-// 네이버 로그인
-async function loginWithNaver() {
-  try {
-    socialLoading.value.naver = true;
-    error.value = '';
-
-    console.log('네이버 로그인 URL 요청 중...');
-
-    const response = await api.get('/oauth/naver/login-url');
-    const naverAuthUrl = response.result;
-
-    console.log('네이버 로그인 시작');
-    window.location.href = naverAuthUrl;
-  } catch (err) {
-    console.error('네이버 로그인 URL 요청 실패:', err);
-    error.value = '네이버 로그인을 시작할 수 없습니다.';
-    socialLoading.value.naver = false;
-  }
-}
-
-// 구글 로그인
-async function loginWithGoogle() {
-  try {
-    socialLoading.value.google = true;
-    error.value = '';
-
-    console.log('구글 로그인 URL 요청 중...');
-
-    const response = await api.get('/oauth/google/login-url');
-    const googleAuthUrl = response.result;
-
-    console.log('구글 로그인 시작');
-    window.location.href = googleAuthUrl;
-  } catch (err) {
-    console.error('구글 로그인 URL 요청 실패:', err);
-    error.value = '구글 로그인을 시작할 수 없습니다.';
-    socialLoading.value.google = false;
-  }
-}
+// 개별 소셜 로그인 함수들
+const loginWithKakao = () => handleSocialLogin('kakao');
+const loginWithNaver = () => handleSocialLogin('naver');
+const loginWithGoogle = () => handleSocialLogin('google');
 </script>
 
 <template>
