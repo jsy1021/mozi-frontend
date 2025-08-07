@@ -24,12 +24,6 @@ export default [
     props: true,
     meta: { isHeader: false, isFooter: false },
   },
-  // {
-  //   path: '/reset-complete',
-  //   name: 'resetComplete',
-  //   component: () => import('../pages/auth/ResetCompletePage.vue'),
-  //   meta: { isHeader: false, isFooter: false },
-  // },
   {
     path: '/join',
     name: 'join',
