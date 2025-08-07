@@ -1,4 +1,13 @@
 <script setup>
+import { ref } from 'vue'
+
+// 북마크
+const isBookmarked = ref(false)
+
+function toggleBookmark(){
+  isBookmarked.value = !isBookmarked.value
+}
+
 // const props = defineProps({
 //   policy: Object
 // })
@@ -19,6 +28,13 @@ const props = defineProps({
 
   <!-- <div class="recommend-card"> -->
   <div :class="['recommend-card', type]">
+
+    <!-- 북마크 -->
+    <div class="bookmark-icon" @click="toggleBookmark">
+      <!-- <i :class="isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'"></i> -->
+        <i :class="['fa-bookmark', isBookmarked ? 'fas' : 'far']"
+          :style="{ color: isBookmarked ? '#569FFF' : '#8E8E93' }"></i>
+    </div>
 
     <!-- 정책 카드(policy) -->
     <template v-if="type === 'policy' && policy">
@@ -47,17 +63,18 @@ const props = defineProps({
             <span class="label">기간</span> {{ policy.bizPrdBgngYmd }} ~ {{ policy.bizPrdEndYmd }}
           </p>
 
-          <div class="keyword" style="display: flex;">
-            <div class="tag">
+          <div class="box">
+            <div class="keyword">
               <p>{{ policy.lclsfNm }}</p>
               <p>{{ policy.mclsfNm }}</p>
             </div>
 
-            <!-- <div class="url">
+            <div class="detail-info">
               <p>
-                <a :href="policy.aplyUrlAddr" target="_blank" rel="noopener noreferrer">자세히보기</a>
+                <!-- <a :href="policy.aplyUrlAddr" target="_blank" rel="noopener noreferrer">자세히보기</a> -->
+                 <a href="#">자세히보기</a>
               </p>
-            </div> -->
+            </div>
           </div>
 
         </div>
@@ -90,10 +107,16 @@ const props = defineProps({
             <span class="label">공시 기간</span> {{ product.dcls_start_day }} ~ {{ product.dcls_end_day }}
           </p>
 
-          <div class="keyword">
-            <div class="tag">
+          <div class="box">
+            <div class="keyword">
               <p>{{ product.kor_co_nm }}</p>
               <p>{{ product.join_way }}</p>
+            </div>
+
+            <div class="detail-info">
+              <p>                
+                 <a href="#">자세히보기</a>
+              </p>
             </div>
           </div>
         
@@ -159,8 +182,8 @@ const props = defineProps({
 }
 
 .recommend-card p,
-.recommend-card .keyword,
-.recommend-card .url {
+.recommend-card .box,
+.recommend-card .detail-info {
   margin-top: 4px;
   margin-bottom: 4px;
 }
@@ -168,7 +191,7 @@ const props = defineProps({
   margin-top: 0;
 }
 
-.recommend-card .url {
+.recommend-card .detail-info {
   margin-bottom: 0;
 }
 
@@ -188,7 +211,9 @@ const props = defineProps({
 
 
 /* 오(내용) */
-.card-right{}
+.card-right{
+  flex: 1;
+}
 
 
 /*  */
@@ -205,7 +230,14 @@ const props = defineProps({
 }
 
 /* 키워드 */
-.keyword .tag p {
+.box{
+  display: flex;
+  justify-content: space-between; /* 좌우로 배치 */
+  align-items: center; /* 세로 중앙 정렬 */
+  width: 100%;
+}
+
+.box .keyword p {
   display: inline-block;
   background-color: #d9d9d9; 
   padding: 4px 10px; 
@@ -218,32 +250,51 @@ const props = defineProps({
 }
 
 /* 자세히보기 */
-.url {
+.detail-info {
   display: flex;
   justify-content: flex-end;
 
   margin-top: 0px;
+  background-color: #f5f5f5;
 }
 
-.url>p{
+.detail-info>p{
   display: inline-block;
   border: 1px solid #d9d9d9;
   padding: 4px;
   border-radius: 5px;
-  color: #757575;
+  color: #aaa;
   font-size: 12px;
 }
 
+.detail-info>p>a{
+  text-decoration: none;
+  color: #aaa;
+}
+
 /* 북마크 */
-.bookmark-icon {
+/* .bookmark-icon {
   position: absolute;
   top: 0;
   right: 0;
   font-size: 18px;
-  /* color: #569FFF; */
+  color: #569FFF;
   color: #757575;
   cursor: pointer;
   z-index: 10;
+} */
+.bookmark-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  color: #8E8E93;
+  cursor: pointer;
+  z-index: 10;
+
+  /* border: 1px solid #8E8E93; */
 }
+
+
 
 </style>

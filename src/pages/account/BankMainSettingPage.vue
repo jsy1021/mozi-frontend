@@ -98,7 +98,8 @@ const goBack = () => {
       class="Agreecard-btn"
       :disabled="!isModified"
       :style="{
-        backgroundColor: isModified ? '#4CAF50' : '#d9d9d9',
+        backgroundColor: isModified ? '#36C18C' : '#36C18C80',
+        // color: isModified ? '#6B7684' : '#FFFFFF',
         cursor: isModified ? 'pointer' : 'not-allowed',
       }"
       @click="handleAgree"
@@ -118,9 +119,10 @@ const goBack = () => {
   gap: 115px;
 }
 .back-btn {
-  font-size: 24px;
+  font-size: 18px;
   cursor: pointer;
   user-select: none;
+  color: #a0a0a0;
 }
 .bank-box {
   border: 1px solid #ddd;
@@ -145,6 +147,7 @@ const goBack = () => {
   color: #f5c518;
 }
 .Agreecard-btn {
+  color: #fff;
   display: block;
   width: 90%;
   margin: 100px 0 0 20px;

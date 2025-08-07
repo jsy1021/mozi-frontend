@@ -381,6 +381,12 @@ watch(
       </div>
       <!-- end goal-top -->
 
+      <!-- 키워드 -->
+      <div class="goal-keyword">
+        <!-- <p>#{{ goal.keyword || '키워드 없음' }}</p> -->
+        <p>#{{ keywordToKorean(goal.keyword) || '키워드 없음' }}</p>
+      </div>
+
       <!-- 진행률 바 -->
       <ProgressBar
         style="width: 270px"
@@ -398,26 +404,6 @@ watch(
         {{ safeToLocaleString(goal.targetAmount || goal.target_amount) }} 원
       </p>
 
-      <!-- 키워드 -->
-      <div class="goal-keyword">
-        <!-- <p>#{{ goal.keyword || '키워드 없음' }}</p> -->
-        <p>#{{ keywordToKorean(goal.keyword) || '키워드 없음' }}</p>
-      </div>
-
-      <!-- 목표 달성 여부에 따라 다른 안내 메시지 -->
-      <!-- 달성o : 축하 메세지 -->
-      <div v-if="goalAchieved" class="goal-complete">
-        <p>🎉 목표를 모두 달성했어요!</p>
-      </div>
-      <!-- 달성x : 목표 달성 가이드 -->
-      <div v-else class="goal-guide">
-        <p class="guide">💡목표 달성 가이드</p>
-        <p class="comment">
-          <!-- 조금씩 꾸준히, 목표 자산에 가까워지고 있어요. 오늘도 한 발짝! -->
-          {{ guideMessage }}
-        </p>
-      </div>
-
       <!-- 토글 버튼 (펼치기)-->
       <div v-if="!isExpanded" class="toggle-arrow" @click="toggleExpand">
         <i class="fa-solid fa-chevron-down"></i>
@@ -425,19 +411,34 @@ watch(
 
       <!-- 토글 아래 부분 -->
       <div class="toggle-down" v-show="isExpanded">
+
+        <!-- 목표 달성 여부에 따라 다른 안내 메시지 -->
+        <!-- 달성o : 축하 메세지 -->
+        <div v-if="goalAchieved" class="goal-complete">
+          <p>🎉 목표를 모두 달성했어요!</p>
+        </div>
+        <!-- 달성x : 목표 달성 가이드 -->
+        <div v-else class="goal-guide">
+          <p class="guide">💡목표 달성 가이드</p>
+          <p class="comment">
+            <!-- 조금씩 꾸준히, 목표 자산에 가까워지고 있어요. 오늘도 한 발짝! -->
+            {{ guideMessage }}
+          </p>
+        </div>
+
         <!-- 날짜 -->
-        <div class="goal-date">
+        <!-- <div class="goal-date"> -->
           <div class="goal-date-target">
             <p><span class="label">목표 달성일</span></p>
             <p>{{ formatDate(goal.goalDate) || '날짜 없음' }}</p>
           </div>
-          <div class="goal-date-expect">
+          <!-- <div class="goal-date-expect">
             <p><span class="label">예상 달성일</span></p>
             <p>
               {{ expectedDate ? formatDate(expectedDate) : '계산 중...' }}
             </p>
-          </div>
-        </div>
+          </div> -->
+        <!-- </div> -->
 
         <!-- 메모 -->
         <div class="goal-memo">
@@ -470,25 +471,11 @@ watch(
                 <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo" />
               </div>
               <div style="flex: 1; padding: 0; margin: 0">
-                <!-- {{ acc.bankName || acc.bankCode }}&nbsp; -->
-                <span class="account-name">{{ acc.accountName }}</span
-                ><br />
-                <!-- {{ (acc.accountNumber || '').slice(0, 4) }}-****-{{ (acc.accountNumber || '').slice(-4) }}<br /> -->
-                <span class="account-number">{{
-                  maskAccountNumber(acc.accountNumber)
-                }}</span>
+                <span class="account-name">{{ acc.accountName }}</span><br />
+                <span class="account-number">{{ maskAccountNumber(acc.accountNumber)}}</span>
               </div>
-              <div
-                style="
-                  margin-top: 25px;
-                  flex: 0 0 auto;
-                  margin: 0;
-                  padding: 0;
-                  margin-right: 5px;
-                "
-              >
-                <span class="account-balance"
-                  >{{ safeToLocaleString(acc.balance) }}원</span
+              <div style="margin-top: 25px; flex: 0 0 auto; margin: 0; padding: 0;  margin-right: 5px;">
+                <span class="account-balance">{{ safeToLocaleString(acc.balance) }}원</span
                 >
               </div>
             </div>
@@ -496,29 +483,6 @@ watch(
           <div v-else>
             <p>연결된 계좌가 없습니다.</p>
           </div>
-
-          <!-- <hr />
-
-          <p style="margin-top: 10px">
-            <span class="label">연결 가능한 계좌</span>
-          </p>
-          <div v-if="allAccounts.length > 0">
-            <div
-              v-for="acc in allAccounts.filter(
-                (a) => !linkedAccounts.some((l) => l.accountId === a.accountId)
-              )"
-              :key="acc.accountId"
-              style="margin-bottom: 10px"
-            >
-              <input type="checkbox" @change="linkAccount(acc.accountId)" />
-              {{ acc.bankName || '은행명 없음' }}<br />
-              ****-****-{{ (acc.accountNumber || '').slice(-4) }}<br />
-              {{ safeToLocaleString(acc.balance) }}원
-            </div>
-          </div>
-          <div v-else>
-            <p>연결 가능한 계좌가 없습니다.</p>
-          </div> -->
         </div>
 
         <!-- 토글 버튼 (접기)-->
@@ -580,7 +544,8 @@ watch(
     </div>
     <!-- 달성x : 맞춤형 추천 영역-->
     <div v-else>
-      <RecommendSection />
+      <!-- <RecommendSection /> -->
+      <RecommendSection :goalId="goalId"/>
     </div>
 
     <!-- 목표달성팝업 -->
@@ -612,6 +577,7 @@ watch(
   text-align: center;
   height: 40px;
   margin-top: 1rem;
+  margin-bottom: 4px;
 }
 .top-backbtn {
   margin-left: 23px;
@@ -637,7 +603,7 @@ watch(
   margin-left: 100px;
 }
 .top-title > p {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
 }
 
@@ -648,7 +614,7 @@ watch(
 }
 
 .goal-info {
-  margin: 20px;
+  margin: 0 20px 20px 20px;
   border: 1px solid #d9d9d9;
   border-radius: 5px;
   text-align: center;
@@ -680,6 +646,10 @@ watch(
 }
 
 /* 키워드 */
+.goal-keyword{
+  margin-top: 2px;
+}
+
 .goal-keyword > p {
   display: inline-block;
   padding: 7px;
@@ -688,6 +658,7 @@ watch(
   border-radius: 5px;
   font-size: 14px;
   line-height: 1;
+  margin-bottom: 0;
 }
 
 /* 목표 달성 가이드 */
@@ -725,6 +696,7 @@ watch(
   background-color: #d2f5e9;
   /* background-color: rgba(100, 186, 170, 0.5); */
   margin-bottom: 10px;
+  padding-bottom: 12px;
 }
 .guide {
   color: #8e8e93;
@@ -732,7 +704,8 @@ watch(
 .comment {
   color: #1a1a1a;
   font-weight: 500;
-  padding: 5px;
+  /* padding: 5px; */
+  margin-bottom: 1rem;
 }
 
 /* 목표 달성 후 자산관리 섹션 개선 */
@@ -924,7 +897,8 @@ watch(
 /* 토글 */
 .toggle-arrow {
   cursor: pointer;
-  margin: 10px 0;
+  /* margin: 10px 0; */
+  margin-bottom: 10px;
   font-weight: bold;
   text-align: center;
   color: #666;
@@ -946,17 +920,19 @@ watch(
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-.goal-date {
+/* .goal-date {
   display: inline-flex;
   margin: 5px;
-}
+} */
 .goal-date-target {
-  margin-right: 10px;
-  width: 150px;
+  /* margin-right: 10px;
+  width: 150px; */
+  width: 310px;
+  margin-left: 6px;
 }
-.goal-date-expect {
+/* .goal-date-expect {
   width: 150px;
-}
+} */
 
 .goal-memo {
   width: 310px;
