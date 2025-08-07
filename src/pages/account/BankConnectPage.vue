@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useBankStore } from '@/stores/bank';
 import BankLoginModal from '@/pages/account/BankLoginModal.vue';
 import { getConnectedBanks } from '@/api/accountApi'; // 실제 API 경로 맞게 수정
 
 const router = useRouter();
+const route = useRoute();
 const bankStore = useBankStore();
 
 const selectedBankCode = ref('');
@@ -28,7 +29,18 @@ function handleConnect(bank) {
 
 function handleAgree() {
   if (hasConnectedBank.value) {
-    router.push({ name: 'mainPage', query: { refresh: 'true' } });
+    const fromPage = route.query.from;
+    if (fromPage === 'summary') {
+      router.push({
+        path: '/account/BankSummaryPage',
+        query: { refresh: 'true' },
+      });
+    } else {
+      router.push({
+        path: '/',
+        query: { refresh: 'true' },
+      });
+    }
   } else {
     alert('최소 하나 이상의 은행을 연동해주세요.');
   }
