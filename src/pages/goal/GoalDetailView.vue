@@ -302,6 +302,236 @@ watch(
 //     document.body.style.overflow = '';
 //   }
 // });
+// 1. <script setup> 섹션에 추가할 코드
+
+// 은행별 자산관리 정보 (기존 은행 관련 코드 아래에 추가)
+const bankAssetManagement = {
+  '0004': {
+    // 국민은행
+    name: 'KB국민은행',
+    hasAssetManagement: true,
+    services: [
+      {
+        name: 'KBot SAM\n케이봇쌤',
+        url: 'https://omoney.kbstar.com/quics?page=C056123',
+        icon: 'fa-solid fa-chart-line',
+        description: 'AI 자산관리 상담',
+      },
+      {
+        name: '연금관리',
+        url: 'https://omoney.kbstar.com/quics?page=C055442',
+        icon: 'fa-solid fa-piggy-bank',
+        description: '연금 통합관리',
+      },
+      {
+        name: 'KB종합\n자산관리',
+        url: 'https://omoney.kbstar.com/quics?page=C065350',
+        icon: 'fa-solid fa-hand-holding-dollar',
+        description: '종합 자산관리',
+      },
+    ],
+  },
+  '0081': {
+    // KEB하나은행
+    name: 'KEB하나은행',
+    hasAssetManagement: true,
+    services: [
+      {
+        name: '하나자산관리',
+        url: 'https://www.kebhana.com/',
+        icon: 'fa-solid fa-chart-line',
+        description: '하나은행 자산관리',
+      },
+      {
+        name: '하나펀드',
+        url: 'https://www.kebhana.com/',
+        icon: 'fa-solid fa-coins',
+        description: '펀드 투자관리',
+      },
+      {
+        name: '하나WM',
+        url: 'https://www.kebhana.com/',
+        icon: 'fa-solid fa-briefcase',
+        description: '프라이빗뱅킹',
+      },
+    ],
+  },
+  '0088': {
+    // 신한은행
+    name: '신한은행',
+    hasAssetManagement: true,
+    services: [
+      {
+        name: '신한자산관리',
+        url: 'https://www.shinhan.com/index.jsp',
+        icon: 'fa-solid fa-chart-line',
+        description: '신한은행 자산관리',
+      },
+      {
+        name: '신한투자',
+        url: 'https://www.shinhan.com/index.jsp',
+        icon: 'fa-solid fa-chart-line-up',
+        description: '투자상품 관리',
+      },
+      {
+        name: '신한WM',
+        url: 'https://www.shinhan.com/index.jsp',
+        icon: 'fa-solid fa-university',
+        description: '프라이빗뱅킹',
+      },
+    ],
+  },
+  '0020': {
+    // 우리은행
+    name: '우리은행',
+    hasAssetManagement: true,
+    services: [
+      {
+        name: '우리자산관리',
+        url: 'https://spot.wooribank.com/pot/Dream?withyou=wa',
+        icon: 'fa-solid fa-chart-line',
+        description: '우리은행 자산관리',
+      },
+      {
+        name: '우리펀드',
+        url: 'https://spot.wooribank.com/pot/Dream?withyou=wa',
+        icon: 'fa-solid fa-chart-pie',
+        description: '펀드 투자관리',
+      },
+      {
+        name: '스팟뱅킹',
+        url: 'https://spot.wooribank.com/pot/Dream?withyou=wa',
+        icon: 'fa-solid fa-mobile-alt',
+        description: '모바일 자산관리',
+      },
+    ],
+  },
+  // 자산관리 서비스가 없는 은행들
+  '0003': {
+    name: '기업은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.ibk.co.kr/',
+  },
+  '0011': {
+    name: '농협은행',
+    hasAssetManagement: false,
+    homepage: 'https://banking.nonghyup.com/nhbank.html',
+  },
+  '0023': {
+    name: 'SC제일은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.standardchartered.co.kr/np/kr/Intro.jsp',
+  },
+  '0027': {
+    name: '씨티은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.citibank.co.kr/ComMainCnts0100.act',
+  },
+  '0031': {
+    name: '대구은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.imbank.co.kr/dgb_ebz_main.jsp',
+  },
+  '0037': {
+    name: '전북은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.jbbank.co.kr/',
+  },
+  '0039': {
+    name: '경남은행',
+    hasAssetManagement: false,
+    homepage: 'https://www.knbank.co.kr/ib20/mnu/BHP000000000001',
+  },
+  '0045': {
+    name: '새마을금고',
+    hasAssetManagement: false,
+    homepage: 'https://www.kfcc.co.kr/',
+  },
+  '0071': {
+    name: '우체국',
+    hasAssetManagement: false,
+    homepage: 'https://www.epostbank.go.kr/IHDMDM0000.do',
+  },
+};
+
+// 주거래 은행 판단 함수 (기존 openAssetManagement 함수 위에 추가)
+const getPrimaryBank = (linkedAccounts) => {
+  if (!linkedAccounts || linkedAccounts.length === 0) {
+    return null;
+  }
+
+  const bankBalances = {};
+
+  linkedAccounts.forEach((account) => {
+    const bankCode = account.bankCode;
+    if (!bankBalances[bankCode]) {
+      bankBalances[bankCode] = {
+        totalBalance: 0,
+        accountCount: 0,
+        bankCode: bankCode,
+      };
+    }
+    bankBalances[bankCode].totalBalance += account.balance || 0;
+    bankBalances[bankCode].accountCount += 1;
+  });
+
+  const sortedBanks = Object.values(bankBalances).sort(
+    (a, b) => b.totalBalance - a.totalBalance
+  );
+
+  return sortedBanks[0]?.bankCode || null;
+};
+
+// 자산관리 데이터 생성 함수 (getPrimaryBank 함수 아래에 추가)
+const getAssetManagementData = (linkedAccounts) => {
+  const primaryBankCode = getPrimaryBank(linkedAccounts);
+  const primaryBank = bankAssetManagement[primaryBankCode];
+
+  if (!primaryBank) {
+    return {
+      bankName: 'KB국민은행',
+      title: '🎉 목표 달성!',
+      subtitle: '자산 성장 모드 ON',
+      description: 'KB 자산관리센터 (기본 추천)',
+      services: bankAssetManagement['0004'].services,
+      isPrimary: false,
+    };
+  }
+
+  if (primaryBank.hasAssetManagement) {
+    return {
+      bankName: primaryBank.name,
+      title: '🎉 목표 달성!',
+      subtitle: '자산 성장 모드 ON',
+      description: `${primaryBank.name} 자산관리센터`,
+      services: primaryBank.services,
+      isPrimary: true,
+    };
+  } else {
+    return {
+      bankName: primaryBank.name,
+      title: '🎉 목표 달성!',
+      subtitle: '자산 성장 모드 ON',
+      description: `${primaryBank.name}에서는 자산관리 서비스를 제공하지 않아 KB 자산관리센터를 추천합니다`,
+      services: bankAssetManagement['0004'].services,
+      isPrimary: false,
+      primaryBankHomepage: primaryBank.homepage,
+    };
+  }
+};
+
+// computed 속성 추가 (기존 guideMessage computed 아래에 추가)
+const assetManagementData = computed(() => {
+  return getAssetManagementData(linkedAccounts.value);
+});
+
+// 주거래 은행 홈페이지 열기 함수 (기존 openAssetManagement 함수 아래에 추가)
+const openPrimaryBankHomepage = () => {
+  const data = assetManagementData.value;
+  if (data.primaryBankHomepage) {
+    window.open(data.primaryBankHomepage, '_blank');
+  }
+};
 </script>
 
 <template>
@@ -338,7 +568,7 @@ watch(
 
         <div class="icon">
           <!-- 수정 -->
-          <router-link :to="`/goal/${goalId}/edit`">
+          <router-link :to="`/goal/${goalId}/edit`" class="edit-link">
             <i class="fa-solid fa-pen-to-square update"></i>
           </router-link>
 
@@ -381,12 +611,6 @@ watch(
       </div>
       <!-- end goal-top -->
 
-      <!-- 키워드 -->
-      <div class="goal-keyword">
-        <!-- <p>#{{ goal.keyword || '키워드 없음' }}</p> -->
-        <p>#{{ keywordToKorean(goal.keyword) || '키워드 없음' }}</p>
-      </div>
-
       <!-- 진행률 바 -->
       <ProgressBar
         style="width: 270px"
@@ -394,15 +618,20 @@ watch(
         :target="goal.targetAmount || goal.target_amount || 0"
       />
 
-      <!-- 계좌 총액 / 목표 금액 형식 -->
-      <p
-        class="account-sum"
-        style="margin-top: 8px; font-weight: 500; font-size: 14px"
-      >
-        {{ safeToLocaleString(currentAmount) }}
-        /
-        {{ safeToLocaleString(goal.targetAmount || goal.target_amount) }} 원
-      </p>
+      <!-- 키워드와 계좌 총액을 한 줄에 -->
+      <div class="keyword-amount-row">
+        <!-- 키워드 -->
+        <div class="goal-keyword">
+          <p>#{{ keywordToKorean(goal.keyword) || '키워드 없음' }}</p>
+        </div>
+
+        <!-- 계좌 총액 / 목표 금액 형식 -->
+        <p class="account-sum">
+          {{ safeToLocaleString(currentAmount) }}
+          /
+          {{ safeToLocaleString(goal.targetAmount || goal.target_amount) }} 원
+        </p>
+      </div>
 
       <!-- 토글 버튼 (펼치기)-->
       <div v-if="!isExpanded" class="toggle-arrow" @click="toggleExpand">
@@ -411,7 +640,6 @@ watch(
 
       <!-- 토글 아래 부분 -->
       <div class="toggle-down" v-show="isExpanded">
-
         <!-- 목표 달성 여부에 따라 다른 안내 메시지 -->
         <!-- 달성o : 축하 메세지 -->
         <div v-if="goalAchieved" class="goal-complete">
@@ -428,11 +656,11 @@ watch(
 
         <!-- 날짜 -->
         <!-- <div class="goal-date"> -->
-          <div class="goal-date-target">
-            <p><span class="label">목표 달성일</span></p>
-            <p>{{ formatDate(goal.goalDate) || '날짜 없음' }}</p>
-          </div>
-          <!-- <div class="goal-date-expect">
+        <div class="goal-date-target">
+          <p><span class="label">목표 달성일</span></p>
+          <p>{{ formatDate(goal.goalDate) || '날짜 없음' }}</p>
+        </div>
+        <!-- <div class="goal-date-expect">
             <p><span class="label">예상 달성일</span></p>
             <p>
               {{ expectedDate ? formatDate(expectedDate) : '계산 중...' }}
@@ -471,11 +699,23 @@ watch(
                 <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo" />
               </div>
               <div style="flex: 1; padding: 0; margin: 0">
-                <span class="account-name">{{ acc.accountName }}</span><br />
-                <span class="account-number">{{ maskAccountNumber(acc.accountNumber)}}</span>
+                <span class="account-name">{{ acc.accountName }}</span
+                ><br />
+                <span class="account-number">{{
+                  maskAccountNumber(acc.accountNumber)
+                }}</span>
               </div>
-              <div style="margin-top: 25px; flex: 0 0 auto; margin: 0; padding: 0;  margin-right: 5px;">
-                <span class="account-balance">{{ safeToLocaleString(acc.balance) }}원</span
+              <div
+                style="
+                  margin-top: 25px;
+                  flex: 0 0 auto;
+                  margin: 0;
+                  padding: 0;
+                  margin-right: 5px;
+                "
+              >
+                <span class="account-balance"
+                  >{{ safeToLocaleString(acc.balance) }}원</span
                 >
               </div>
             </div>
@@ -493,59 +733,56 @@ watch(
       <!-- end toggle-down -->
     </div>
     <!-- end goal-info -->
-
-    <!-- 목표 달성 여부에 따라 다른 추천 영역 -->
-    <!-- 달성o : 자산관리 사이트 -->
     <div v-if="goalAchieved" class="asset-management">
       <div class="asset-header">
-        <p class="asset-title">🎉 목표 달성!</p>
-        <p class="asset-subtitle">자산 성장 모드 ON</p>
-        <p class="asset-description">KB 자산관리센터</p>
+        <p class="asset-title">{{ assetManagementData.title }}</p>
+        <p class="asset-subtitle">{{ assetManagementData.subtitle }}</p>
+        <p class="asset-description">{{ assetManagementData.description }}</p>
+
+        <!-- 주거래 은행에 자산관리 서비스가 없는 경우 안내 -->
+        <div
+          v-if="
+            !assetManagementData.isPrimary &&
+            assetManagementData.primaryBankHomepage
+          "
+          class="primary-bank-notice"
+        >
+          <p class="notice-text">
+            <i class="fa-solid fa-info-circle"></i>
+            {{ assetManagementData.bankName }} 홈페이지도 확인해보세요
+          </p>
+          <button @click="openPrimaryBankHomepage" class="primary-bank-btn">
+            {{ assetManagementData.bankName }} 홈페이지
+          </button>
+        </div>
       </div>
 
       <div class="asset-url-box">
-        <!-- 🎯 개선: 아이콘과 텍스트 모두 클릭 가능하도록 수정 -->
         <div
+          v-for="(service, index) in assetManagementData.services"
+          :key="index"
           class="asset-manage-url"
-          @click="
-            openAssetManagement('https://omoney.kbstar.com/quics?page=C056123')
-          "
+          @click="openAssetManagement(service.url)"
+          :title="service.description"
         >
           <div class="asset-icon">
-            <i class="fa-solid fa-chart-line"></i>
+            <i :class="service.icon"></i>
           </div>
-          <p class="asset-link">KBot SAM<br />케이봇쌤</p>
-        </div>
-
-        <div
-          class="asset-manage-url"
-          @click="
-            openAssetManagement('https://omoney.kbstar.com/quics?page=C055442')
-          "
-        >
-          <div class="asset-icon">
-            <i class="fa-solid fa-piggy-bank"></i>
-          </div>
-          <p class="asset-link">연금관리</p>
-        </div>
-
-        <div
-          class="asset-manage-url"
-          @click="
-            openAssetManagement('https://omoney.kbstar.com/quics?page=C065350')
-          "
-        >
-          <div class="asset-icon">
-            <i class="fa-solid fa-hand-holding-dollar"></i>
-          </div>
-          <p class="asset-link">KB종합<br />자산관리</p>
+          <p class="asset-link">{{ service.name }}</p>
         </div>
       </div>
+
+      <!-- 추천 뱃지 -->
+      <div class="recommendation-badge" v-if="!assetManagementData.isPrimary">
+        <i class="fa-solid fa-star"></i>
+        <span>KB 추천 서비스</span>
+      </div>
     </div>
+
     <!-- 달성x : 맞춤형 추천 영역-->
     <div v-else>
       <!-- <RecommendSection /> -->
-      <RecommendSection :goalId="goalId"/>
+      <RecommendSection :goalId="goalId" />
     </div>
 
     <!-- 목표달성팝업 -->
@@ -568,7 +805,7 @@ watch(
   align-items: center;
   min-height: 200px;
   font-size: 16px;
-  color: #666;
+  color: #6b7684;
 }
 
 /* 상단 */
@@ -579,32 +816,37 @@ watch(
   margin-top: 1rem;
   margin-bottom: 4px;
 }
+
 .top-backbtn {
   margin-left: 23px;
   margin-top: 2px;
 }
 
-/* 🎯 개선: 뒤로가기 버튼 스타일 */
 .back-btn {
   border: none;
   background: none;
-  padding: 0;
+  padding: 8px;
   cursor: pointer;
-  color: inherit;
-  font-size: inherit;
+  color: #36c18c;
+  font-size: 18px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .back-btn:hover {
-  opacity: 0.7;
+  background-color: rgba(54, 193, 140, 0.1);
+  transform: translateX(-2px);
 }
 
 .top-title {
   align-items: center;
   margin-left: 100px;
 }
+
 .top-title > p {
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #2c3e50;
 }
 
 /* 내용 시작 */
@@ -615,119 +857,167 @@ watch(
 
 .goal-info {
   margin: 0 20px 20px 20px;
-  border: 1px solid #d9d9d9;
-  border-radius: 5px;
+  border: 1px solid #e8f5f0;
+  border-radius: 16px;
   text-align: center;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(54, 193, 140, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  transition: all 0.3s ease;
+  min-height: auto;
+  padding: 16px 0 8px 0;
+}
+
+.goal-info:hover {
+  box-shadow: 0 8px 32px rgba(54, 193, 140, 0.12);
 }
 
 .goal-top {
   display: flex;
   height: 30px;
-  margin-top: 10px;
+  margin-top: 16px;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
 }
 
 .mygoal {
-  align-items: center;
-  margin-left: 50px;
+  flex: 1;
+  text-align: left;
 }
+
 .goalName {
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
 }
 
 .icon {
-  margin-left: 30px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
+
 .update {
-  margin-right: 10px;
+  color: #6b7684;
+  font-size: 14px;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.update:hover {
+  background-color: #f2f4f6;
+  color: #333;
 }
 
 /* 키워드 */
-.goal-keyword{
-  margin-top: 2px;
+.goal-keyword {
+  margin: 0;
+  padding: 0;
+  text-align: left;
 }
 
 .goal-keyword > p {
   display: inline-block;
-  padding: 7px;
-  background-color: lightgray;
-  color: gray;
-  border-radius: 5px;
-  font-size: 14px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #36c18c 0%, #2f9b78 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1;
   margin-bottom: 0;
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.2);
 }
 
-/* 목표 달성 가이드 */
+/* 계좌 총액 표시 */
+.account-sum {
+  margin: 0;
+  padding: 0;
+  font-weight: 500;
+  font-size: 12px;
+  color: #2c3e50;
+  text-align: right;
+}
+
+/* 목표 달성 완료 */
 .goal-complete {
-  border-radius: 5px;
-  padding: 10px 63px;
-  /* background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700); */
-  margin-bottom: 10px;
-
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px 0;
   background: linear-gradient(135deg, #d2f5e9 0%, #ffffff 100%);
-  border: 2px solid #7bc4a4;
-  box-shadow: 0 4px 16px rgba(47, 155, 120, 0.2);
+  border: 2px solid #36c18c;
+  box-shadow: 0 4px 16px rgba(54, 193, 140, 0.15);
+  position: relative;
+  overflow: hidden;
 }
 
-/* .goal-complete::before{
-    content: '';
+.goal-complete::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #2f9b78, #d2f5e9, #2f9b78);
-  border-radius: 12px 12px 0 0;
-} */
+  background: linear-gradient(90deg, #36c18c, #2f9b78, #36c18c);
+  border-radius: 10px 10px 0 0;
+}
 
 .goal-complete > p {
-  font-weight: 500;
+  font-weight: 600;
+  color: #2f9b78;
+  margin: 0;
+  font-size: 16px;
 }
 
+/* 목표 달성 가이드 */
 .goal-guide {
-  /* border: 1px solid #d9d9d9; */
-  /* border: 2px solid #36C18C; */
-  border-radius: 5px;
-  width: 310px;
-  background-color: #d2f5e9;
-  /* background-color: rgba(100, 186, 170, 0.5); */
-  margin-bottom: 10px;
-  padding-bottom: 12px;
-}
-.guide {
-  color: #8e8e93;
-}
-.comment {
-  color: #1a1a1a;
-  font-weight: 500;
-  /* padding: 5px; */
-  margin-bottom: 1rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 320px;
+  background: linear-gradient(135deg, #f8fffe 0%, #e8f5f0 100%);
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #d2f5e9;
+  box-shadow: 0 2px 12px rgba(54, 193, 140, 0.08);
 }
 
-/* 목표 달성 후 자산관리 섹션 개선 */
+.guide {
+  color: #6b7684;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.comment {
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0;
+}
+
+/* 목표 달성 후 자산관리 섹션 */
 .asset-management {
   margin: 20px;
-  border-radius: 16px;
+  border-radius: 20px;
   text-align: center;
-
-  /* 목표 완료 섹션과 동일한 그라디언트 적용 */
   background: linear-gradient(135deg, #d2f5e9 0%, #ffffff 100%);
-  border: 2px solid #7bc4a4;
-  box-shadow: 0 6px 20px rgba(47, 155, 120, 0.15);
-
+  border: 2px solid #36c18c;
+  box-shadow: 0 6px 24px rgba(54, 193, 140, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 20px;
+  padding: 28px 20px;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-/* 상단 빛나는 효과 */
 .asset-management::before {
   content: '';
   position: absolute;
@@ -735,33 +1025,39 @@ watch(
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #2f9b78, #d2f5e9, #2f9b78);
-  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, #36c18c, #2f9b78, #36c18c);
+  border-radius: 18px 18px 0 0;
+}
+
+.asset-management:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(54, 193, 140, 0.2);
+  border-color: #2f9b78;
 }
 
 .asset-header {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   text-align: center;
 }
 
 .asset-title {
   font-size: 20px;
   font-weight: 700;
-  color: #2f9b78;
+  color: #36c18c;
   margin: 0 0 8px 0;
-  text-shadow: 0 1px 2px rgba(47, 155, 120, 0.1);
+  text-shadow: 0 1px 2px rgba(54, 193, 140, 0.1);
 }
 
 .asset-subtitle {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #2c3e50;
   margin: 0 0 4px 0;
 }
 
 .asset-description {
   font-size: 14px;
-  color: #666;
+  color: #6b7684;
   margin: 0;
   font-weight: 500;
 }
@@ -770,9 +1066,8 @@ watch(
   display: flex !important;
   flex-wrap: nowrap !important;
   flex-direction: row !important;
-  gap: 16px; /* 기존 간격 유지 */
-  justify-content: center; /* 중앙 정렬 유지 */
-  flex-wrap: nowrap; /* 꼭 명시 */
+  gap: 16px;
+  justify-content: center;
 }
 
 .asset-manage-url {
@@ -781,14 +1076,12 @@ watch(
   border: 2px solid #e8f5f0;
   border-radius: 16px;
   background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
-  box-shadow: 0 4px 12px rgba(47, 155, 120, 0.08);
-
+  box-shadow: 0 4px 12px rgba(54, 193, 140, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 12px 8px;
-
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
@@ -796,8 +1089,8 @@ watch(
 
 .asset-manage-url:hover {
   transform: translateY(-4px);
-  border-color: #7bc4a4;
-  box-shadow: 0 8px 24px rgba(47, 155, 120, 0.15);
+  border-color: #36c18c;
+  box-shadow: 0 8px 24px rgba(54, 193, 140, 0.15);
   background: linear-gradient(135deg, #f8fffe 0%, #ffffff 100%);
 }
 
@@ -807,51 +1100,241 @@ watch(
 
 .asset-icon {
   margin-bottom: 8px;
-  color: #2f9b78;
+  color: #36c18c;
   font-size: 24px;
-
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-
   border-radius: 12px;
   background: linear-gradient(135deg, #d2f5e9 0%, #e8f5f0 100%);
-
   transition: all 0.3s ease;
 }
 
 .asset-manage-url:hover .asset-icon {
-  color: #237a5f;
-  transform: scale(1.1);
-  background: linear-gradient(135deg, #7bc4a4 0%, #2f9b78 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(47, 155, 120, 0.3);
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #36c18c 0%, #2f9b78 100%);
+  box-shadow: 0 4px 12px rgba(54, 193, 140, 0.3);
 }
 
 .asset-link {
   margin: 0;
   line-height: 1.3;
   cursor: pointer;
-}
-
-.asset-link {
   text-decoration: none;
   font-size: 11px;
   font-weight: 600;
-  color: #1a1a1a;
-  line-height: 1.2;
-
+  color: #2c3e50;
   transition: color 0.3s ease;
 }
 
 .asset-manage-url:hover .asset-link {
-  color: #2f9b78;
+  color: #36c18c;
+}
+
+/* 토글 */
+.toggle-arrow {
+  cursor: pointer;
+  margin: 4px 0;
+  font-weight: bold;
+  text-align: center;
+  color: #6b7684;
+  user-select: none;
+  padding: 6px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.toggle-arrow:hover {
+  background-color: rgba(54, 193, 140, 0.1);
+  color: #36c18c;
+}
+
+/* 토글 아래 내용 */
+.toggle-down {
+  width: 100%;
+  padding: 0 12px 8px 12px;
+}
+
+.label {
+  color: #6b7684;
+  margin-top: 5px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.goal-date-target,
+.goal-memo,
+.goal-account {
+  border: 1px solid #e8f5f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.06);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  margin: 12px 0;
+  padding: 16px;
+  width: 100%;
+  max-width: 320px;
+  transition: all 0.2s ease;
+}
+
+.goal-date-target:hover,
+.goal-memo:hover,
+.goal-account:hover {
+  border-color: #d2f5e9;
+  box-shadow: 0 4px 16px rgba(54, 193, 140, 0.1);
+}
+
+/* 은행 로고 이미지 */
+.bank-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.account-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.account-number {
+  font-size: 12px;
+  color: #6b7684;
+}
+
+.account-balance {
+  font-size: 14px;
+  color: #36c18c;
+  font-weight: 600;
+}
+
+/* 모달 스타일 (삭제 버튼) */
+.delete-btn {
+  border: none;
+  background: none;
+  color: #6b7684;
+  font-size: 14px;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background-color: #f2f4f6;
+  color: #333;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #f8fffe 0%, #ffffff 100%);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body p {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #2c3e50;
+  line-height: 1.5;
+}
+
+.warning-text {
+  font-size: 14px !important;
+  color: #dc3545 !important;
+  font-weight: 500 !important;
+}
+
+.modal-footer {
+  padding: 16px 20px 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #f8f9fa;
+}
+
+.cancel-btn,
+.confirm-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: #f8f9fa;
+  color: #6b7684;
+  border: 1px solid #e9ecef;
+}
+
+.cancel-btn:hover {
+  background-color: #e9ecef;
+  border-color: #d2d6db;
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  transform: translateY(-1px);
 }
 
 /* 반응형 디자인 */
 @media (max-width: 480px) {
+  .goal-info {
+    margin: 0 16px 16px 16px;
+  }
+
+  .asset-management {
+    margin: 16px;
+    padding: 20px 16px;
+  }
+
   .asset-url-box {
     gap: 12px;
   }
@@ -871,189 +1354,218 @@ watch(
   .asset-link {
     font-size: 10px;
   }
+
+  .modal-content {
+    width: 300px;
+  }
+
+  .top-title {
+    margin-left: 80px;
+  }
 }
 
-/* 추가적인 애니메이션 효과 */
-@keyframes gentle-glow {
+/* 부드러운 애니메이션 효과 */
+@keyframes gentle-pulse {
   0%,
   100% {
-    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.15);
+    box-shadow: 0 6px 24px rgba(54, 193, 140, 0.15);
   }
   50% {
-    box-shadow: 0 6px 20px rgba(47, 155, 120, 0.25);
+    box-shadow: 0 6px 24px rgba(54, 193, 140, 0.25);
   }
 }
 
 .asset-management {
-  animation: gentle-glow 4s ease-in-out infinite;
+  animation: gentle-pulse 4s ease-in-out infinite;
 }
 
-/* 호버 시 전체 섹션 효과 */
-.asset-management:hover {
-  border-color: #2f9b78;
-  background: linear-gradient(135deg, #e8f5f0 0%, #ffffff 100%);
+/* 로딩 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* 토글 */
-.toggle-arrow {
-  cursor: pointer;
-  /* margin: 10px 0; */
-  margin-bottom: 10px;
-  font-weight: bold;
+.goal-info,
+.asset-management {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* 3. <style scoped> 섹션 맨 아래에 추가할 CSS */
+
+/* 주거래 은행 안내 섹션 */
+.primary-bank-notice {
+  margin: 12px 0;
+  padding: 12px;
+  background: linear-gradient(135deg, #fff3cd 0%, #fefefe 100%);
+  border: 1px solid #ffeaa7;
+  border-radius: 12px;
   text-align: center;
-  color: #666;
-  user-select: none;
 }
 
-/* 토글 아래 내용 */
-.label {
-  color: #8e8e93;
-  margin-top: 5px;
+.notice-text {
+  font-size: 13px;
+  color: #856404;
+  margin: 0 0 8px 0;
+  font-weight: 500;
 }
 
-.goal-date-target,
-.goal-date-expect,
-.goal-memo,
-.goal-account {
-  border: 1px solid #d9d9d9;
-  border-radius: 5px;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+.notice-text i {
+  margin-right: 6px;
+  color: #f39c12;
 }
 
-/* .goal-date {
-  display: inline-flex;
-  margin: 5px;
-} */
-.goal-date-target {
-  /* margin-right: 10px;
-  width: 150px; */
-  width: 310px;
-  margin-left: 6px;
-}
-/* .goal-date-expect {
-  width: 150px;
-} */
-
-.goal-memo {
-  width: 310px;
-  margin-left: 6px;
-}
-
-.goal-account {
-  width: 310px;
-  margin-bottom: 20px;
-  margin-left: 6px;
-  margin-top: 5px;
-}
-
-/* 은행 로고 이미지 */
-.bank-logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  /* margin-right: 12px; */
-}
-
-.account-name {
-  font-size: 16px;
-  font-weight: 400;
-}
-.account-number {
-  font-size: 12px;
-}
-.account-balance {
-  font-size: 14px;
-  color: #569fff;
-}
-
-/* 모달 스타일 (삭제 버튼)*/
-.delete-btn {
+.primary-bank-btn {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
   border: none;
-  background-color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.2);
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
+.primary-bank-btn:hover {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+/* 추천 뱃지 */
+.recommendation-badge {
+  margin-top: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #36c18c 0%, #2f9b78 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.2);
+}
+
+.recommendation-badge i {
+  font-size: 11px;
+}
+
+/* 서비스 카드에 툴팁 효과 */
+.asset-manage-url {
+  position: relative;
+}
+
+.asset-manage-url::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
   z-index: 1000;
 }
 
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 320px;
-  max-width: 90vw;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+.asset-manage-url:hover::after {
+  opacity: 1;
 }
 
-.modal-header {
-  padding: 20px 20px 10px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.modal-header h3 {
+/* 자산관리 설명 텍스트 개선 */
+.asset-description {
+  font-size: 13px;
+  color: #6b7684;
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-body p {
-  margin: 0 0 10px;
-  font-size: 16px;
-  color: #333;
-  line-height: 1.5;
-}
-
-.warning-text {
-  font-size: 14px !important;
-  color: #dc3545 !important;
-}
-
-.modal-footer {
-  padding: 10px 20px 20px;
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.cancel-btn,
-.confirm-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  line-height: 1.4;
+  max-width: 280px;
+  margin: 0 auto;
 }
 
-.cancel-btn {
-  background-color: #f8f9fa;
-  color: #666;
+/* 애니메이션 개선 */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(-5px);
+  }
+  70% {
+    transform: scale(0.9) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.cancel-btn:hover {
-  background-color: #e9ecef;
+.asset-manage-url {
+  animation: bounceIn 0.6s ease-out;
 }
 
-.confirm-btn {
-  background-color: #dc3545;
-  color: white;
+.asset-manage-url:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.asset-manage-url:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.asset-manage-url:nth-child(3) {
+  animation-delay: 0.3s;
 }
 
-.confirm-btn:hover {
-  background-color: #c82333;
+/* 반응형 개선 */
+@media (max-width: 480px) {
+  .primary-bank-notice {
+    margin: 8px 0;
+    padding: 10px;
+  }
+
+  .notice-text {
+    font-size: 12px;
+  }
+
+  .primary-bank-btn {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .asset-description {
+    font-size: 12px;
+    max-width: 250px;
+  }
+
+  .recommendation-badge {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+}
+.keyword-amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 20px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+.edit-link {
+  text-decoration: none;
+  color: inherit;
 }
 </style>
