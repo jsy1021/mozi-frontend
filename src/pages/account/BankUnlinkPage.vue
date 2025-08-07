@@ -111,6 +111,9 @@ onMounted(() => {
               'fa-regular',
               selectedBanks.has(bank.code) ? 'fa-check-square' : 'fa-square',
             ]"
+            :style="{
+              color: selectedBanks.has(bank.code) ? '#757575' : '#C0C0C0', // 진한색 vs 연한색
+            }"
           ></i>
         </span>
       </div>
@@ -186,7 +189,7 @@ onMounted(() => {
 }
 .check-icon {
   font-size: 20px;
-  color: teal;
+  color: #a0a0a0;
 }
 .delete-btn {
   display: block;
