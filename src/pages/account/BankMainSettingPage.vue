@@ -119,9 +119,10 @@ const goBack = () => {
   gap: 115px;
 }
 .back-btn {
-  font-size: 24px;
+  font-size: 18px;
   cursor: pointer;
   user-select: none;
+  color: #a0a0a0;
 }
 .bank-box {
   border: 1px solid #ddd;
