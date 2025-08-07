@@ -188,7 +188,7 @@ onMounted(async () => {
 }
 
 .total-box {
-  background: #d3e8df;
+  background: #d2f5e9;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
