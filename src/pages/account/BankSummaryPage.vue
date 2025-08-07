@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getBankSummary } from '@/api/accountApi';
+import { getBankSummary, refreshAccounts } from '@/api/accountApi';
 import { useBankStore } from '@/stores/bank';
 
 const router = useRouter();
@@ -27,6 +27,7 @@ const goToConnectPage = () => router.push('/account/BankConnectPage');
 const refreshAccountData = async () => {
   try {
     isLoading.value = true;
+    await refreshAccounts();
     const response = await getBankSummary();
     totalBalance.value = response.totalBalance;
     bankSummaryList.value = response.BankSummaryList;
@@ -122,7 +123,12 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="isLoading" class="loading">불러오는 중...</div>
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="loading-content">
+          <div class="spinner"></div>
+          <div class="loading-text">로딩 중...</div>
+        </div>
+      </div>
     </template>
 
     <template v-else>
@@ -375,5 +381,50 @@ onMounted(async () => {
   cursor: pointer;
   transition: background-color 0.2s;
   border: none;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(240, 240, 240, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* 스피너 + 텍스트를 세로로 정렬 */
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-40px); /* 스피너를 약간 위로 이동 */
+}
+
+.spinner {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #36c18c;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1.5s linear infinite;
+}
+
+.loading-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

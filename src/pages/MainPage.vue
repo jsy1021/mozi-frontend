@@ -320,7 +320,7 @@ watch(
     </div>
 
     <div v-else class="card">
-      <p>로딩 중...</p>
+      <!-- <p>로딩 중...</p> -->
     </div>
   </div>
 
