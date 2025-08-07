@@ -19,7 +19,7 @@ const getBankLogoUrl = (bankCode) => {
   return bank?.logo || '/images/financial/default.png';
 };
 
-const goBack = () => router.back();
+const goBack = () => router.push('/');
 const goToDeletePage = () => router.push('/account/BankUnlinkPage');
 const goToBankMainSetting = () => router.push('/account/BankMainSettingPage');
 const goToConnectPage = () =>
@@ -335,7 +335,7 @@ onMounted(async () => {
 .link-item {
   margin-bottom: 15px;
   color: #a0a0a0;
-  font-size: 18px;
+  font-size: 15px;
   cursor: pointer;
 }
 
