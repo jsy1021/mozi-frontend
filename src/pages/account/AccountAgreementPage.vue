@@ -148,8 +148,8 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
           style="
             font-size: 18px;
             font-weight: 550;
-            color: #585858;
-            margin-top: 10px;
+            color: #757575;
+            margin-top: 12px;
           "
         >
           약관 동의
@@ -272,7 +272,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 40px 0 40px 0;
+  margin: 20px 0 65px 0;
   /* gap: 100px; 버튼과 h1 사이 간격 */
 }
 
@@ -281,6 +281,10 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   left: 0px; /*뒤로가기 버튼 위치 조정*/
   top: 50%;
   transform: translateY(-50%);
+  color: #a0a0a0;
+  font-size: 18px;
+  margin-top: -4px;
+  cursor: pointer;
 }
 .header-row h1 {
   margin: 40px auto;
@@ -365,7 +369,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
 
   display: block;
   width: 100%;
-  margin: 0px 0 0 0;
+  margin: 20px 0 0 0;
   padding: 10px 0;
   border-radius: 6px;
   border: 2.3px solid #36c18c;

@@ -113,9 +113,13 @@ onMounted(async () => {
 
       <div class="nav-links">
         <div class="link-item" @click="goToBankMainSetting">
-          주거래 은행 설정 &gt;
+          주거래 은행 설정
+          <i class="fa-solid fa-angle-right"></i>
         </div>
-        <div class="link-item" @click="goToDeletePage">은행 연동 해지 &gt;</div>
+        <div class="link-item" @click="goToDeletePage">
+          은행 연동 해지
+          <i class="fa-solid fa-angle-right"></i>
+        </div>
       </div>
 
       <div v-if="isLoading" class="loading">불러오는 중...</div>
@@ -323,6 +327,8 @@ onMounted(async () => {
 
 .link-item {
   margin-bottom: 15px;
+  color: #a0a0a0;
+  font-size: 18px;
   cursor: pointer;
 }
 
