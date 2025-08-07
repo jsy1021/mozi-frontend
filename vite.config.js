@@ -28,11 +28,19 @@ export default defineConfig({
     outDir:
       //'/Users/soohyun/Documents/mozi/src/main/webapp/resources',
       //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
+<<<<<<< HEAD
       //'C:/KB_Fullstack/10_finalProject/mozi-backend/src/main/webapp/resources',
       //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
       //'C:/KB-PJT/goal/mozi-backend/src/main/webapp/resources',
       //"D:/KB_6th/final_project/Mozi/mozi-backend/src/main/webapp/resources",
      // 'C:/KB_fullstack/final_project/backend/0731/mozi-backend/src/main/webapp/resources',
+=======
+    //'C:/KB_Fullstack/10_finalProject/mozi-backend/src/main/webapp/resources',
+    //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
+    //'C:/KB-PJT/goal/mozi-backend/src/main/webapp/resources',
+    //"D:/KB_6th/final_project/Mozi/mozi-backend/src/main/webapp/resources",
+    // 'C:/KB_fullstack/final_project/backend/0731/mozi-backend/src/main/webapp/resources',
+>>>>>>> 97be4550c82de93d2dc6b9c22a4c294a844d7cc7
     //'C:/KB_Fullstack/accountConnect/mozi_4_backend/src/main/webapp/resources',
   },
 });
