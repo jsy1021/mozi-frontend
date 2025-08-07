@@ -60,11 +60,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getRecommendations } from '@/api/recommendFinanceApi.js';
-import { getBankLogoUrl } from '../search/financialSearch/util/bankLogo.js';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
-
+import { getRecommendations, getFinanceScraps, addFinanceScrap, removeFinanceScrap } from '@/api/recommendFinanceApi';
+import { getBankLogoUrl } from '../search/financialSearch/util/bankLogo.js';
 
 const router = useRouter();
 const recommendations = ref([]);
@@ -74,33 +72,17 @@ const scrapedProducts = ref([]);
 onMounted(async () => {
   try {
     recommendations.value = await getRecommendations();
+    await checkScrapStatus(); // 스크랩 상태 확인
   } catch (error) {
     console.error('추천 상품 불러오기 실패:', error);
     recommendations.value = [];
   }
 });
-function goToGoalPage() {
-  router.push('/goal'); // 목표 생성 페이지 경로
-}
-// ✅ 외부 함수 등록
-function getBankLogo(bankCode) {
-  return getBankLogoUrl(bankCode);
-}
 
-function isScraped(product) {
-  return scrapedProducts.value.includes(product.productId);
-}
-
-// 스크랩 상태 확인 (전체 상품 기준)
 const checkScrapStatus = async () => {
   try {
-    const userId = 1; // 임시 사용자 ID
-    const response = await axios.get('/api/scrap/finance', {
-      params: { userId }
-    });
-
-    // 스크랩된 상품 ID 배열로 저장
-    scrapedProducts.value = response.data.map(scrap =>
+    const scraps = await getFinanceScraps();
+    scrapedProducts.value = scraps.map(scrap =>
       scrap.productType === 'SAVING' ? scrap.product.savingId : scrap.product.depositId
     );
   } catch (error) {
@@ -108,47 +90,38 @@ const checkScrapStatus = async () => {
   }
 };
 
-// 스크랩 토글 함수 (상품 단위)
 const toggleScrap = async (product) => {
+  const productId = product.productId;
+  const productType = product.productType;
+
+  if (!productId) {
+    console.error('상품 ID가 없습니다.');
+    return;
+  }
+
   try {
-    const userId = 1; // 임시 사용자 ID
-    const productId = product.productId;
-    const productType = product.productType;
-
-    if (!productId) {
-      console.error('상품 ID가 없습니다.');
-      return;
-    }
-
     if (isScraped(product)) {
-      // 스크랩 삭제
-      await axios.delete('/api/scrap/finance', {
-        params: { userId, productType, productId }
-      });
+      await removeFinanceScrap(productType, productId);
       scrapedProducts.value = scrapedProducts.value.filter(id => id !== productId);
-      console.log('스크랩이 삭제되었습니다.');
     } else {
-      // 스크랩 추가
-      await axios.post('/api/scrap/finance', null, {
-        params: { userId, productType, productId }
-      });
+      await addFinanceScrap(productType, productId);
       scrapedProducts.value.push(productId);
-      console.log('스크랩이 추가되었습니다.');
     }
   } catch (error) {
     console.error('스크랩 토글 실패:', error);
   }
 };
 
+const isScraped = (product) => scrapedProducts.value.includes(product.productId);
 
 function goToDetail(product) {
   const productType = product.productType === 'SAVINGS' ? 'saving' : 'deposit';
   router.push(`/financialSearch/${productType}/${product.productId}`);
 }
-// 컴포넌트 마운트 시 스크랩 상태 확인
-onMounted(() => {
-  checkScrapStatus();
-});
+
+function goToGoalPage() {
+  router.push('/goal');
+}
 </script>
 
 <style scoped>
