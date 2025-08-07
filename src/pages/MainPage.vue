@@ -258,7 +258,7 @@ watch(
 
   <!-- 계좌 정보 -->
   <div style="display: flex">
-    <p style="margin: 10px 10px 5px 25px; color: #6b7684; font-weight: bolder">
+    <p style="margin: 10px 10px 0px 25px; color: #6b7684; font-weight: bolder">
       나의 계좌
     </p>
     <i
@@ -268,7 +268,7 @@ watch(
     ></i>
   </div>
 
-  <div style="margin: 20px">
+  <div style="margin: 0px 20px; padding-top: 10px">
     <div v-if="isUnlinked" class="card card-unlinked">
       <div class="card-text">연동시 더 많은 기능을 이용할 수 있어요!</div>
       <button class="card-btn" @click="goToAccountAuth">계좌연동</button>
@@ -320,12 +320,12 @@ watch(
     </div>
 
     <div v-else class="card">
-      <p>로딩 중...</p>
+      <!-- <p>로딩 중...</p> -->
     </div>
   </div>
 
   <!-- 마감임박 정책 -->
-  <div style="display: flex">
+  <div style="display: flex; margin-top: 12px">
     <p
       style="margin: 10px 10px -10px 25px; color: #6b7684; font-weight: bolder"
     >
@@ -338,12 +338,16 @@ watch(
     ></i>
   </div>
   <!-- 정책 카드뷰 -->
-  <div style="margin: 0 20px 10px 20px">
-    <recommendCarousel :cards="deadlinePolicies" :showDday="true" />
+  <div style="margin: 12px 20px 10px 20px">
+    <recommendCarousel
+      :cards="deadlinePolicies"
+      :showDday="true"
+      style="padding-bottom: 0px"
+    />
   </div>
 
   <!-- 금융 상품 -->
-  <div style="display: flex">
+  <div style="display: flex; margin-top: -16px">
     <p
       style="margin: 10px 10px -10px 25px; color: #6b7684; font-weight: bolder"
     >
@@ -357,7 +361,7 @@ watch(
   </div>
 
   <!-- 예, 적금 우대 금리 상위 2개 상품 출력 -->
-  <div style="margin: 20px">
+  <div style="margin: 2px 20px">
     <Swiper
       v-if="products.length > 0"
       :slides-per-view="'auto'"
@@ -371,7 +375,11 @@ watch(
         :key="index"
         class="financial-slide"
       >
-        <FinancialCard :deposit="item" :productType="item.type" />
+        <FinancialCard
+          :deposit="item"
+          :productType="item.type"
+          style="margin-bottom: 5px"
+        />
       </SwiperSlide>
     </Swiper>
   </div>
@@ -433,8 +441,7 @@ watch(
 }
 
 .goal-main-container {
-  padding: 20px;
-  background-color: #f8f9fa;
+  padding: 12px 20px;
 }
 
 .goals-container {
@@ -453,5 +460,11 @@ watch(
 
 .financial-slide {
   width: 100%; /* 화면의 90% 너비 */
+}
+
+::v-deep(.financial-swiper .swiper-pagination) {
+  position: static !important;
+  margin-top: -1px;
+  padding-top: 0px;
 }
 </style>

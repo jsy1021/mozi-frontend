@@ -32,7 +32,9 @@ onMounted(fetchAccounts);
 <template>
   <div class="wrapper">
     <div class="header">
-      <button class="back-btn" @click="goBack">＜</button>
+      <span class="back-btn" @click="goBack"
+        ><i class="fa-solid fa-angle-left"></i
+      ></span>
       <p class="title">계좌보기</p>
     </div>
 
@@ -75,26 +77,34 @@ onMounted(fetchAccounts);
   align-items: center;
   position: relative;
   margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #757575;
 }
 
 .back-btn {
   position: absolute;
   left: 0;
-  font-size: 20px;
+  font-size: 18px; /* 전체 은행과 통일 */
+  color: #757575; /* 동일 색상 */
   background: none;
   border: none;
   cursor: pointer;
+  transition: color 0.2s;
+}
+.back-btn:hover {
+  color: #555555; /* hover 시 약간 어둡게 */
 }
 
 .title {
   margin: 0 auto;
   font-size: 18px;
   font-weight: bold;
+  color: #757575; /* 전체 은행 텍스트 색상과 통일 */
 }
 
 .bank-code {
   font-size: 16px;
-  font-weight: 600;
   margin: 16px 0 16px;
   padding-left: 5px;
 }
@@ -123,6 +133,7 @@ onMounted(fetchAccounts);
 .account-info {
   display: flex;
   flex-direction: column;
+  padding-left: 12px;
 }
 
 .logo-text {
@@ -132,26 +143,27 @@ onMounted(fetchAccounts);
 }
 
 .bank-logo {
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
 }
 
 .account-name {
   font-size: 15px;
   font-weight: 500;
   color: #333;
+  margin-bottom: -4px;
 }
 
 .account-number {
   font-size: 13px;
   color: #777;
-  margin-top: 4px;
+  margin-top: 5px;
 }
 
 .account-balance {
-  font-size: 16px;
-  font-weight: bold;
-  color: #2e8b57;
+  font-weight: 500;
+  color: #333;
+  padding-right: 5px;
 }
 
 .empty {

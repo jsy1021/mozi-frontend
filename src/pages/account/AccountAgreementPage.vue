@@ -9,7 +9,7 @@ const optionalAgreeChecked = ref(false);
 
 function handleAgree() {
   if (requiredAgreeChecked.value) {
-    router.push('/account/BankConnectPage');
+    router.push({ path: '/account/BankConnectPage', query: { from: 'agree' } });
   } else {
     alert('필수 항목에 동의해야 합니다.');
   }
