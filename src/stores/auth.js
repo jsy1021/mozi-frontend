@@ -70,6 +70,15 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => {
     return validateAndCleanToken() && !!user.value;
   });
+  // Getters 섹션에 추가
+  const needsPersonalInfo = computed(() => {
+    if (!user.value) return false;
+    return user.value.needsPersonalInfo || false;
+  });
+
+  const personalInfoPromptDays = computed(() => {
+    return user.value?.personalInfoDaysRemaining || 0;
+  });
 
   const userInfo = computed(() => user.value);
   const userRoles = computed(() => user.value?.roles || []);
@@ -302,6 +311,61 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  // Actions 섹션에 추가
+  const checkPersonalInfoStatus = async () => {
+    try {
+      console.log('🔥 퍼스널 정보 상태 확인 시작');
+
+      const response = await api.get('/profile/status');
+
+      console.log('🔥 퍼스널 정보 상태 응답:', response);
+
+      // 사용자 정보에 퍼스널 정보 상태 추가
+      if (user.value && response.result) {
+        user.value.hasPersonalInfo = response.result.has_personal_info;
+        user.value.needsPersonalInfo = response.result.needs_prompt;
+        user.value.personalInfoDaysRemaining = response.result.days_remaining;
+        user.value.createdAt = response.result.created_at;
+
+        // localStorage 업데이트
+        localStorage.setItem('userInfo', JSON.stringify(user.value));
+      }
+
+      return {
+        hasPersonalInfo:
+          response.result?.has_personal_info ??
+          response.result?.hasPersonalInfo ??
+          false,
+        needsPrompt:
+          response.result?.needs_prompt ??
+          response.result?.needsPrompt ??
+          false,
+        daysRemaining:
+          response.result?.days_remaining ??
+          response.result?.daysRemaining ??
+          0,
+      };
+    } catch (error) {
+      console.error('🔥 퍼스널 정보 상태 확인 실패:', error);
+      return {
+        hasPersonalInfo: false,
+        needsPrompt: false,
+        daysRemaining: 0,
+      };
+    }
+  };
+
+  const markPersonalInfoCompleted = async () => {
+    try {
+      // 상태 다시 확인하여 최신 정보로 업데이트
+      await checkPersonalInfoStatus();
+
+      console.log('🔥 퍼스널 정보 완료 상태 업데이트');
+    } catch (error) {
+      console.error('🔥 퍼스널 정보 상태 업데이트 실패:', error);
+    }
+  };
+
   // 마이페이지 정보 조회
   const getMyPageInfo = async () => {
     try {
@@ -351,5 +415,9 @@ export const useAuthStore = defineStore('auth', () => {
     getMyPageInfo,
     confirmPassword,
     processOAuthLogin,
+    needsPersonalInfo,
+    personalInfoPromptDays,
+    checkPersonalInfoStatus,
+    markPersonalInfoCompleted,
   };
 });

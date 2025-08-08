@@ -7,23 +7,51 @@
       <label>관심지역</label>
       <select v-model="form.region" class="select-input">
         <option value="">지역을 선택하세요</option>
-        <option v-for="option in regionOptions" :key="option.code" :value="option.code">
+        <option
+          v-for="option in regionOptions"
+          :key="option.code"
+          :value="option.code"
+        >
           {{ option.label }}
         </option>
       </select>
 
       <label>연령 (만)</label>
-      <input type="number" v-model.number="form.age" placeholder="예: 24" min="0" />
+      <input
+        type="number"
+        v-model.number="form.age"
+        placeholder="예: 24"
+        min="0"
+      />
 
       <label>혼인여부</label>
       <div class="radio-group">
-        <label><input type="radio" :value="MARITAL_STATUS.SINGLE" v-model="form.maritalStatus" /> 미혼</label>
-        <label><input type="radio" :value="MARITAL_STATUS.MARRIED" v-model="form.maritalStatus" /> 기혼</label>
+        <label
+          ><input
+            type="radio"
+            :value="MARITAL_STATUS.SINGLE"
+            v-model="form.maritalStatus"
+          />
+          미혼</label
+        >
+        <label
+          ><input
+            type="radio"
+            :value="MARITAL_STATUS.MARRIED"
+            v-model="form.maritalStatus"
+          />
+          기혼</label
+        >
       </div>
 
       <label>연소득</label>
       <div class="income">
-        <input type="number" v-model.number="form.annualIncome" placeholder="숫자 입력" min="0" />
+        <input
+          type="number"
+          v-model.number="form.annualIncome"
+          placeholder="숫자 입력"
+          min="0"
+        />
         <span>만원</span>
       </div>
     </div>
@@ -36,7 +64,8 @@
           v-for="opt in educationOptions"
           :key="opt.code"
           :class="{ active: form.educationLevel === opt.code }"
-          @click="form.educationLevel = opt.code">
+          @click="form.educationLevel = opt.code"
+        >
           {{ opt.label }}
         </button>
       </div>
@@ -50,7 +79,8 @@
           v-for="opt in employmentOptions"
           :key="opt.code"
           :class="{ active: form.employmentStatus === opt.code }"
-          @click="form.employmentStatus = opt.code">
+          @click="form.employmentStatus = opt.code"
+        >
           {{ opt.label }}
         </button>
       </div>
@@ -64,7 +94,8 @@
           v-for="opt in majorOptions"
           :key="opt.code"
           :class="{ active: form.major === opt.code }"
-          @click="form.major = opt.code">
+          @click="form.major = opt.code"
+        >
           {{ opt.label }}
         </button>
       </div>
@@ -78,7 +109,8 @@
           v-for="opt in specialtyOptions"
           :key="opt.code"
           :class="{ active: form.specialty === opt.code }"
-          @click="form.specialty = opt.code">
+          @click="form.specialty = opt.code"
+        >
           {{ opt.label }}
         </button>
       </div>
@@ -159,7 +191,8 @@ onMounted(async () => {
         maritalStatus: profile.marital_status || profile.maritalStatus || '',
         annualIncome: profile.annual_income || profile.annualIncome || null,
         educationLevel: profile.education_level || profile.educationLevel || '',
-        employmentStatus: profile.employment_status || profile.employmentStatus || '',
+        employmentStatus:
+          profile.employment_status || profile.employmentStatus || '',
         major: profile.major || '',
         specialty: profile.specialty || '',
       });
@@ -171,7 +204,12 @@ onMounted(async () => {
 
 const stepValid = computed(() => {
   if (currentStep.value === 0) {
-    return form.region && form.age >= 0 && form.maritalStatus && form.annualIncome >= 0;
+    return (
+      form.region &&
+      form.age >= 0 &&
+      form.maritalStatus &&
+      form.annualIncome >= 0
+    );
   }
   if (currentStep.value === 1) return !!form.educationLevel;
   if (currentStep.value === 2) return !!form.employmentStatus;
@@ -223,7 +261,9 @@ async function saveProfile() {
     await router.push({ name: 'myPage' });
   } catch (err) {
     console.error('저장 실패:', err.response?.data);
-    alert('저장에 실패했습니다: ' + (err.response?.data?.message || err.message));
+    alert(
+      '저장에 실패했습니다: ' + (err.response?.data?.message || err.message)
+    );
   }
 }
 </script>
