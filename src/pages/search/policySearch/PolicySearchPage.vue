@@ -1,41 +1,33 @@
 <template>
   <div class="container py-3">
-    <!-- 정책 탐색 + 검색 -->
-    <div
-      class="d-flex justify-content-center align-items-center mb-2 position-relative"
-    >
-      <h4 class="mb-0 fw-bold text-center w-100">정책 탐색</h4>
-      <i
-        class="fa-solid fa-magnifying-glass fa-lg"
-        @click="toggleSearch"
-        style="cursor: pointer"
-      ></i>
+    <!-- 페이지 제목 -->
+    <div class="page-header mb-3">
+      <span class="back-btn" @click="goBack">
+        <i class="fa-solid fa-angle-left"></i>
+      </span>
+      <h4 class="page-title">정책 탐색</h4>
     </div>
 
-    <!-- 검색창 -->
-    <div class="mb-2" v-if="showSearch">
+    <!-- 검색창 + 필터 버튼 -->
+    <div class="d-flex align-items-center mb-3 gap-2">
       <input
         v-model="searchKeyword"
         type="text"
-        class="form-control"
+        class="search-input"
         placeholder="검색어를 입력하세요"
       />
-    </div>
-
-    <!-- 필터 버튼 -->
-    <div class="d-flex justify-content-end mb-2">
       <button
-        class="btn btn-outline-secondary btn-sm"
+        class="btn btn-outline-secondary btn-sm filter-btn"
         @click="toggleFilterPanel"
       >
         <i class="fa-solid fa-sliders"></i>
       </button>
     </div>
 
-    <!-- SUMMARY 필터 태그 UI (x 버튼 포함) -->
-    <div class="mb-3" v-if="summaryTags.length">
+    <!-- SUMMARY 필터 태그 -->
+    <div class="mb-3" v-if="summaryTags && summaryTags.length">
       <span
-        v-for="(tag, index) in summaryTags"
+        v-for="(tag, index) in summaryTags || []"
         :key="index"
         class="badge bg-secondary me-1 d-inline-flex align-items-center"
         style="font-size: 0.65rem"
@@ -50,7 +42,7 @@
       </span>
     </div>
 
-    <!-- 필터 -->
+    <!-- 필터 패널 -->
     <policyFilter
       v-if="showFilter"
       :filterState="filterState"
@@ -62,40 +54,37 @@
     />
 
     <!-- 카테고리 탭 -->
-    <ul
-      class="nav nav-tabs justify-content-between small mb-2"
-      style="font-size: 0.85rem"
-    >
-      <li
-        v-for="tab in categories"
-        :key="tab"
-        class="nav-item"
-        style="flex: 1; text-align: center"
-      >
+    <ul class="nav mozi-tabs mb-2">
+      <li v-for="tab in categories" :key="tab" class="nav-item">
         <a
           href="#"
-          :class="['nav-link', currentCategory === tab ? 'active' : '']"
+          class="nav-link"
+          :class="{ active: currentCategory === tab }"
           @click.prevent="selectCategory(tab)"
-          style="padding: 6px 4px"
         >
           {{ tab }}
         </a>
       </li>
     </ul>
 
-    <PolicyCard
-      v-for="policy in filteredList"
-      :key="policy.plcyNo"
-      :policy="policy"
-      :isScrapped="policy.bookmarked"
-      @updateBookmark="handleBookmarkChange"
-    />
+    <!-- 카드 리스트 -->
+    <transition name="slide-fade" mode="out-in">
+      <div :key="currentCategory">
+        <PolicyCard
+          v-for="policy in filteredList"
+          :key="policy.plcyNo"
+          :policy="policy"
+          :isScrapped="policy.bookmarked"
+          @updateBookmark="handleBookmarkChange"
+        />
+      </div>
+    </transition>
   </div>
 </template>
-
 <script setup>
 // 기본 import
 import { ref, onMounted, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import PolicyCard from './policyCard.vue';
 import policyApi from '@/api/policyApi';
 import policyFilter from './policyFilter.vue';
@@ -126,6 +115,11 @@ const regionNameMap = ref({});
 const policyList = ref([]);
 const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
 const userProfile = ref(null);
+const router = useRouter();
+
+const goBack = () => {
+  router.back();
+};
 
 // 북마크 업데이트
 const handleBookmarkChange = ({ plcyNo, value }) => {
@@ -175,7 +169,7 @@ const toggleSearch = () => {
 const selectedTagsWithCategory = computed(() => {
   const result = [];
   for (const [category, values] of Object.entries(filterState.value)) {
-    values.forEach((label) => {
+    (values || []).forEach((label) => {
       result.push({ category, label });
     });
   }
@@ -184,7 +178,7 @@ const selectedTagsWithCategory = computed(() => {
 
 // 정책 필터링
 const filteredList = computed(() => {
-  let list = policyList.value;
+  let list = Array.isArray(policyList.value) ? policyList.value : [];
 
   // 지역 → 연령 → 혼인 → 소득 → 학력 → 취업 → 전공 → 특화 → 카테고리 탭 순서
 
@@ -319,10 +313,7 @@ const filteredList = computed(() => {
     });
   }
 
-  console.log('전체 정책 수:', policyList.value.length);
-  console.log('필터링 후 정책 수:', list.length);
-
-  return list;
+  return Array.isArray(list) ? list : [];
 });
 
 // 요약 테그 매핑용
@@ -421,11 +412,11 @@ const summaryTags = computed(() => {
     const filteredList = list.filter(
       (label) =>
         label !== '제한없음' &&
-        label !== '0055003' && // 혼인 제한없음
-        label !== '0049010' && // 학력 제한없음
-        label !== '0013010' && // 취업 제한없음
-        label !== '0011009' && // 전공 제한없음
-        label !== '0014010' // 특화 제한없음
+        label !== '0055003' &&
+        label !== '0049010' &&
+        label !== '0013010' &&
+        label !== '0011009' &&
+        label !== '0014010'
     );
     if (filteredList.length === 0) continue;
 
@@ -456,7 +447,7 @@ const summaryTags = computed(() => {
     }
   }
 
-  return summaries;
+  return Array.isArray(summaries) ? summaries : [];
 });
 
 // 요약 태그 제거
@@ -548,11 +539,21 @@ watch(
 onMounted(async () => {
   const saved = sessionStorage.getItem('filterState');
   if (saved) {
-    filterState.value = JSON.parse(saved);
+    const EMPTY = {
+      region: [],
+      age: [],
+      maritalStatus: [],
+      income: [],
+      education: [],
+      employment: [],
+      major: [],
+      special: [],
+    };
+    // 기본 키 보장하며 병합
+    filterState.value = { ...EMPTY, ...JSON.parse(saved) };
   }
 
   try {
-    // 모든 데이터 병렬 로딩
     const [profile, data, scrappedIds] = await Promise.all([
       profileAPI.getProfile(),
       policyApi.getList(),
@@ -561,7 +562,7 @@ onMounted(async () => {
 
     userProfile.value = profile;
 
-    // 퍼스널 필터 자동 적용
+    // 퍼스널 자동 적용
     if (userProfile.value) {
       const regionLabel = RegionEnum?.[userProfile.value.region]?.label;
       if (regionLabel) {
@@ -604,21 +605,13 @@ onMounted(async () => {
         userProfile.value.specialty
       );
       if (specialtyCode) filterState.value.special = [specialtyCode];
-    } else {
-      console.warn('[경고] userProfile 없음: 퍼스널 정보 자동 필터 생략');
     }
 
-    // 스크랩 ID 양쪽 다 trim 해서 비교
     const cleanScrappedIds = scrappedIds.map((id) => String(id).trim());
     policyList.value = data.map((p) => ({
       ...p,
       bookmarked: cleanScrappedIds.includes(String(p.plcyNo).trim()),
     }));
-
-    console.log('✅ 초기 로드 완료', {
-      스크랩목록: cleanScrappedIds,
-      정책수: policyList.value.length,
-    });
   } catch (e) {
     console.error('❌ 초기 데이터 로딩 실패:', e);
   }
@@ -626,6 +619,47 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* ✅ 공용 탭 유틸 (scoped에서도 Bootstrap보다 강하게) */
+.mozi-tabs {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid #ddd;
+}
+.mozi-tabs .nav-item {
+  flex: 1;
+  text-align: center;
+}
+.mozi-tabs .nav-link {
+  width: 100%;
+  text-align: center;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  color: #6b7684 !important;
+  font-weight: 500;
+  padding: 6px 4px;
+  /* 탭 버튼 전환도 부드럽게 */
+  transition: color 0.18s ease, border-bottom-color 0.18s ease, background-color 0.18s ease;
+}
+.mozi-tabs .nav-link.active {
+  border: none !important;
+  border-bottom: 2px solid #36C18C !important;
+  background: transparent !important;
+  color: #6b7684 !important;
+}
+
+/* ✅ 탭 콘텐츠 전환 (슬라이드 + 페이드) */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(8px);
+}
+
+/* 기존 스타일 유지 */
 .summary-chip {
   display: inline-flex;
   align-items: center;
@@ -658,5 +692,48 @@ onMounted(async () => {
 }
 .summary-chip:active {
   transform: scale(0.98);
+}
+.search-input {
+  flex: 1;
+  height: 36px;
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.search-input:focus {
+  border-color: #36C18C;
+  box-shadow: 0 0 0 3px rgba(54,193,140,.15);
+}
+
+.filter-btn {
+  height: 36px;
+  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 제목을 중앙 */
+  position: relative;
+}
+
+.back-btn {
+  position: absolute;
+  left: 0;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #333;
+  padding: 4px 8px; /* 클릭 영역 확보 */
+}
+
+.page-title {
+  margin: 0;
+  font-weight: bold;
+  text-align: center;
 }
 </style>

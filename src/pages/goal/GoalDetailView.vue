@@ -571,18 +571,13 @@ function getDDay(dateStr) {
 
 <template>
   <!-- 상단-->
-  <div class="top">
-    <!-- 뒤로가기 -->
-    <div class="top-backbtn">
-      <!-- 🎯 개선: 고정된 링크 대신 함수 호출 -->
-      <button @click="goBack" class="back-btn">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-    </div>
-    <!-- 제목 -->
-    <div class="top-title">
-      <p>목표 상세보기</p>
-    </div>
+  <div class="header">
+    <div class="page-header mb-3">
+      <span class="back-btn" @click="goBack">
+        <i class="fa-solid fa-angle-left"></i>
+      </span>
+      <h4 class="page-title">목표 상세 정보</h4>
+    </div>  
   </div>
 
   <!-- 로딩 중 -->
@@ -824,7 +819,33 @@ function getDDay(dateStr) {
 </template>
 
 <style scoped>
-/* 로딩 및 에러 스타일 */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 제목을 중앙 */
+  position: relative;
+}
+.back-btn {
+  position: absolute;
+  left: 0;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #333;
+  padding: 4px 8px; /* 클릭 영역 확보 */
+}
+.page-title {
+  margin: 0;
+  font-weight: bold;
+  text-align: center;
+}
+/* 헤더 */
+.header {
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #f2f3f5;
+}
+
+
 .loading,
 .error-message {
   display: flex;
@@ -835,48 +856,36 @@ function getDDay(dateStr) {
   color: #6b7684;
 }
 
-/* 상단 */
-.top {
-  display: flex;
-  text-align: center;
-  height: 40px;
-  margin-top: 1rem;
-  margin-bottom: 2px;
-}
 
-.top-backbtn {
-  margin-left: 23px;
-  margin-bottom: 4px;
-}
 
-.back-btn {
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: #6b7684;
-  font-size: 16px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  margin-bottom: 4px;
-}
 
-.back-btn:hover {
-  background-color: rgba(54, 193, 140, 0.1);
-  transform: translateX(-2px);
-}
 
+/* 중앙 타이틀 */
 .top-title {
-  align-items: center;
-  margin-left: 100px;
-}
-
-.top-title > p {
+  grid-column: 2;
+  justify-self: center;
+  margin: 0;
   font-size: 16px;
   font-weight: 600;
   color: #2c3e50;
-  margin: 0;
+  text-align: center;
 }
 
+
+.top-title > p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* 우측 슬롯 (아이콘 자리 비워서 중앙 균형 유지) */
+.right-slot {
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+}
 /* 내용 시작 */
 .goal-detail {
   margin: 0;
@@ -1405,9 +1414,6 @@ function getDDay(dateStr) {
     width: 300px;
   }
 
-  .top-title {
-    margin-left: 80px;
-  }
 }
 
 /* 부드러운 애니메이션 효과 */

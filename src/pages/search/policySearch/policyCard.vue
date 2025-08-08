@@ -35,15 +35,14 @@
               >
                 누구나
               </template>
-              <tem v-else>
+              <template v-else>
                 만
                 {{
                   policy.sprtTrgtMinAge === 0
                     ? 0
                     : policy.sprtTrgtMinAge || '?'
                 }}세 ~ 만 {{ policy.sprtTrgtMaxAge || '?' }}세
-              </tem
-              plate>
+              </template>
             </span>
           </div>
 

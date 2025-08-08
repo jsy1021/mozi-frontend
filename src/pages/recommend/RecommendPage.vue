@@ -2,11 +2,6 @@
   <div class="container py-3">
     <!-- 상단 타이틀 -->
     <div class="position-relative d-flex align-items-center mb-3">
-      <!-- 뒤로가기 버튼 -->
-      <button class="back-btn" @click="goBack">
-        <i class="fa-solid fa-arrow-left"></i>
-      </button>
-
       <!-- 타이틀 가운데 정렬 -->
       <h4 class="fw-bold mb-0 title-center">추천</h4>
     </div>
@@ -31,36 +26,44 @@
       </li>
     </ul>
 
-    <!-- 금융 상품 추천 -->
-    <div v-if="currentTab === '금융상품'">
-      <FinancialRecommendTab :user-id="userId" :goal-id="goalId" />
-    </div>
-
-    <!-- 청년 정책 추천 -->
-    <div v-if="currentTab === '청년정책'">
-      <policyRecommendTab :user-id="userId" :goal-id="goalId" />
+    <!-- ✅ 탭 콘텐츠: 래퍼로 감싸서 높이 유지 + 밀림 방지 -->
+    <div class="tab-content-wrapper">
+      <transition name="slide-fade" mode="out-in">
+        <component
+          :is="currentTab === '금융상품' ? FinancialRecommendTab : policyRecommendTab"
+          :user-id="userId"
+          :goal-id="goalId"
+          :key="currentTab"
+        />
+      </transition>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import policyRecommendTab from './policyRecommendTab.vue';
 import FinancialRecommendTab from './FinancialRecommendTab.vue';
 
-
 const router = useRouter();
-
 const goBack = () => router.back();
 
-const userName='사용자';
-
+const userName = '사용자';
 
 const tabs = ['금융상품', '청년정책'];
 const currentTab = ref('금융상품');
+
+/* 주의: userId/goalId는 상위에서 내려주거나 라우트에서 가져오세요.
+   필요하면 아래처럼 라우트 파라미터로 받을 수도 있음.
+   const route = useRoute();
+   const userId = computed(() => route.params.userId);
+   const goalId = computed(() => route.params.goalId);
+*/
+const userId = undefined;
+const goalId = undefined;
 </script>
+
 <style scoped>
 .position-relative {
   position: relative;
@@ -92,12 +95,10 @@ const currentTab = ref('금융상품');
   justify-content: center;
   border-bottom: 1px solid #ddd;
 }
-
 .recommend-tabs .nav-item {
   flex: 1; /* 각 탭 동일 너비 */
   text-align: center;
 }
-
 .recommend-tabs .nav-link {
   width: 100%;
   text-align: center;
@@ -106,9 +107,30 @@ const currentTab = ref('금융상품');
   color: #6b7684; /* 글씨 색상 고정 */
   font-weight: 500;
 }
-
 .recommend-tabs .nav-link.active {
   border-bottom: 2px solid #36C18C; /* ✅ 활성 탭 하단 border 색상 변경 */
   color: #6b7684; /* 글씨 색상 그대로 유지 */
+}
+
+/* ✅ 전환 래퍼: 높이 유지 + 떠나는 패널 absolute로 밀림 방지 */
+.tab-content-wrapper {
+  position: relative;
+  min-height: 40vh; /* 필요 시 조절 */
+}
+
+/* ✅ 탭 콘텐츠 전환 (슬라이드 + 페이드) */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: opacity .18s ease, transform .18s ease;
+}
+/* 떠나는 패널을 띄워서 레이아웃 흔들림 방지 */
+.slide-fade-leave-active {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(8px); /* 오른쪽에서 살짝 들어오고 나가기 */
 }
 </style>

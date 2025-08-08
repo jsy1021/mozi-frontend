@@ -140,9 +140,12 @@ const loginWithGoogle = () => handleSocialLogin('google');
         <a href="/join">회원가입</a>
       </div>
 
-      <!--소셜 로그인 -->
+      <!-- 소셜 로그인 -->
       <div class="social-login">
-        <p class="social-title">또는 소셜 계정으로 로그인</p>
+        <!-- ✅ 가운데 텍스트 + 양옆 가로선 구분선 -->
+        <div class="social-divider">
+          <span>소셜 계정으로 로그인</span>
+        </div>
 
         <button type="button" class="kakao-btn" @click="loginWithKakao">
           <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -194,6 +197,7 @@ const loginWithGoogle = () => handleSocialLogin('google');
 h1 {
   text-align: center;
   margin-top: 4rem;
+  font-weight: 800; /* Extra Bold */
   font-size: 48px;
   color: #36c18c;
   transform: translateY(0%);
@@ -311,7 +315,7 @@ h1 {
   color: #ffffff;
 }
 
-/* 소셜 로그인 스타일 */
+/* 소셜 로그인 */
 .social-login {
   display: flex;
   flex-direction: column;
@@ -319,14 +323,23 @@ h1 {
   margin-top: 10px;
 }
 
-.social-title {
-  font-size: 11px;
-  color: #999999;
-  margin-bottom: 4px;
-  text-align: left;
-  margin-top: 2rem;
-  margin-left: 4px;
+/* ✅ 가운데 텍스트 + 양옆 가로선 */
+.social-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin: 16px 0 12px;
 }
+.social-divider::before,
+.social-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+}
+.social-divider::before { margin-right: 12px; }
+.social-divider::after  { margin-left: 12px; }
 
 .social-login button {
   display: flex;

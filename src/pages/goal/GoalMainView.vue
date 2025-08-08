@@ -2,7 +2,7 @@
   <div class="goal-main-container">
     <!-- 페이지 헤더 -->
     <div class="page-header">
-      <h1 class="page-title">나의 목표</h1>
+      <h4 class="fw-bold mb-3 text-center">목표</h4>
       <router-link :to="{ name: 'goalCreate' }" class="add-button">
         <i class="fas fa-plus"></i>
       </router-link>
@@ -176,14 +176,16 @@ window.addEventListener('focus', loadGoals);
 <style scoped>
 .goal-main-container {
   padding: 20px;
-  background-color: #f5f5f7;
+  background-color: #ffffff; /* ✅ 배경색 흰색 */
   min-height: 100vh;
 }
 
+/* 페이지 헤더 - 타이틀 가운데 정렬 */
 .page-header {
+  position: relative; /* 좌우 버튼 배치 대비 */
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center; /* 가운데 정렬 */
   margin-bottom: 20px;
   padding: 0 5px;
 }
@@ -196,12 +198,15 @@ window.addEventListener('focus', loadGoals);
 }
 
 .add-button {
+  position: absolute;
+  right: 5px; /* 타이틀 중앙에 영향 없게 우측 배치 */
   color: #333;
   font-size: 18px;
   text-decoration: none;
   padding: 8px;
 }
 
+/* 로딩, 에러 상태 공통 */
 .loading-container,
 .error-container {
   display: flex;
@@ -236,6 +241,7 @@ window.addEventListener('focus', loadGoals);
   background-color: #237a5f;
 }
 
+/* 배너 */
 .banner-section {
   background: linear-gradient(135deg, #2f9b78 0%, #d2f5e9 100%);
   padding: 20px;
@@ -265,12 +271,8 @@ window.addEventListener('focus', loadGoals);
 }
 
 @keyframes shine {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 .banner-section:hover {
@@ -292,94 +294,55 @@ window.addEventListener('focus', loadGoals);
   animation: sparkle 2s ease-in-out infinite alternate;
 }
 
-.banner-text {
-  flex: 1;
-}
-
+.banner-text { flex: 1; }
 .banner-title {
   font-size: 16px;
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 4px;
 }
-
 .banner-subtitle {
   font-size: 13px;
   color: #ffffff;
   opacity: 0.9;
 }
-
-.banner-arrow {
-  font-size: 16px;
-  color: #ffffff;
-}
+.banner-arrow { font-size: 16px; color: #ffffff; }
 
 @keyframes sparkle {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.1); opacity: 1; }
 }
 
-.goals-container {
-  flex: 1;
-}
-
+/* 목표 카드 리스트 */
+.goals-container { flex: 1; }
 .empty-state {
   text-align: center;
   padding: 60px 20px;
   color: #6b7684;
 }
-
 .empty-icon {
   font-size: 48px;
   color: #ddd;
   margin-bottom: 20px;
 }
-
 .empty-state p {
   margin: 10px 0;
   font-size: 16px;
 }
-
-/* 모바일 최적화 - 세로 리스트 형태 */
 .goals-grid {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+/* 모바일 최적화 */
 @media (max-width: 480px) {
-  .goal-main-container {
-    padding: 15px;
-  }
-
-  .page-header {
-    margin-bottom: 15px;
-  }
-
-  .page-title {
-    font-size: 16px;
-  }
-
-  .banner-content {
-    gap: 12px;
-  }
-
-  .banner-title {
-    font-size: 14px;
-  }
-
-  .banner-subtitle {
-    font-size: 12px;
-  }
-
-  .goals-grid {
-    gap: 10px;
-  }
+  .goal-main-container { padding: 15px; }
+  .page-header { margin-bottom: 15px; }
+  .page-title { font-size: 16px; }
+  .banner-content { gap: 12px; }
+  .banner-title { font-size: 14px; }
+  .banner-subtitle { font-size: 12px; }
+  .goals-grid { gap: 10px; }
 }
 </style>
