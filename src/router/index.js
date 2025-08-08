@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 import MainPage from '../pages/MainPage.vue';
 import HamburgerMenu from '../pages/HamburgerMenu.vue';
@@ -12,35 +13,19 @@ import searchRoutes from './search';
 import recommendRoutes from './recommend';
 import accountRoutes from './account';
 
-// 인증 가드 추가
-const requiresAuth = (to, from, next) => {
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    next('/auth/LoginPage');
-  } else {
-    next();
-  }
-};
-
 const routes = [
   //인증 필요 라우트 - 로그인 사용자만 접근 가능
   {
     path: '/',
     name: 'mainPage',
     component: MainPage,
-    meta: { isHeader: true, isFooter: true },
+    meta: { isHeader: true, isFooter: true, requiresAuth: true },
   },
   {
     path: '/HamburgerMenu',
     name: 'hamburgerMenu',
     component: HamburgerMenu,
-    meta: { isHeader: false, isFooter: false },
-  },
-  {
-    path: '/user/mypage',
-    name: 'MyPage',
-    component: () => import('@/pages/user/MyPage.vue'),
-    beforeEnter: requiresAuth,
+    meta: { isHeader: false, isFooter: false, requiresAuth: true },
   },
   {
     path: '/oauth/kakao/callback',
@@ -61,12 +46,6 @@ const routes = [
     meta: { isHeader: false, isFooter: false },
   },
 
-  // {
-  //   path: '/user/personal',
-  //   name: 'PersonalStep',
-  //   component: () => import('@/pages/user/PersonalStepPage.vue'),
-  //   beforeEnter: requiresAuth,
-  // },
   ...authRoutes,
   ...userRoutes,
   ...financialSearchRoutes,
@@ -89,30 +68,40 @@ const router = createRouter({
 
 //전역 네비게이션 가드 설정
 router.beforeEach((to) => {
-  const token = localStorage.getItem('accessToken');
-  const isAuthenticated = !!token;
+  console.log('🔥 라우터 가드 실행:', {
+    경로: to.path,
+    이름: to.name,
+    requiresAuth: to.matched.some((record) => record.meta?.requiresAuth),
+  });
 
-  const requiresAuth = to.matched.some((r) => r.meta?.requiresAuth);
+  const authStore = useAuthStore();
 
-  // 인증 필요한 페이지인데 로그인 안되어 있음
-  if (requiresAuth && !isAuthenticated) {
+  // 1. 로그인 성공 후 redirect 처리
+  if (
+    to.name === 'loginPage' &&
+    authStore.isAuthenticated &&
+    to.query.redirect
+  ) {
+    return { path: to.query.redirect };
+  }
+  console.log('🔥 라우터 가드 - authStore 상태:', {
+    'authStore.isAuthenticated': authStore.isAuthenticated,
+    'authStore.user': authStore.user,
+    'authStore.token': authStore.token ? '있음' : '없음',
+  });
+
+  // 2. 이미 로그인한 사용자가 공개 페이지 접근 시 메인으로 이동
+  if (authStore.isAuthenticated && authStore.isPublicRoute(to.name)) {
+    return { name: 'mainPage' };
+  }
+
+  // 3. 인증이 필요한 페이지 접근 체크
+  if (!authStore.canAccess(to)) {
     return {
       name: 'loginPage',
       query: { redirect: to.fullPath },
     };
   }
-
-  // ✅ 로그인한 사용자는 아래 페이지들 접근 막기
-  const unauthOnlyPages = [
-    'loginPage',
-    'join',
-    'findPasswd',
-    'ResetPasswdPage',
-  ];
-  if (isAuthenticated && unauthOnlyPages.includes(to.name)) {
-    return { name: 'mainPage' };
-  }
-
   return true;
 });
 

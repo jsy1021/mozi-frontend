@@ -2,63 +2,39 @@
 import { onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import api from '@/api/index.js';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+
 const loading = ref(true);
 const error = ref('');
 const message = ref('로그인 처리 중...');
 
-// OAuth 제공자별 설정
-const oauthProviders = {
-  kakao: {
-    name: '카카오',
-    endpoint: '/oauth/kakao/callback',
-    cancelMessage: '카카오 로그인이 취소되었습니다.',
-  },
-  naver: {
-    name: '네이버',
-    endpoint: '/oauth/naver/callback',
-    cancelMessage: '네이버 로그인이 취소되었습니다.',
-  },
-  google: {
-    name: '구글',
-    endpoint: '/oauth/google/callback',
-    cancelMessage: '구글 로그인이 취소되었습니다.',
-  },
-};
-
-// 현재 경로에서 OAuth 제공자 확인
-function detectOAuthProvider() {
+// OAuth 제공자 감지
+const getProvider = () => {
   const path = route.path;
-
-  if (path.includes('/oauth/kakao/callback')) return 'kakao';
-  if (path.includes('/oauth/naver/callback')) return 'naver';
-  if (path.includes('/oauth/google/callback')) return 'google';
-
-  // 범용 콜백인 경우 state나 다른 파라미터로 판단 가능
-  return 'kakao'; // 기본값
-}
+  if (path.includes('kakao')) return 'kakao';
+  if (path.includes('naver')) return 'naver';
+  if (path.includes('google')) return 'google';
+  return 'unknown';
+};
 
 onMounted(async () => {
   try {
-    const provider = detectOAuthProvider();
-    const providerConfig = oauthProviders[provider];
-
     const code = route.query.code;
     const error_code = route.query.error;
-    const state = route.query.state;
+    const provider = getProvider();
 
-    console.log(`${providerConfig.name} 콜백 파라미터:`, {
-      code: code,
+    console.log(`${provider} OAuth 콜백 수신:`, {
+      code: code?.substring(0, 10) + '...',
       error: error_code,
-      state: state,
-      provider: provider,
     });
 
     // 에러 처리
     if (error_code) {
-      error.value = providerConfig.cancelMessage;
+      error.value = `${provider} 로그인이 취소되었습니다.`;
       message.value = '로그인 페이지로 이동합니다...';
       setTimeout(() => {
         router.push({ name: 'loginPage' });
@@ -76,57 +52,36 @@ onMounted(async () => {
       return;
     }
 
-    console.log(
-      `${providerConfig.name} OAuth 콜백 수신 - code:`,
-      code.substring(0, 10) + '...'
-    );
-    message.value = `${providerConfig.name} 로그인 처리 중...`;
+    // 백엔드에 인증 코드 전송
+    console.log(`${provider} OAuth 처리 시작`);
+    const response = await api.get(`/oauth/${provider}/callback?code=${code}`);
 
-    // OAuth 제공자별 콜백 API 호출
-    const response = await api.get(
-      `${providerConfig.endpoint}?code=${code}${state ? `&state=${state}` : ''}`
-    );
+    console.log('백엔드 응답:', response);
 
-    console.log(`${providerConfig.name} 백엔드 응답:`, response);
-
-    // BaseResponse 처리 (api 인터셉터에서 이미 처리됨)
-    let authResult = response;
-
-    // 혹시 response.result가 있다면 그것을 사용 (인터셉터를 통과하지 않은 경우)
+    // 응답 데이터 추출
+    let authResult;
     if (response.result) {
       authResult = response.result;
+    } else if (response.token) {
+      authResult = response;
+    } else {
+      throw new Error('응답 형태를 인식할 수 없습니다.');
     }
 
-    console.log('추출된 인증 결과:', authResult);
-
-    // 토큰과 사용자 정보 확인
+    // 인증 데이터 확인
     if (authResult.token && authResult.user) {
-      localStorage.setItem('accessToken', authResult.token);
-      localStorage.setItem('userInfo', JSON.stringify(authResult.user));
+      console.log(`${provider} 로그인 성공`);
 
-      console.log('토큰 저장 완료:', authResult.token.substring(0, 20) + '...');
+      // auth store를 통해 인증 처리 및 리다이렉트
+      authStore.processOAuthLogin(authResult);
 
-      message.value = `${providerConfig.name} 로그인 성공! 메인 페이지로 이동합니다...`;
-
-      setTimeout(() => {
-        router.push({ name: 'mainPage' });
-      }, 1500);
+      message.value = '로그인 성공! 이동 중...';
     } else {
-      console.error('토큰 또는 사용자 정보 없음:', {
-        hasToken: !!authResult.token,
-        hasUser: !!authResult.user,
-        authResult: authResult,
-      });
+      console.error('토큰 또는 사용자 정보 없음:', authResult);
       throw new Error('토큰 또는 사용자 정보가 없습니다.');
     }
   } catch (err) {
     console.error('OAuth 콜백 처리 실패:', err);
-    console.error('에러 상세:', {
-      message: err.message,
-      response: err.response,
-      status: err.response?.status,
-      data: err.response?.data,
-    });
 
     // 에러 메시지 설정
     if (err.response?.status === 404) {
@@ -135,10 +90,8 @@ onMounted(async () => {
       error.value = '서버 내부 오류가 발생했습니다.';
     } else if (err.response?.data?.message) {
       error.value = err.response.data.message;
-    } else if (err.message) {
-      error.value = err.message;
     } else {
-      error.value = '로그인 처리 중 오류가 발생했습니다.';
+      error.value = err.message || '로그인 처리 중 오류가 발생했습니다.';
     }
 
     message.value = '로그인 페이지로 이동합니다...';
