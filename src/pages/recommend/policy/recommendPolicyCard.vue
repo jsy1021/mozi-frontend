@@ -25,11 +25,17 @@
         <div class="info-item">
           <span class="label">연령</span>
           <span class="value">
-            <span v-if="policy.sprtTrgtMinAge || policy.sprtTrgtMaxAge">
-              만 {{ policy.sprtTrgtMinAge || '?' }}세 ~ 만
-              {{ policy.sprtTrgtMaxAge || '?' }}세
-            </span>
-            <span v-else>누구나</span>
+            <template
+              v-if="policy.sprtTrgtMinAge === 0 && policy.sprtTrgtMaxAge === 0"
+            >
+              누구나
+            </template>
+            <template v-else>
+              만
+              {{
+                policy.sprtTrgtMinAge === 0 ? 0 : policy.sprtTrgtMinAge || '?'
+              }}세 ~ 만 {{ policy.sprtTrgtMaxAge || '?' }}세
+            </template>
           </span>
         </div>
       </div>

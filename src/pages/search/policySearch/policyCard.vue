@@ -27,15 +27,24 @@
         <div class="info-item deadline-row">
           <div class="left-info">
             <span class="label">연령</span>
-
-            <span
-              class="value"
-              v-if="policy.sprtTrgtMinAge || policy.sprtTrgtMaxAge"
-            >
-              만 {{ policy.sprtTrgtMinAge || '?' }}세 ~ 만
-              {{ policy.sprtTrgtMaxAge || '?' }}세
+            <span class="value">
+              <template
+                v-if="
+                  policy.sprtTrgtMinAge === 0 && policy.sprtTrgtMaxAge === 0
+                "
+              >
+                누구나
+              </template>
+              <tem v-else>
+                만
+                {{
+                  policy.sprtTrgtMinAge === 0
+                    ? 0
+                    : policy.sprtTrgtMinAge || '?'
+                }}세 ~ 만 {{ policy.sprtTrgtMaxAge || '?' }}세
+              </tem
+              plate>
             </span>
-            <span class="value" v-else>누구나</span>
           </div>
 
           <!-- 마감 뱃지 -->
@@ -215,7 +224,7 @@ watch(
 }
 
 .info-item .value {
-  color: #444;
+  color: #000000;
   margin-left: 4px;
 }
 

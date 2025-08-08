@@ -609,10 +609,10 @@ onMounted(async () => {
     }
 
     // 스크랩 ID 양쪽 다 trim 해서 비교
-    const cleanScrappedIds = scrappedIds.map((id) => id.trim());
+    const cleanScrappedIds = scrappedIds.map((id) => String(id).trim());
     policyList.value = data.map((p) => ({
       ...p,
-      bookmarked: cleanScrappedIds.includes(p.plcyNo.trim()),
+      bookmarked: cleanScrappedIds.includes(String(p.plcyNo).trim()),
     }));
 
     console.log('✅ 초기 로드 완료', {
