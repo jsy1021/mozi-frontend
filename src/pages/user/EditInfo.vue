@@ -210,35 +210,34 @@ async function onSave() {
         {{ verifyStep === 0 ? '인증' : '재전송' }}
       </button>
     </div>
-  </div>
 
-  <!-- 인증 코드 섹션 -->
-  <div v-if="verifyStep === 1" class="verify-section full-width">
-    <!--남은 시간 텍스트 표시 -->
-    <div v-if="resendCooldown > 0" class="cooldown-text">
-      {{ Math.floor(resendCooldown / 60) }}:{{ (resendCooldown % 60).toString().padStart(2, '0') }} 뒤에 재시도 가능
+    <div v-if="verifyStep === 1" class="verify-section">
+      <!--남은 시간 텍스트 표시 -->
+      <div v-if="resendCooldown > 0" class="cooldown-text">
+        {{ Math.floor(resendCooldown / 60) }}:{{ (resendCooldown % 60).toString().padStart(2, '0') }} 뒤에 재시도 가능
+      </div>
+
+      <label>인증 코드</label>
+      <div class="input-row">
+        <input v-model="verificationCode" placeholder="인증 코드 입력" class="verification-input" />
+        <button @click="verifyCode" class="confirm-btn">확인</button>
+      </div>
+      <div v-if="verificationError" class="error-text">{{ verificationError }}</div>
     </div>
 
-    <label>인증 코드</label>
-    <div class="input-row">
-      <input v-model="verificationCode" placeholder="인증 코드 입력" class="verification-input" />
-      <button @click="verifyCode" class="confirm-btn">확인</button>
+    <!-- 전화번호 입력 -->
+    <label>전화번호</label>
+    <div class="readonly-field">{{ form.phoneNumber }}</div>
+
+    <!-- 에러 메시지 -->
+    <div v-if="error" class="error-msg">{{ error }}</div>
+
+    <!-- 저장 버튼 -->
+    <div class="button-wrapper">
+      <button :disabled="loading" @click="onSave">
+        {{ loading ? '저장 중...' : '저장' }}
+      </button>
     </div>
-    <div v-if="verificationError" class="error-text">{{ verificationError }}</div>
-  </div>
-
-  <!-- 전화번호 입력 -->
-  <label>전화번호</label>
-  <input v-model="form.phoneNumber" placeholder="전화번호 입력" class="full-width" />
-
-  <!-- 에러 메시지 -->
-  <div v-if="error" class="error-msg">{{ error }}</div>
-
-  <!-- 저장 버튼 -->
-  <div class="button-wrapper">
-    <button :disabled="loading" @click="onSave">
-      {{ loading ? '저장 중...' : '저장' }}
-    </button>
   </div>
 </template>
 
@@ -269,6 +268,13 @@ label {
   border: 1px solid #ddd;
   border-radius: 4px;
   box-sizing: border-box;
+  width: 100%;
+}
+/* 저장 버튼 너비 통일 */
+.button-wrapper button {
+  width: 100%;
+  padding: 12px 0;
+  max-width: 100%; /* 입력창과 동일 폭 */
 }
 
 input {
