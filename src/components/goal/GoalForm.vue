@@ -490,15 +490,42 @@ const getKeywordLabel = (keywordKey) => {
 
 // 계좌번호 마스킹 처리 함수
 const maskAccountNumber = (accountNumber) => {
-  if (!accountNumber) return '';
-  const length = accountNumber.length;
-  if (length <= 4) return accountNumber;
+  if (accountNumber == null) return '';
+  const s = String(accountNumber).trim(); // 숫자나 null 방어, 공백 제거
+  const length = s.length;
+  if (length <= 4) return s;
 
-  const firstPart = accountNumber.slice(0, 4);
-  const lastPart = accountNumber.slice(-4);
-  const middlePart = '*'.repeat(Math.max(0, length - 8));
+  const visible = 4;
 
-  return `${firstPart}${middlePart}${lastPart}`;
+  // 길이가 짧아서 앞/뒤 4글자 확보가 안 되는 경우(5..8)
+  // => 앞1, 뒤1만 노출하고 가운데는 '-'은 유지하고 나머지는 '*' 처리
+  if (length <= visible * 2) {
+    const first = s[0];
+    const last = s[length - 1];
+    const middle = s
+      .slice(1, -1)
+      .split('')
+      .map(ch => (ch === '-' ? '-' : '*'))
+      .join('');
+    return `${first}${middle}${last}`;
+  }
+
+  // 일반적인 경우: 앞 4 / 뒤 4 고정
+  const firstPart = s.slice(0, visible);
+  const lastPart = s.slice(-visible);
+  const middleLength = Math.max(0, length - visible * 2);
+
+  // 이 부분은 원하신 대로 '*.repeat(...)' 구조 사용
+  let middlePart = '*'.repeat(middleLength).split('');
+
+  // 원본 문자열의 해당 위치가 '-'이면 그대로 '-'로 덮어쓰기
+  for (let i = 0; i < middleLength; i++) {
+    if (s[visible + i] === '-') {
+      middlePart[i] = '-';
+    }
+  }
+
+  return `${firstPart}${middlePart.join('')}${lastPart}`;
 };
 
 // 컴포넌트 마운트 시 폼 초기화 및 계좌 로드
