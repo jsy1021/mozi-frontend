@@ -87,7 +87,7 @@ const startAutoSlide = () => {
   if (recommendedProducts.value.length > 1) {
     autoSlideTimer.value = setInterval(() => {
       activeIndex.value = (activeIndex.value + 1) % recommendedProducts.value.length;
-    }, 5000); // 5초마다 슬라이드
+    }, 3600000); // 5초마다 슬라이드(5000) //1시간
   }
 };
 
