@@ -15,6 +15,24 @@ const bankInfo = computed(() =>
   bankStore.banks.find((bank) => bank.code === bankCode)
 );
 
+// ✅ 계좌번호 마스킹 함수
+const maskAccountNumber = (accountNumber) => {
+  if (!accountNumber) return '';
+
+  let visibleChars = 0; // 앞뒤 4자리 세기
+  return accountNumber
+    .split('')
+    .map((ch, idx) => {
+      if (ch === '-') return '-'; // -는 그대로
+      if (idx < 4 || idx >= accountNumber.length - 4) {
+        visibleChars++;
+        return ch; // 앞뒤 4자리 표시
+      }
+      return '*'; // 나머지는 마스킹
+    })
+    .join('');
+};
+
 const fetchAccounts = async () => {
   try {
     const res = await getAccountsByBank(bankCode);
@@ -53,7 +71,9 @@ onMounted(fetchAccounts);
             <img :src="bankInfo?.logo" alt="logo" class="bank-logo" />
             <p class="account-name">{{ acc.accountName }}</p>
           </div>
-          <p class="account-number">계좌번호: {{ acc.accountNumber }}</p>
+          <p class="account-number">
+            계좌번호: {{ maskAccountNumber(acc.accountNumber) }}
+          </p>
         </div>
         <div class="account-balance">{{ acc.balance?.toLocaleString() }}원</div>
       </div>
@@ -120,8 +140,9 @@ onMounted(fetchAccounts);
   padding: 14px;
   border-radius: 8px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width: 0;
 
   /* ✅ 경계선 */
   border: 1px solid #e0e0e0;
@@ -133,6 +154,8 @@ onMounted(fetchAccounts);
 .account-info {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
   padding-left: 12px;
 }
 
@@ -140,6 +163,7 @@ onMounted(fetchAccounts);
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .bank-logo {
@@ -152,6 +176,9 @@ onMounted(fetchAccounts);
   font-weight: 500;
   color: #333;
   margin-bottom: -4px;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .account-number {
@@ -161,9 +188,18 @@ onMounted(fetchAccounts);
 }
 
 .account-balance {
+  padding-left: 5px;
   font-weight: 500;
   color: #333;
   padding-right: 5px;
+  margin-left: auto;
+  flex: 0 0 120px;
+  text-align: right;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .empty {
