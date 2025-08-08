@@ -32,6 +32,5 @@ export default defineConfig({
       // 'C:/KB_fullstack/final_project/backend/0731/mozi-backend/src/main/webapp/resources',
       //'C:/KB_Fullstack/accountConnect/mozi_4_backend/src/main/webapp/resources',
       //'C:/Users/user/Documents/mozi/mozi-bakcend/src/main/webapp/resources',
-
   },
 });
