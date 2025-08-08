@@ -2,15 +2,22 @@
 <template>
   <div>
     <div v-if="goalRecommendations.length">
-      <div v-for="goal in goalRecommendations" :key="goal.goalId" class="mb-4">
+      <div
+        v-for="(goal, index) in goalRecommendations"
+        :key="goal.goalId"
+        class="mb-4"
+      >
         <div class="goal-header">
           <h5 class="goal-title">{{ goal.goalName }}</h5>
           <span class="goal-keyword">
             #{{ keywordMap[goal.keyword] ?? goal.keyword }}
           </span>
         </div>
+
         <RecommendCarousel :cards="goal.recommendations" />
-        <hr />
+
+        <!-- 마지막 목표가 아닐 때만 hr 출력 -->
+        <hr v-if="index < goalRecommendations.length - 1" style="margin: 16px 0;" />
       </div>
     </div>
     <div v-else class="text-muted text-center">목표가 없습니다.</div>
