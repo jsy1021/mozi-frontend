@@ -163,7 +163,7 @@ function goBack() {
 }
 
 function goToLogin() {
-  router.push({ name: 'login' });
+  router.push({ name: 'loginPage' });
 }
 </script>
 
