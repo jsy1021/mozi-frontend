@@ -1,62 +1,84 @@
 <template>
   <div class="recommendations">
-    
-    <div v-if="recommendations && recommendations.length">
-      <div v-for="goal in recommendations" :key="goal.goalId" class="goal-section">
-        <h4 class="goal-title mb-2">{{ goal.goalName }}</h4>
 
-        <div v-if="goal.recommendedProducts && goal.recommendedProducts.length">
-          <div
+    <!-- 목표가 있는 경우 -->
+    <div v-if="recommendations && recommendations.length">
+      <div
+        v-for="goal in recommendations"
+        :key="goal.goalId"
+        class="goal-section"
+      >
+        <div class="goal-header">
+          <h5 class="goal-title mb-2">{{ goal.goalName }}</h5>
+        </div>
+
+        <!-- 추천 상품이 있는 경우 -->
+        <Swiper
+          v-if="goal.recommendedProducts && goal.recommendedProducts.length"
+          :slides-per-view="'auto'"
+          :space-between="16"
+          :pagination="{ clickable: true }"
+          :modules="[Pagination]"
+          class="financial-swiper"
+        >
+          <SwiperSlide
             v-for="product in goal.recommendedProducts"
             :key="product.productId"
-            class="financial-card"
+            class="financial-slide"
           >
-            <div class="card-header">
-              <!-- ✅ getBankLogoUrl 정상 호출 -->
-              <img
-                class="bank-logo"
-                :src="getBankLogoUrl(product.bankCode)"
-                alt="은행로고"
-              />
-              <span class="product-title">{{ product.productName }}</span>
-            
-              <i 
-                class="fa-regular fa-bookmark bookmark"
-                :class="{ 'scraped': isScraped(product) }"
-                @click="toggleScrap(product)"
-                style="margin-left: auto; cursor: pointer;">
-              </i>
-            </div>
+            <!-- 카드 UI 그대로 재사용 -->
+            <div class="financial-card">
+              <div class="card-header">
+                <img
+                  class="bank-logo"
+                  :src="getBankLogoUrl(product.bankCode)"
+                  alt="은행로고"
+                />
+                <span class="product-title">{{ product.productName }}</span>
+                <i 
+                  class="fa-regular fa-bookmark bookmark"
+                  :class="{ 'scraped': isScraped(product) }"
+                  @click="toggleScrap(product)"
+                  style="margin-left: auto; cursor: pointer;"
+                ></i>
+              </div>
 
-            <div class="card-body">
-              <div class="rate small-text">
-                <span style="color:#888;">가입 </span>
-                <span style="color:#444;">{{ product.bankName }}</span><br />
-                <span style="color:#888;">금리 </span>
-                <span class="main-rate">{{ product.intRate }}%({{ product.saveTrm }}개월)</span>,
-                <span class="max-rate" style="color:#e74c3c;">최고 {{ product.intRate2 }}%</span>
-                ({{ product.saveTrm }}개월)
+              <div class="card-body">
+                <div class="rate small-text">
+                  <span style="color:#888;">가입 </span>
+                  <span style="color:#444;">{{ product.bankName }}</span><br />
+                  <span style="color:#888;">금리 </span>
+                  <span class="main-rate">{{ product.intRate }}%({{ product.saveTrm }}개월)</span>,
+                  <span class="max-rate" style="color:#e74c3c;">최고 {{ product.intRate2 }}%</span>
+                  ({{ product.saveTrm }}개월)
+                </div>
+              </div>
+
+              <div class="button-container">
+                <button class="detail-btn" @click="goToDetail(product)">자세히보기</button>
               </div>
             </div>
+          </SwiperSlide>
+        </Swiper>
 
-            <div class="button-container">
-              <button class="detail-btn" @click="goToDetail(product)">자세히보기</button>
-            </div>
-          </div>
-        </div>
+        <!-- 추천 상품이 없는 경우 -->
         <p v-else class="text-muted text-center py-3">
           추천할 상품이 없습니다.
         </p>
       </div>
     </div>
+
+    <!-- 목표가 없는 경우 -->
     <div v-else class="text-center text-muted py-4">
       <img src="../../../public/images/noGoal.png" alt="추천 없음" class="empty-image" />
       <p><b>아직 목표가 없어요</b></p>
-      <p>목표를 세우면 더 정교한 추천을<br/> 받을 수 있어요!</p>
+      <p>목표를 세우면 더 정교한 추천을<br />받을 수 있어요!</p>
       <button class="set-goal-btn" @click="goToGoalPage">목표 세우러 가기</button>
     </div>
+
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue';
@@ -64,6 +86,11 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { getBankLogoUrl } from '../search/financialSearch/util/bankLogo.js';
 import api from '@/api'; // axios 인스턴스 사용
+// Swiper 관련 import
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 const router = useRouter();
 const recommendations = ref([]);
@@ -166,12 +193,18 @@ function goToGoalPage() {
 
 
 <style scoped>
-.recommendations {
-  padding: 16px;
+.goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 5px 12px;
 }
 .goal-title {
+  font-size: 16px;
   font-weight: 600;
-  margin-top: 10px;
+  margin: 0;
+  display: flex;
+  align-items: center;
 }
 
 /* financial-card 스타일 재사용 */
@@ -273,5 +306,12 @@ function goToGoalPage() {
 
 .set-goal-btn:hover {
   background-color: #2fa477; /* hover 시 약간 어두운 초록색 */
+}
+.financial-swiper {
+  padding-bottom: 20px;
+}
+
+.financial-slide {
+  width: 100%;
 }
 </style>
