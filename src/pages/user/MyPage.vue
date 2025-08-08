@@ -8,6 +8,15 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useRoute, useRouter } from 'vue-router';
 import { computed } from 'vue';
 
+import {
+  REGION_LABELS,
+  MARITAL_STATUS_LABELS,
+  EDUCATION_LEVEL_LABELS,
+  EMPLOYMENT_STATUS_LABELS,
+  MAJOR_LABELS,
+  SPECIALTY_LABELS,
+} from '@/constants/enums';
+
 const route = useRoute();
 const router = useRouter();
 const personalForm = ref(null);
@@ -122,7 +131,10 @@ onMounted(async () => {
       <div class="info-card">
         <div class="info-header">
           <h3>기본 정보</h3>
-          <button class="edit-btn" @click="openPasswordModal">수정</button>
+          <button class="edit-btn" @click="openPasswordModal">
+            <font-awesome-icon :icon="['fas', 'pen']" class="edit-icon" />
+            수정
+          </button>
         </div>
         <div class="user-info-row">
           <div class="avatar">
@@ -152,7 +164,7 @@ onMounted(async () => {
           <div class="grid">
             <div class="item">
               <span class="label">관심지역</span>
-              <span class="value">{{ personalForm.region }}</span>
+              <span class="value">{{ REGION_LABELS[personalForm.region] || personalForm.region }}</span>
             </div>
             <div class="item">
               <span class="label">연령</span>
@@ -160,7 +172,9 @@ onMounted(async () => {
             </div>
             <div class="item">
               <span class="label">혼인여부</span>
-              <span class="value">{{ personalForm.marital_status }}</span>
+              <span class="value">{{
+                MARITAL_STATUS_LABELS[personalForm.marital_status] || personalForm.marital_status
+              }}</span>
             </div>
             <div class="item">
               <span class="label">연소득</span>
@@ -168,19 +182,23 @@ onMounted(async () => {
             </div>
             <div class="item">
               <span class="label">학력</span>
-              <span class="value">{{ personalForm.education_level }}</span>
+              <span class="value">{{
+                EDUCATION_LEVEL_LABELS[personalForm.education_level] || personalForm.education_level
+              }}</span>
             </div>
             <div class="item">
               <span class="label">취업상태</span>
-              <span class="value">{{ personalForm.employment_status }}</span>
+              <span class="value">{{
+                EMPLOYMENT_STATUS_LABELS[personalForm.employment_status] || personalForm.employment_status
+              }}</span>
             </div>
             <div class="item">
               <span class="label">전공</span>
-              <span class="value">{{ personalForm.major }}</span>
+              <span class="value">{{ MAJOR_LABELS[personalForm.major] || personalForm.major }}</span>
             </div>
             <div class="item">
               <span class="label">특화분야</span>
-              <span class="value">{{ personalForm.specialty }}</span>
+              <span class="value">{{ SPECIALTY_LABELS[personalForm.specialty] || personalForm.specialty }}</span>
             </div>
           </div>
           <button class="edit-btn" @click="router.push({ name: 'personal' })">퍼스널 정보 수정</button>
@@ -196,6 +214,9 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+html {
+  z-index: -9999;
+}
 /* 모달 스타일 */
 .modal-overlay {
   position: fixed;
@@ -274,6 +295,32 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 20px 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+/* 기본 정보 수정 버튼 스타일 */
+.info-card .edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  background-color: #36c18c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.info-card .edit-btn:hover {
+  background-color: #2fa77b;
+}
+
+.info-card .edit-btn:active {
+  transform: scale(0.97);
+}
+
+.edit-icon {
+  font-size: 12px;
 }
 
 .info-header {
