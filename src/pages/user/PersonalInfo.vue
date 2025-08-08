@@ -141,9 +141,6 @@ import {
   getMajorOptions,
   getSpecialtyOptions,
 } from '@/constants/enums.js';
-import { useAuthStore } from '@/stores/auth';
-
-const authStore = useAuthStore();
 
 const router = useRouter();
 const currentStep = ref(0);
@@ -230,37 +227,6 @@ function onLeftClick() {
     currentStep.value--;
   }
 }
-
-// 기존 폼 제출 함수 수정
-const handleSubmit = async (formData) => {
-  try {
-    console.log('🔥 퍼스널 정보 저장 시작');
-
-    // 기존 API 호출
-    const response = await api.post('/profile', formData);
-
-    if (response.isSuccess) {
-      console.log('🔥 퍼스널 정보 저장 성공');
-
-      // Auth Store에서 상태 업데이트
-      await authStore.markPersonalInfoCompleted();
-
-      // 성공 메시지
-      alert('퍼스널 정보가 성공적으로 저장되었습니다!');
-
-      // 메인 페이지로 이동
-      router.push({
-        name: 'mainPage',
-        query: { personalInfoCompleted: 'true' },
-      });
-    } else {
-      throw new Error(response.message || '저장에 실패했습니다.');
-    }
-  } catch (error) {
-    console.error('🔥 퍼스널 정보 저장 실패:', error);
-    alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
-  }
-};
 
 async function onRightClick() {
   if (!stepValid.value) {
