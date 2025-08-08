@@ -4,6 +4,7 @@ import IconGoal from '@/components/icons/IconGoal.vue'
 import IconMain from '@/components/icons/IconMain.vue'
 import IconSearch from '@/components/icons/IconSearch.vue'
 import IconRecommend from '@/components/icons/IconRecommend.vue'
+import IconAccount from '@/components/icons/IconAccount.vue'
 
 const route = useRoute()
 const isActive = (tabName) => route.name === tabName
@@ -31,9 +32,9 @@ const isActive = (tabName) => route.name === tabName
       <span :class="{ active: isActive('goalMain') }">목표</span>
     </router-link>
 
-    <router-link :to="{ name: 'scrapPage' }" class="tab">
-      <i class="fas fa-tag" :style="{ color: isActive('scrapPage') ? '#1A1A1A' : '#C2C6CE' }"></i>
-      <span :class="{ active: isActive('scrapPage') }">스크랩</span>
+    <router-link :to="{ name: 'BankSummaryPage' }" class="tab">
+      <IconAccount :active="isActive('BankSummaryPage')"/>
+      <span :class="{ active: isActive('BankSummaryPage') }">자산</span>
     </router-link>
   </div>
 </template>
