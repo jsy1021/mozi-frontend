@@ -47,17 +47,19 @@ onMounted(async () => {
         :key="goal.goalId"
         class="mb-4"
       >
-        <!-- <div class="goal-header">
-          <h5 class="goal-title">{{ goal.goalName }}</h5>
-          <span class="goal-keyword">
-            #{{ keywordMap[goal.keyword] ?? goal.keyword }}
-          </span>
-        </div> -->
         <RecommendCarousel :cards="goal.recommendations" />
-        <!-- <hr /> -->
       </div>
     </div>
-    <div v-else class="text-muted text-center">추천할 상품이 없습니다.</div>
+    
+    <!-- 추천 상품이 없을 때 -->
+    <div v-else class="text-center text-muted py-4">
+      <div class="empty-state">
+        <i class="fa-solid fa-coins empty-icon"></i>
+        <p class="empty-title"><strong>추천할 정책이 없습니다</strong></p>
+        <p class="empty-desc">목표 정보를 업데이트하시면<br/>더 정확한 추천을 받을 수 있어요!</p>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -88,4 +90,38 @@ onMounted(async () => {
   color: #888;
   font-weight: 500;
 }
+
+/* 빈 상태 */
+.empty-state {
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 20px;
+  color: #ddd;
+  margin-bottom: 6px;
+}
+
+.empty-title{
+  font-size: 14px;
+}
+
+.empty-desc {
+  color: #888;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+.py-4 {
+  padding: 1.5rem 0;
+}
+
 </style>
