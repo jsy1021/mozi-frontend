@@ -1,10 +1,6 @@
 <template>
   <div class="header">
-    <font-awesome-icon
-      icon="fa-solid fa-chevron-left"
-      class="backIcon"
-      @click="goBack"
-    />
+    <font-awesome-icon icon="fa-solid fa-chevron-left" class="backIcon" @click="goBack" />
     <h1 class="logo">MoZi</h1>
   </div>
 
@@ -14,32 +10,17 @@
     <div v-if="!isSubmitted">
       <div class="form-group">
         <label>이름</label>
-        <input
-          type="text"
-          v-model="form.name"
-          placeholder="이름을 입력해주세요"
-          @keyup.enter="handleSubmit"
-        />
+        <input type="text" v-model="form.name" placeholder="이름을 입력해주세요" @keyup.enter="handleSubmit" />
         <p v-if="error.name" class="error">{{ error.name }}</p>
       </div>
 
       <div class="form-group email-group">
         <label>이메일</label>
-        <input
-          type="email"
-          v-model="form.email"
-          placeholder="이메일을 입력해주세요"
-          @keyup.enter="handleSubmit"
-        />
+        <input type="email" v-model="form.email" placeholder="이메일을 입력해주세요" @keyup.enter="handleSubmit" />
         <p v-if="error.email" class="error">{{ error.email }}</p>
       </div>
 
-      <button
-        @click="handleSubmit"
-        class="submit-btn"
-        :class="{ active: isFormValid }"
-        :disabled="loading"
-      >
+      <button @click="handleSubmit" class="submit-btn" :class="{ active: isFormValid }" :disabled="loading">
         {{ loading ? '확인 중...' : '확인' }}
       </button>
     </div>
@@ -54,10 +35,7 @@
 
         <div v-else class="error-result">
           <h3>아이디를 찾을 수 없습니다</h3>
-          <p>
-            입력하신 정보와 일치하는 계정이 없습니다.<br />이름과 이메일을 다시
-            확인해주세요.
-          </p>
+          <p>입력하신 정보와 일치하는 계정이 없습니다.<br />이름과 이메일을 다시 확인해주세요.</p>
         </div>
       </div>
 
@@ -98,10 +76,7 @@ const loading = ref(false);
 
 // 폼 유효성 검사 computed
 const isFormValid = computed(
-  () =>
-    form.name.trim() &&
-    form.email.trim() &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
+  () => form.name.trim() && form.email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
 );
 
 // 유효성 검사 함수
@@ -140,8 +115,7 @@ async function handleSubmit() {
     console.error('아이디 찾기 실패:', err);
     foundId.value = '';
 
-    const errorMessage =
-      err.response?.data?.message || '아이디 찾기 중 오류가 발생했습니다.';
+    const errorMessage = err.response?.data?.message || '아이디 찾기 중 오류가 발생했습니다.';
     alert(errorMessage);
   } finally {
     loading.value = false;

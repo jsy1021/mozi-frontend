@@ -57,7 +57,6 @@
       :toggleFilter="toggleFilter"
       v-model:customIncome="customIncome"
       v-model:customAge="customAge"
-      v-model:usePersonalInfo="usePersonalInfo"
       :regionNameMap="regionNameMap"
       :user-profile="userProfile"
     />
@@ -88,7 +87,7 @@
       v-for="policy in filteredList"
       :key="policy.plcyNo"
       :policy="policy"
-      :is-Scrapped="policy.bookmarked"
+      :isScrapped="policy.bookmarked"
       @updateBookmark="handleBookmarkChange"
     />
   </div>
@@ -128,11 +127,12 @@ const policyList = ref([]);
 const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
 const userProfile = ref(null);
 
-function handleBookmarkChange({ plcyNo, value }) {
-  policyList.value = policyList.value.map((policy) =>
-    policy.plcyNo === plcyNo ? { ...policy, bookmarked: value } : policy
+// 북마크 업데이트
+const handleBookmarkChange = ({ plcyNo, value }) => {
+  policyList.value = policyList.value.map((p) =>
+    p.plcyNo === plcyNo ? { ...p, bookmarked: value } : p
   );
-}
+};
 
 // 필터 상태
 const filterState = ref({
@@ -552,79 +552,73 @@ onMounted(async () => {
   }
 
   try {
-    const profile = await profileAPI.getProfile();
-    userProfile.value = profile;
-
-    const [data, scrappedIds] = await Promise.all([
+    // 모든 데이터 병렬 로딩
+    const [profile, data, scrappedIds] = await Promise.all([
+      profileAPI.getProfile(),
       policyApi.getList(),
       getScrappedPolicyIds(),
     ]);
 
-    // 콘솔: 퍼스널 정보 전체 확인
-    console.log('[userProfile]', userProfile);
+    userProfile.value = profile;
 
-    if (userProfile) {
-      const regionLabel = RegionEnum?.[userProfile.region]?.label;
+    // 퍼스널 필터 자동 적용
+    if (userProfile.value) {
+      const regionLabel = RegionEnum?.[userProfile.value.region]?.label;
       if (regionLabel) {
         try {
           const zipCodes = await fetchZipCodesBySido(regionLabel);
           filterState.value.region = zipCodes;
-          console.log('[퍼스널 지역 → zipCodes]', zipCodes);
         } catch (e) {
           console.error('퍼스널 지역 zipCode 불러오기 실패', e);
         }
       }
+      if (userProfile.value.age) customAge.value = userProfile.value.age;
 
-      // 나이
-      if (userProfile.age) {
-        customAge.value = userProfile.age;
-      }
-
-      // 혼인 여부
       const mrgSttsCode = getCodeFromEnum(
         MaritalStatusEnum,
-        userProfile.marital_status
+        userProfile.value.marital_status
       );
       if (mrgSttsCode) filterState.value.maritalStatus = [mrgSttsCode];
 
-      // 연소득
-      if (userProfile.annual_income) {
-        customIncome.value = String(userProfile.annual_income);
+      if (userProfile.value.annual_income) {
+        customIncome.value = String(userProfile.value.annual_income);
       }
 
-      // 학력
       const educationCode = getCodeFromEnum(
         EducationLevelEnum,
-        userProfile.education_level
+        userProfile.value.education_level
       );
       if (educationCode) filterState.value.education = [educationCode];
 
-      // 취업 상태
       const employmentCode = getCodeFromEnum(
         EmploymentStatusEnum,
-        userProfile.employment_status
+        userProfile.value.employment_status
       );
       if (employmentCode) filterState.value.employment = [employmentCode];
 
-      // 전공
-      const majorCode = getCodeFromEnum(MajorEnum, userProfile.major);
+      const majorCode = getCodeFromEnum(MajorEnum, userProfile.value.major);
       if (majorCode) filterState.value.major = [majorCode];
 
-      // 특화 분야
       const specialtyCode = getCodeFromEnum(
         SpecialtyEnum,
-        userProfile.specialty
+        userProfile.value.specialty
       );
       if (specialtyCode) filterState.value.special = [specialtyCode];
     } else {
       console.warn('[경고] userProfile 없음: 퍼스널 정보 자동 필터 생략');
     }
 
-    //정책 스크랩 여부 포함해서 저장
+    // 스크랩 ID 양쪽 다 trim 해서 비교
+    const cleanScrappedIds = scrappedIds.map((id) => id.trim());
     policyList.value = data.map((p) => ({
       ...p,
-      bookmarked: scrappedIds.includes(p.plcyNo),
+      bookmarked: cleanScrappedIds.includes(p.plcyNo.trim()),
     }));
+
+    console.log('✅ 초기 로드 완료', {
+      스크랩목록: cleanScrappedIds,
+      정책수: policyList.value.length,
+    });
   } catch (e) {
     console.error('❌ 초기 데이터 로딩 실패:', e);
   }

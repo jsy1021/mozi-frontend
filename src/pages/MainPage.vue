@@ -17,6 +17,7 @@ import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import RecommendPolicyCard from './recommend/policy/recommendPolicyCard.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -338,12 +339,23 @@ watch(
     ></i>
   </div>
   <!-- 정책 카드뷰 -->
-  <div style="margin: 12px 20px 10px 20px">
-    <recommendCarousel
-      :cards="deadlinePolicies"
-      :showDday="true"
-      style="padding-bottom: 0px"
-    />
+  <div style="margin: 2px 20px">
+    <Swiper
+      v-if="deadlinePolicies.length > 0"
+      :slides-per-view="'auto'"
+      :space-between="16"
+      :pagination="{ clickable: true }"
+      :modules="[Pagination]"
+      class="policy-swiper"
+    >
+      <SwiperSlide
+        v-for="(policy, index) in deadlinePolicies"
+        :key="index"
+        class="policy-slide"
+      >
+        <RecommendPolicyCard :policy="policy" :showDday="true" />
+      </SwiperSlide>
+    </Swiper>
   </div>
 
   <!-- 금융 상품 -->
@@ -463,6 +475,19 @@ watch(
 }
 
 ::v-deep(.financial-swiper .swiper-pagination) {
+  position: static !important;
+  margin-top: -1px;
+  padding-top: 0px;
+}
+
+.policy-swiper {
+  width: 100%;
+  padding: 10px 0;
+}
+.policy-slide {
+  width: 100%;
+}
+::v-deep(.policy-swiper .swiper-pagination) {
   position: static !important;
   margin-top: -1px;
   padding-top: 0px;

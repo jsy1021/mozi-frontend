@@ -25,6 +25,10 @@ onMounted(() => {
   }
 });
 
+function goBack() {
+  router.back();
+}
+
 //✖✔ 조건//
 const isLengthOk = computed(() => newPassword.value.length >= 10);
 const isCompositionOk = computed(() => {
@@ -77,7 +81,7 @@ async function handleSubmit() {
     if (response.isSuccess || response.code === 200) {
       alert('비밀번호가 성공적으로 변경되었습니다.');
       // 로그인 페이지로 이동
-      router.push('/login');
+      router.replace('/auth/LoginPage');
     } else {
       submitError.value = response.message || '비밀번호 변경에 실패했습니다. 다시 시도해주세요.';
     }
@@ -101,83 +105,100 @@ async function handleSubmit() {
 <template>
   <div class="reset-page">
     <div class="header">
-      <font-awesome-icon icon="fa-solid fa-chevron-left" class="backIcon" />
+      <FontAwesomeIcon :icon="['fas', 'chevron-left']" class="backIcon" @click="goBack" />
       <h1 class="logo">MoZi</h1>
     </div>
+
     <div class="title">비밀번호 재설정</div>
-
-    <section class="new-form">
-      <div class="form">
-        <div class="input-group">
-          <label>새 비밀번호 등록</label>
-          <input
-            type="password"
-            v-model="newPassword"
-            placeholder="새 비밀번호를 입력해주세요"
-            @input="validatePassword" />
-          <p class="error" v-if="passwordError">{{ passwordError }}</p>
-          <ul class="guide">
-            <li :class="{ valid: isLengthOk, invalid: !isLengthOk }">{{ isLengthOk ? '✔' : '✖' }} 10자 이상 입력</li>
-            <li :class="{ valid: isCompositionOk, invalid: !isCompositionOk }">
-              {{ isCompositionOk ? '✔' : '✖' }} 영문/숫자/특수문자 중 2개 이상 조합
-            </li>
-            <li :class="{ valid: isNoTripleNumber, invalid: !isNoTripleNumber }">
-              {{ isNoTripleNumber ? '✔' : '✖' }} 동일한 숫자 3개 연속 사용 불가
-            </li>
-          </ul>
+    <div class="content">
+      <section class="new-form">
+        <div class="form">
+          <div class="input-group">
+            <label>새 비밀번호 등록</label>
+            <input
+              type="password"
+              v-model="newPassword"
+              placeholder="새 비밀번호를 입력해주세요"
+              @input="validatePassword" />
+            <p class="error" v-if="passwordError">{{ passwordError }}</p>
+            <ul class="guide">
+              <li :class="{ valid: isLengthOk, invalid: !isLengthOk }">{{ isLengthOk ? '✔' : '✖' }} 10자 이상 입력</li>
+              <li :class="{ valid: isCompositionOk, invalid: !isCompositionOk }">
+                {{ isCompositionOk ? '✔' : '✖' }} 영문/숫자/특수문자 중 2개 이상 조합
+              </li>
+              <li :class="{ valid: isNoTripleNumber, invalid: !isNoTripleNumber }">
+                {{ isNoTripleNumber ? '✔' : '✖' }} 동일한 숫자 3개 연속 사용 불가
+              </li>
+            </ul>
+          </div>
+          <div class="input-group">
+            <label>새 비밀번호 확인</label>
+            <input
+              type="password"
+              v-model="confirmPassword"
+              placeholder="비밀번호 확인"
+              @input="validateConfirmPassword" />
+            <p class="error" v-if="confirmError">{{ confirmError }}</p>
+          </div>
         </div>
-        <div class="input-group">
-          <label>새 비밀번호 확인</label>
-          <input
-            type="password"
-            v-model="confirmPassword"
-            placeholder="비밀번호 확인"
-            @input="validateConfirmPassword" />
-          <p class="error" v-if="confirmError">{{ confirmError }}</p>
-        </div>
-      </div>
-
-      <div v-if="loading" class="loading-message">비밀번호를 변경하고 있습니다...</div>
-      <div v-if="submitError" class="error submit-error">{{ submitError }}</div>
-
-      <button class="submit-btn" :disabled="!isFormValid || loading" @click="handleSubmit">
-        {{ loading ? '처리중...' : '확인' }}
-      </button>
-    </section>
+        <div v-if="loading" class="loading-message">비밀번호를 변경하고 있습니다...</div>
+        <div v-if="submitError" class="error submit-error">{{ submitError }}</div>
+        <button class="submit-btn" :disabled="!isFormValid || loading" @click="handleSubmit">
+          {{ loading ? '처리중...' : '확인' }}
+        </button>
+      </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .reset-page {
-  padding: 1.5rem;
+  padding: 0;
   max-width: 500px;
   margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2rem;
-  height: 60px;
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  margin-top: 2rem;
 }
+
 .logo {
   font-size: 48px;
-  color: #4fa2a0;
+  color: #36c18c;
+  margin: 0;
+  font-weight: bold;
 }
+
 .backIcon {
-  font-size: 30px;
-  left: 10px;
-  color: black;
-  cursor: pointer;
   position: absolute;
-  transform: translateY(10%);
+  left: 10px;
+  top: 60%;
+  transform: translateY(-50%);
+  font-size: 30px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
 }
+
+.backIcon:hover {
+  color: #36c18c;
+}
+
 .title {
   font-size: 24px;
   color: #776e6e;
   text-align: center;
   margin-top: 1rem;
+  font-weight: 600;
 }
 .form {
   width: 100%;
@@ -188,6 +209,14 @@ async function handleSubmit() {
 }
 .form .input-group {
   margin-bottom: 2.5rem;
+}
+
+.content {
+  flex: 1; /* 남은 공간 채우기 */
+  display: flex;
+  flex-direction: column;
+  margin-top: 20%;
+  align-items: center; /* 가로 중앙 */
 }
 
 label {
@@ -242,10 +271,6 @@ input {
 .submit-btn:enabled {
   background-color: #36c18c;
   cursor: pointer;
-}
-.new-form {
-  margin-top: 4rem;
-  margin-left: 1rem;
 }
 
 .loading-message {

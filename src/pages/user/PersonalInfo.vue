@@ -84,9 +84,13 @@
       </div>
     </div>
 
+    <!-- 왼쪽 버튼 -->
     <div class="btns">
-      <button class="btn-cancel" @click="onCancel">취소</button>
-      <button class="btn-next" :disabled="!stepValid" @click="onNext">
+      <button class="btn-cancel" @click="onLeftClick">
+        {{ currentStep === 0 ? '취소' : '이전' }}
+      </button>
+      <!-- 오른쪽 버튼 -->
+      <button class="btn-next" :disabled="!stepValid" @click="onRightClick">
         {{ currentStep < 4 ? '다음' : '완료' }}
       </button>
     </div>
@@ -176,29 +180,27 @@ const stepValid = computed(() => {
   return false;
 });
 
-function onCancel() {
-  Object.assign(form, {
-    region: '',
-    age: null,
-    maritalStatus: '',
-    annualIncome: null,
-    educationLevel: '',
-    employmentStatus: '',
-    major: '',
-    specialty: '',
-  });
-  currentStep.value = 0;
+function onLeftClick() {
+  if (currentStep.value === 0) {
+    // 첫 화면에서 취소 → 이전 페이지로
+    router.back(); // 또는 router.push({ name: 'myPage' });
+  } else {
+    // 이전 스텝으로
+    currentStep.value--;
+  }
 }
 
-async function onNext() {
+async function onRightClick() {
   if (!stepValid.value) {
     alert('필수 항목을 입력해주세요.');
     return;
   }
 
   if (currentStep.value < 4) {
+    // 저장 없이 다음 스텝으로
     currentStep.value++;
   } else {
+    // 마지막 스텝이면 저장
     await saveProfile();
   }
 }
