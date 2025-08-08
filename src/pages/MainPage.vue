@@ -17,13 +17,12 @@ import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-<<<<<<< HEAD
+
 import { useAuthStore } from '@/stores/auth';
 import PersonalInfoPrompt from '@/components/profile/PersonalInfoPrompt.vue';
-=======
+
 import RecommendPolicyCard from './recommend/policy/recommendPolicyCard.vue';
 
->>>>>>> main
 const router = useRouter();
 const route = useRoute();
 const goalStore = useGoalStore();

@@ -231,7 +231,6 @@ function onLeftClick() {
   }
 }
 
-<<<<<<< HEAD
 // 기존 폼 제출 함수 수정
 const handleSubmit = async (formData) => {
   try {
@@ -262,10 +261,8 @@ const handleSubmit = async (formData) => {
     alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
   }
 };
-async function onNext() {
-=======
+
 async function onRightClick() {
->>>>>>> main
   if (!stepValid.value) {
     alert('필수 항목을 입력해주세요.');
     return;
