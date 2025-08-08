@@ -68,7 +68,9 @@ const goBack = () => {
         주거래 은행
       </div>
     </div>
-    <p>주거래 은행 한 개를 선택해주세요</p>
+    <p style="padding-left: 10px; font-size: 15px">
+      주거래 은행을 선택해주세요
+    </p>
 
     <div class="bank-box">
       <div
@@ -98,7 +100,8 @@ const goBack = () => {
       class="Agreecard-btn"
       :disabled="!isModified"
       :style="{
-        backgroundColor: isModified ? '#4CAF50' : '#d9d9d9',
+        backgroundColor: isModified ? '#36C18C' : '#36C18C80',
+        // color: isModified ? '#6B7684' : '#FFFFFF',
         cursor: isModified ? 'pointer' : 'not-allowed',
       }"
       @click="handleAgree"
@@ -116,11 +119,18 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 115px;
+  margin-bottom: 25px;
 }
 .back-btn {
-  font-size: 24px;
+  font-size: 18px; /* 크기 맞춤 */
+  color: #757575; /* 텍스트 색과 동일하게 */
   cursor: pointer;
   user-select: none;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: #555555; /* 살짝 어두운 hover 효과 */
 }
 .bank-box {
   border: 1px solid #ddd;
@@ -145,6 +155,7 @@ const goBack = () => {
   color: #f5c518;
 }
 .Agreecard-btn {
+  color: #fff;
   display: block;
   width: 90%;
   margin: 100px 0 0 20px;
@@ -154,6 +165,7 @@ const goBack = () => {
   box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
   font-size: 16px;
   transition: background-color 0.3s ease;
+  font-weight: 700;
 }
 .Agreecard-btn:active {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);

@@ -1,25 +1,30 @@
-// src/api/scrapApi.js
-import axios from 'axios';
+import api from './index.js';
 
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 30000,
-});
-
-export const scrapPolicy = (userId, plcyNo) => {
-  return axios.post(`/api/scrap/policy/${plcyNo}?userId=${userId}`);
+export const scrapPolicy = (plcyNo) => {
+  return api.post(`/scrap/policy/${plcyNo}`);
 };
 
-export const cancelScrap = (userId, plcyNo) => {
-  return axios.delete(`/api/scrap/policy/${plcyNo}?userId=${userId}`);
+export const cancelScrap = (plcyNo) => {
+  return api.delete(`/scrap/policy/${plcyNo}`);
 };
 
-export const getScrappedPolicyIds = (userId) =>
-  axios
-    .get('/api/scrap', { params: { userId, type: 'policy' } })
-    .then((res) => res.data);
+// export const getScrappedPolicyIds = () =>
+//   api.get('/scrap').then((res) => res.data.result ?? []);
 
-export const getScrappedPolicies = (userId) =>
-  axios
-    .get('/api/scrap/policy/list', { params: { userId } })
-    .then((res) => res.data);
+export const getScrappedPolicyIds = () =>
+  api.get('/scrap').then((res) => {
+    console.log('🔍 스크랩 응답:', res);
+    return res.data?.result ?? []; // ✅ 이게 핵심
+  });
+
+// export const getScrappedPolicies = () =>
+//   api.get('/scrap/policy/list').then((res) => res.data);
+
+// export const getScrappedPolicies = () =>
+//   api.get('/scrap/policy/list').then((res) => res.data ?? []);
+
+export const getScrappedPolicies = () =>
+  api.get('/scrap/policy/list').then((res) => {
+    console.log('🟢 scrapApi 응답:', res); // res가 곧 data
+    return res ?? [];
+  });

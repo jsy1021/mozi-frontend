@@ -1,25 +1,45 @@
 <template>
   <div class="financial-card">
-    <div class="card-header" style="display: flex; align-items: center;">
-      <img class="bank-logo" :src="getBankLogoUrl(deposit?.bankCode)" alt="은행로고" style="width: 32px; height: 32px; margin-right: 8px;" />
-      <span class="product-title" style="font-weight: bold; font-size: 14px;">{{ deposit?.productName || '상품명 없음' }}</span>
-      <i class="fa-regular fa-bookmark bookmark" 
-         :class="{ 'scraped': isScraped }" 
-         @click="toggleScrap" 
-         style="margin-left: auto; cursor: pointer;"></i>
+    <div class="card-header" style="display: flex; align-items: center">
+      <img
+        class="bank-logo"
+        :src="getBankLogoUrl(deposit?.bankCode)"
+        alt="은행로고"
+        style="width: 32px; height: 32px; margin-right: 8px"
+      />
+      <span class="product-title" style="font-weight: bold; font-size: 14px">
+        {{ deposit?.productName || '상품명 없음' }}
+      </span>
+      <i
+        class="fa-regular fa-bookmark bookmark"
+        :class="{ scraped: isScraped }"
+        @click="toggleScrap"
+        style="margin-left: auto; cursor: pointer"
+      >
+      </i>
     </div>
+
     <div class="card-body" v-if="bestOption">
-      
       <div class="rate small-text">
-        <span style="color: #888;">가입 </span><span style="color: #444;">{{ deposit?.bankName || '은행명 없음' }}</span><br>
-        <span style="color: #888;">금리 </span>
-        <span class="main-rate">{{ bestOption.intrRate }}%({{ bestOption.saveTrm }}개월)</span>,<span class="max-rate" style="color: #e74c3c;">최고 {{ bestOption.intrRate2 }}%</span>({{ bestOption.saveTrm }}개월)
+        <span style="color: #888">가입 </span>
+        <span style="color: #444">{{ deposit?.bankName || '은행명 없음' }}</span
+        ><br />
+        <span style="color: #888">금리 </span>
+        <span class="main-rate"
+          >{{ bestOption.intrRate }}%({{ bestOption.saveTrm }}개월)</span
+        >,
+        <span class="max-rate" style="color: #e74c3c"
+          >최고 {{ bestOption.intrRate2 }}%</span
+        >({{ bestOption.saveTrm }}개월)
       </div>
-      <div class="target small-text" style="color: #888;">
+      <div class="target small-text" style="color: #888">
         <span>대상 </span>
-        <span style="color: #444;">{{ deposit?.target || deposit?.joinMember || '정보 없음' }}</span>
+        <span style="color: #444">{{
+          deposit?.target || deposit?.joinMember || '정보 없음'
+        }}</span>
       </div>
     </div>
+
     <div class="button-container">
       <button class="detail-btn" @click="goToDetail">자세히보기</button>
     </div>
@@ -30,17 +50,19 @@
 import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getBankLogoUrl } from './util/bankLogo.js';
-import axios from 'axios';
+import api from '@/api'; // axios 인스턴스 사용
 
 const props = defineProps({
   deposit: Object,
-  productType: String
+  productType: String,
 });
+
 const router = useRouter();
 const isScraped = ref(false);
 
 const bestOption = computed(() => {
-  if (!props.deposit?.options || props.deposit.options.length === 0) return null;
+  if (!props.deposit?.options || props.deposit.options.length === 0)
+    return null;
   return props.deposit.options.reduce((max, cur) =>
     Number(cur.intrRate) > Number(max.intrRate) ? cur : max
   );
@@ -49,20 +71,20 @@ const bestOption = computed(() => {
 // 스크랩 상태 확인
 const checkScrapStatus = async () => {
   try {
-    const userId = 1; // 임시로 고정된 사용자 ID
-    const response = await axios.get('/api/scrap/finance', {
-      params: { userId }
-    });
-    
-    const productId = props.productType === '적금' ? props.deposit?.savingId : props.deposit?.depositId;
+    const response = await api.get('/scrap/finance');
+    const productId =
+      props.productType === '적금'
+        ? props.deposit?.savingId
+        : props.deposit?.depositId;
     const productType = props.productType === '적금' ? 'SAVING' : 'DEPOSIT';
-    
-    const isAlreadyScraped = response.data.some(scrap => 
-      scrap.productType === productType && 
-      ((productType === 'SAVING' && scrap.product.savingId === productId) ||
-       (productType === 'DEPOSIT' && scrap.product.depositId === productId))
+
+    const isAlreadyScraped = response.some(
+      (scrap) =>
+        scrap.productType === productType &&
+        ((productType === 'SAVING' && scrap.product.savingId === productId) ||
+          (productType === 'DEPOSIT' && scrap.product.depositId === productId))
     );
-    
+
     isScraped.value = isAlreadyScraped;
   } catch (error) {
     console.error('스크랩 상태 확인 실패:', error);
@@ -72,26 +94,28 @@ const checkScrapStatus = async () => {
 // 스크랩 토글 함수
 const toggleScrap = async () => {
   try {
-    const userId = 1; // 임시로 고정된 사용자 ID
-    const productId = props.productType === '적금' ? props.deposit?.savingId : props.deposit?.depositId;
+    const productId =
+      props.productType === '적금'
+        ? props.deposit?.savingId
+        : props.deposit?.depositId;
     const productType = props.productType === '적금' ? 'SAVING' : 'DEPOSIT';
-    
+
     if (!productId) {
       console.error('상품 ID가 없습니다.');
       return;
     }
-    
+
     if (isScraped.value) {
       // 스크랩 삭제
-      await axios.delete('/api/scrap/finance', {
-        params: { userId, productType, productId }
+      await api.delete('/scrap/finance', {
+        params: { productType, productId },
       });
       isScraped.value = false;
       console.log('스크랩이 삭제되었습니다.');
     } else {
       // 스크랩 추가
-      await axios.post('/api/scrap/finance', null, {
-        params: { userId, productType, productId }
+      await api.post('/scrap/finance', null, {
+        params: { productType, productId },
       });
       isScraped.value = true;
       console.log('스크랩이 추가되었습니다.');
@@ -101,9 +125,10 @@ const toggleScrap = async () => {
   }
 };
 
+// 상세 페이지 이동
 const goToDetail = () => {
   if (!props.deposit) return;
-  
+
   if (props.productType === '적금') {
     const savingId = props.deposit.savingId;
     if (savingId) {
@@ -157,13 +182,13 @@ onMounted(() => {
 }
 
 .bookmark.scraped {
-  color: #569FFF;
+  color: #569fff;
 }
 
 .bookmark.scraped::before {
-  font-family: "Font Awesome 6 Free";
+  font-family: 'Font Awesome 6 Free';
   font-weight: 900;
-  content: "\f02e";
+  content: '\f02e';
 }
 .card-body {
   font-size: 0.97rem;
@@ -203,5 +228,18 @@ onMounted(() => {
 }
 .small-text {
   font-size: 12px;
+}
+
+.financial-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, #ff9d00 0%, #83fff1 70%);
+  opacity: 0.7;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
 }
 </style>

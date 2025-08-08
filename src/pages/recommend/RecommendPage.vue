@@ -13,7 +13,7 @@
 
     <!-- 추천 인트로 -->
     <div class="p-3 rounded bg-light mb-3 text-center">
-      <p class="mb-1 fw-semibold">{{ userId }}님을 위한 맞춤 추천</p>
+      <p class="mb-1 fw-semibold">{{ userName }}님을 위한 맞춤 추천</p>
       <small class="text-muted">목표와 프로필을 기반으로 추천을 제공합니다.</small>
     </div>
 
@@ -46,29 +46,21 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
 import policyRecommendTab from './policyRecommendTab.vue';
 import FinancialRecommendTab from './FinancialRecommendTab.vue';
-import { useRouter } from 'vue-router';
+
 
 const router = useRouter();
-const authStore = useAuthStore();
 
-const goBack = () => {
-  router.back();
-};
+const goBack = () => router.back();
 
-onMounted(() => {
-  authStore.initializeAuth(); // 새로고침 시 사용자 정보 복원
-});
+const userName='사용자';
 
-// 로그인한 사용자 ID를 가져오기
-const userId = computed(() => authStore.user?.login_id || '사용자');
-const goalId = 2;
 
 const tabs = ['금융상품', '청년정책'];
 const currentTab = ref('금융상품');
 </script>
-
 <style scoped>
 .position-relative {
   position: relative;

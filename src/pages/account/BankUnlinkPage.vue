@@ -78,10 +78,22 @@ onMounted(() => {
       </div>
     </div>
 
-    <p>해지할 은행을 선택해주세요 (복수 선택 가능)</p>
+    <p style="padding-left: 10px; font-size: 15px">
+      해지할 은행을 선택해주세요
+    </p>
 
     <!-- 은행 목록 -->
     <div class="bank-box">
+      <!-- 은행 목록 없을때 -->
+      <div class="no-bank" v-if="bankList.length === 0">
+        <img
+          src="/images/unlinkAccountEmpty.png"
+          style="height: 100px; margin-right: 0.5rem"
+        />
+        <div>해지할 은행이 없습니다.</div>
+      </div>
+
+      <!-- 은행 목록 있을때 -->
       <div
         v-for="bank in bankList"
         :key="bank.code"
@@ -101,6 +113,9 @@ onMounted(() => {
               'fa-regular',
               selectedBanks.has(bank.code) ? 'fa-check-square' : 'fa-square',
             ]"
+            :style="{
+              color: selectedBanks.has(bank.code) ? '#757575' : '#C0C0C0', // 진한색 vs 연한색
+            }"
           ></i>
         </span>
       </div>
@@ -112,7 +127,7 @@ onMounted(() => {
       :disabled="selectedBanks.size === 0"
       @click="showConfirm = true"
       :style="{
-        backgroundColor: selectedBanks.size > 0 ? '#e34c4c' : '#d9d9d9',
+        backgroundColor: selectedBanks.size > 0 ? '#e34c4c' : '#e34c4c80',
         cursor: selectedBanks.size > 0 ? 'pointer' : 'not-allowed',
       }"
     >
@@ -141,10 +156,18 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 110px;
+  margin-bottom: 25px;
 }
 .back-btn {
-  font-size: 24px;
+  font-size: 18px; /* 크기 맞춤 */
+  color: #757575; /* 텍스트 색과 동일하게 */
   cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: #555555; /* 살짝 어두운 hover 효과 */
 }
 .bank-box {
   border: 1px solid #ddd;
@@ -174,7 +197,7 @@ onMounted(() => {
 }
 .check-icon {
   font-size: 20px;
-  color: teal;
+  color: #a0a0a0;
 }
 .delete-btn {
   display: block;
@@ -235,5 +258,13 @@ onMounted(() => {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+.no-bank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #757575;
 }
 </style>
