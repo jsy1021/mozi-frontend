@@ -17,7 +17,8 @@ import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-
+import { useAuthStore } from '@/stores/auth';
+import PersonalInfoPrompt from '@/components/profile/PersonalInfoPrompt.vue';
 const router = useRouter();
 const route = useRoute();
 const goalStore = useGoalStore();
@@ -32,6 +33,63 @@ const products = ref([]);
 const banks = bankStore.banks;
 
 const deadlinePolicies = ref([]);
+
+const authStore = useAuthStore();
+const showPersonalPrompt = ref(false);
+const remainingDays = ref(0);
+
+// 퍼스널 정보 상태 체크
+const checkPersonalInfoNeeded = async () => {
+  try {
+    console.log('🔥 퍼스널 정보 필요 여부 확인');
+
+    // 현재 사용자별 다시 보지 않기 설정 확인
+    const userInfo = authStore.userInfo;
+    const loginId = userInfo?.loginId;
+
+    if (loginId) {
+      const neverShow = localStorage.getItem(
+        `personalInfoPromptNeverShow_${loginId}`
+      );
+      if (neverShow === 'true') {
+        console.log(
+          '🔥 퍼스널 정보 프롬프트 다시 보지 않기 설정됨 - 사용자:',
+          loginId
+        );
+        return;
+      }
+    }
+
+    const status = await authStore.checkPersonalInfoStatus();
+    console.log('🔥 퍼스널 정보 상태:', status);
+
+    const needsPrompt = status.needs_prompt || status.needsPrompt;
+    const daysRemaining = status.days_remaining || status.daysRemaining || 0;
+
+    if (needsPrompt) {
+      showPersonalPrompt.value = true;
+      remainingDays.value = daysRemaining;
+      console.log('🔥 퍼스널 정보 프롬프트 표시:', {
+        show: true,
+        remainingDays: daysRemaining,
+      });
+    }
+  } catch (error) {
+    console.error('🔥 퍼스널 정보 상태 확인 실패:', error);
+  }
+};
+
+const handlePromptDismiss = () => {
+  showPersonalPrompt.value = false;
+  console.log('🔥 퍼스널 정보 프롬프트 닫기');
+};
+// 새로운 함수 추가
+const handlePromptNeverShow = () => {
+  showPersonalPrompt.value = false;
+  // localStorage에 다시 보지 않기 설정 저장
+  localStorage.setItem('personalInfoPromptNeverShow', 'true');
+  console.log('🔥 퍼스널 정보 프롬프트 다시 보지 않기 설정');
+};
 
 function goToAccountAuth() {
   router.push('/account/AccountAgreementPage');
@@ -191,6 +249,14 @@ onMounted(() => {
   loadSummary();
   loadGoals();
   loadDeadlinePolicies();
+
+  // 퍼스널 정보 체크 (인증된 사용자인 경우에만)
+  if (authStore.isAuthenticated) {
+    // 약간의 지연을 두고 체크 (다른 API 호출 완료 후)
+    setTimeout(async () => {
+      await checkPersonalInfoNeeded();
+    }, 1000);
+  }
 });
 
 onMounted(async () => {
@@ -222,6 +288,14 @@ watch(
 </script>
 
 <template>
+  <!-- 퍼스널 정보 입력 프롬프트 (최상단에 배치) -->
+  <PersonalInfoPrompt
+    v-if="showPersonalPrompt"
+    :remaining-days="remainingDays"
+    @dismiss="handlePromptDismiss"
+    @never-show="handlePromptNeverShow"
+  />
+
   <!-- 목표 리스트 -->
   <div style="display: flex">
     <p
