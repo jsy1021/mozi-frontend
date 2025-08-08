@@ -374,9 +374,31 @@ watch(
                 : '0'
             }}원
           </div>
-          <div style="font-size: 12px; color: #555; margin-top: 3px">
-            {{ bankSummaryList?.representativeAccountName }}외
-            {{ (bankSummaryList?.accountCount || 1) - 1 }}개 계좌
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              font-size: 12px;
+              color: #555;
+              margin-top: 3px;
+            "
+          >
+            <!-- 계좌명만 말줄임 -->
+            <span
+              style="
+                max-width: 90px; /* 카드 폭에 맞게 조절 */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: inline-block;
+              "
+            >
+              {{ bankSummaryList?.representativeAccountName }}
+            </span>
+
+            <!-- 외 N개 계좌는 항상 보이게 -->
+            <span> 외 {{ (bankSummaryList?.accountCount || 1) - 1 }}개 </span>
           </div>
         </div>
         <div

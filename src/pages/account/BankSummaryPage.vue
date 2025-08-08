@@ -96,8 +96,12 @@ onMounted(async () => {
             <div class="bank-account">
               <template v-if="bank.accountCount === 0">계좌 0개</template>
               <template v-else>
-                {{ bank.representativeAccountName }} 외
-                {{ bank.accountCount - 1 }}개
+                <span class="account-name-ellipsis">
+                  {{ bank.representativeAccountName }}
+                </span>
+                <span class="account-etc">
+                  외 {{ bank.accountCount - 1 }}개
+                </span>
               </template>
             </div>
           </div>
@@ -299,8 +303,34 @@ onMounted(async () => {
 }
 
 .bank-account {
-  font-size: 13px;
+  font-size: 13px; /* ✅ 네가 설정해둔 값 유지 */
   color: #555;
+  display: flex; /* 말줄임 + 고정 텍스트 분리 위해 플렉스화 */
+  align-items: center;
+  gap: 4px;
+}
+
+/* 계좌명만 말줄임 */
+.account-name-ellipsis {
+  flex: 1; /* 남는 공간을 이쪽에 할당 */
+  min-width: 0; /* ✨ 말줄임이 실제로 작동하려면 필요 */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  flex: 0 1 auto; /* ✨ 퍼센트로 적당히만 차지 (혹은 140px 같은 px도 OK) */
+  min-width: 0;
+  max-width: 70%; /* 안전빵으로 상한 */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+/* "외 N개"는 줄어들지 않게 고정 */
+.account-etc {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .connect-btn-full {
