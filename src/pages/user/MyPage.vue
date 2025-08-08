@@ -95,7 +95,9 @@ onMounted(async () => {
         email: result.email,
       };
 
-      personalForm.value = result.has_personal_info ? result.personal_info : null;
+      personalForm.value = result.has_personal_info
+        ? result.personal_info
+        : null;
 
       console.log('📦 personalForm:', personalForm.value);
     } else {
@@ -114,13 +116,28 @@ onMounted(async () => {
       <div class="modal">
         <div class="modal-header">
           <h3>비밀번호 확인</h3>
-          <font-awesome-icon :icon="['fas', 'xmark']" class="close-icon" @click="closeModal" />
+          <font-awesome-icon
+            :icon="['fas', 'xmark']"
+            class="close-icon"
+            @click="closeModal"
+          />
         </div>
         <p class="desc">정보 수정을 위해 비밀번호를 입력해주세요</p>
-        <input v-model="passwordInput" type="password" placeholder="비밀번호 입력" class="pw-input" />
+        <input
+          v-model="passwordInput"
+          type="password"
+          placeholder="비밀번호 입력"
+          class="pw-input"
+        />
         <div v-if="passwordError" class="error-msg">{{ passwordError }}</div>
         <div class="btn-group">
-          <button @click="verifyPassword" :disabled="!canSubmit" :class="{ 'disabled-btn': !canSubmit }">확인</button>
+          <button
+            @click="verifyPassword"
+            :disabled="!canSubmit"
+            :class="{ 'disabled-btn': !canSubmit }"
+          >
+            확인
+          </button>
         </div>
       </div>
     </div>
@@ -164,7 +181,9 @@ onMounted(async () => {
           <div class="grid">
             <div class="item">
               <span class="label">관심지역</span>
-              <span class="value">{{ REGION_LABELS[personalForm.region] || personalForm.region }}</span>
+              <span class="value">{{
+                REGION_LABELS[personalForm.region] || personalForm.region
+              }}</span>
             </div>
             <div class="item">
               <span class="label">연령</span>
@@ -173,7 +192,8 @@ onMounted(async () => {
             <div class="item">
               <span class="label">혼인여부</span>
               <span class="value">{{
-                MARITAL_STATUS_LABELS[personalForm.marital_status] || personalForm.marital_status
+                MARITAL_STATUS_LABELS[personalForm.marital_status] ||
+                personalForm.marital_status
               }}</span>
             </div>
             <div class="item">
@@ -183,30 +203,44 @@ onMounted(async () => {
             <div class="item">
               <span class="label">학력</span>
               <span class="value">{{
-                EDUCATION_LEVEL_LABELS[personalForm.education_level] || personalForm.education_level
+                EDUCATION_LEVEL_LABELS[personalForm.education_level] ||
+                personalForm.education_level
               }}</span>
             </div>
             <div class="item">
               <span class="label">취업상태</span>
               <span class="value">{{
-                EMPLOYMENT_STATUS_LABELS[personalForm.employment_status] || personalForm.employment_status
+                EMPLOYMENT_STATUS_LABELS[personalForm.employment_status] ||
+                personalForm.employment_status
               }}</span>
             </div>
             <div class="item">
               <span class="label">전공</span>
-              <span class="value">{{ MAJOR_LABELS[personalForm.major] || personalForm.major }}</span>
+              <span class="value">{{
+                MAJOR_LABELS[personalForm.major] || personalForm.major
+              }}</span>
             </div>
             <div class="item">
               <span class="label">특화분야</span>
-              <span class="value">{{ SPECIALTY_LABELS[personalForm.specialty] || personalForm.specialty }}</span>
+              <span class="value">{{
+                SPECIALTY_LABELS[personalForm.specialty] ||
+                personalForm.specialty
+              }}</span>
             </div>
           </div>
-          <button class="edit-btn" @click="router.push({ name: 'personal' })">퍼스널 정보 수정</button>
+          <button class="edit-btn" @click="router.push({ name: 'personal' })">
+            퍼스널 정보 수정
+          </button>
         </template>
         <template v-else>
           <h3>퍼스널 정보</h3>
-          <p class="desc">설정하신 개인정보 및 관심사항을 기반으로<br />맞춤 정책을 제공합니다.</p>
-          <button class="save-btn" @click="router.push('/user/personal')">퍼스널 정보 입력</button>
+          <p class="desc">
+            설정하신 개인정보 및 관심사항을 기반으로<br />맞춤 정책을
+            제공합니다.
+          </p>
+          <button class="save-btn" @click="router.push('/user/personal')">
+            퍼스널 정보 입력
+          </button>
         </template>
       </div>
     </div>
