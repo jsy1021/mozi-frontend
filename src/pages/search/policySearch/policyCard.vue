@@ -88,9 +88,8 @@ const hasIncomeCondition = computed(() => {
   return ['0043002', '0043003'].includes(code);
 });
 
-const bookmarked = ref(props.isScrapped); // ✅ 초기 상태는 props에서 받아옴
+const bookmarked = ref(props.isScrapped);
 
-// ✅ 이 줄이 없으면 emit은 undefined 에러 남!
 const emit = defineEmits(['updateBookmark']);
 
 function isClosed(aplyYmd) {
@@ -115,10 +114,12 @@ const toggleBookmark = async () => {
       await cancelScrap(plcyNo);
       console.log('❌ 스크랩 해제 요청 보냄');
       emit('updateBookmark', { plcyNo, value: false });
+      bookmarked.value = false;
     } else {
       await scrapPolicy(plcyNo);
       console.log('✅ 스크랩 등록 요청 보냄');
       emit('updateBookmark', { plcyNo, value: true });
+      bookmarked.value = true;
     }
   } catch (err) {
     console.error('⚠️ 스크랩 처리 오류:', err);
@@ -131,7 +132,8 @@ watch(
   () => props.isScrapped,
   (newVal) => {
     bookmarked.value = newVal;
-  }
+  },
+  { immediate: true }
 );
 </script>
 

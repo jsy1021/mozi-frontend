@@ -7,6 +7,7 @@
         id="personalInfo"
         class="form-check-input me-1"
         v-model="usePersonalInfo"
+        @change="onPersonalToggle"
       />
       <label
         for="personalInfo"
@@ -139,7 +140,9 @@ import {
   RegionEnum,
 } from './util/policyEnums';
 
-const usePersonalInfo = ref(true); //퍼스널 정보 체크 상태
+const usePersonalInfo = ref(localStorage.getItem('usePersonalInfo') === 'true');
+const serverProfile = ref(null);
+const manuallyToggled = ref(false);
 
 // props 정의
 const props = defineProps({
@@ -147,7 +150,6 @@ const props = defineProps({
   toggleFilter: Function,
   exactAge: Number,
   regionNameMap: Object,
-  //userProfile: Object,
 });
 
 // 지역 선택 상태
@@ -158,6 +160,13 @@ const selectedRegions = ref([]);
 const customAge = defineModel('customAge');
 const customIncome = defineModel('customIncome');
 
+// ✅ 수동 해제 체크 (v-model + change 동시에 써도 안전)
+const onPersonalToggle = () => {
+  if (!usePersonalInfo.value) {
+    clearFilters(); // ✅ 체크 해제 → 전체 필터 초기화
+    console.log('🧹 퍼스널 직접 해제 → 필터 초기화됨');
+  }
+};
 // 필터 초기화
 const clearFilters = () => {
   Object.assign(props.filterState, {
@@ -177,9 +186,10 @@ const applyUserProfile = async () => {
   try {
     const response = await profileAPI.getProfile();
     const profile = response.result;
+    serverProfile.value = profile;
 
     if (!profile) return;
-    // ✅ 1. ENUM → 코드 매핑
+    //  ENUM → 코드 매핑
     props.filterState.education = [
       getCodeFromEnum(EducationLevelEnum, profile.education_level),
     ];
@@ -194,15 +204,15 @@ const applyUserProfile = async () => {
       getCodeFromEnum(SpecialtyEnum, profile.specialty),
     ];
 
-    // ✅ 2. 연령/소득
+    // 연령/소득
     customAge.value = profile.age ?? null;
     customIncome.value = profile.annual_income ?? null;
 
-    // ✅ 3. 지역 매핑: "SEOUL" → "서울특별시"
+    // 지역 매핑
     const sidoLabel = RegionEnum?.[profile.region]?.label;
 
     if (sidoLabel) {
-      const zipCodes = await fetchZipCodesBySido(sidoLabel); // 전체 구 zipCode 받아오기
+      const zipCodes = await fetchZipCodesBySido(sidoLabel);
       props.filterState.region = zipCodes;
     } else {
       console.warn('⚠️ 퍼스널 지역 매핑 실패:', profile.region);
@@ -214,34 +224,66 @@ const applyUserProfile = async () => {
   }
 };
 
-onMounted(async () => {
-  if (usePersonalInfo.value) {
-    console.log(
-      '🟡 [onMounted] 퍼스널 정보 사용 설정됨. 프로필 적용 시도 중...'
-    );
-    await applyUserProfile();
-    console.log('🟢 [onMounted] 프로필 적용 완료:', {
-      region: props.filterState.region,
-      age: customAge.value,
-      income: customIncome.value,
-      maritalStatus: props.filterState.maritalStatus,
-      education: props.filterState.education,
-      employment: props.filterState.employment,
-      major: props.filterState.major,
-      special: props.filterState.special,
-    });
-  } else {
-    console.log('⚪ [onMounted] 퍼스널 정보 사용 안 함');
-  }
+onMounted(() => {
+  console.log('🔄 페이지 진입 - 퍼스널 체크 상태:', usePersonalInfo.value);
 });
 
 watch(usePersonalInfo, async (enabled) => {
-  if (!enabled) {
-    clearFilters();
-  } else {
+  localStorage.setItem('usePersonalInfo', enabled);
+  if (enabled) {
     await applyUserProfile();
   }
 });
+
+// 퍼스널 필터 상태 - 서버 정보와 불일치 시 자동 해제
+watch(
+  [
+    () => props.filterState.education,
+    () => props.filterState.employment,
+    () => props.filterState.maritalStatus,
+    () => props.filterState.major,
+    () => props.filterState.special,
+    () => props.filterState.region,
+    () => customAge.value,
+    () => customIncome.value,
+  ],
+  async () => {
+    if (!serverProfile.value || !usePersonalInfo.value) return;
+
+    const p = serverProfile.value;
+    const zipCodes = p.region
+      ? await fetchZipCodesBySido(RegionEnum[p.region]?.label)
+      : [];
+
+    const isMatch =
+      JSON.stringify(props.filterState.education) ===
+        JSON.stringify([
+          getCodeFromEnum(EducationLevelEnum, p.education_level),
+        ]) &&
+      JSON.stringify(props.filterState.employment) ===
+        JSON.stringify([
+          getCodeFromEnum(EmploymentStatusEnum, p.employment_status),
+        ]) &&
+      JSON.stringify(props.filterState.maritalStatus) ===
+        JSON.stringify([
+          getCodeFromEnum(MaritalStatusEnum, p.marital_status),
+        ]) &&
+      JSON.stringify(props.filterState.major) ===
+        JSON.stringify([getCodeFromEnum(MajorEnum, p.major)]) &&
+      JSON.stringify(props.filterState.special) ===
+        JSON.stringify([getCodeFromEnum(SpecialtyEnum, p.specialty)]) &&
+      JSON.stringify(props.filterState.region) === JSON.stringify(zipCodes) &&
+      customAge.value === p.age &&
+      customIncome.value === p.annual_income;
+
+    if (!isMatch) {
+      usePersonalInfo.value = false;
+      localStorage.setItem('usePersonalInfo', 'false');
+      console.log('🛑 퍼스널 정보와 불일치 → 체크 해제됨');
+    }
+  },
+  { deep: true }
+);
 
 // 지역 필터 → 지역명 표시용 selectedRegions 갱신
 watch(
