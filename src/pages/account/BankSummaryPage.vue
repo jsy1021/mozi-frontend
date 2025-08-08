@@ -348,7 +348,7 @@ onMounted(async () => {
 /* ✅ 변경된 계좌 없음 화면 위치 조정 */
 .fixed-center-box {
   position: absolute;
-  top: 45%; /* 기존 60%에서 위로 조정 */
+  top: 38%; /* 기존 60%에서 위로 조정 */
   left: 50%;
   width: 320px;
   padding: 24px;

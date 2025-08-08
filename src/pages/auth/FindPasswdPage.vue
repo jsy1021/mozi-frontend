@@ -1,25 +1,70 @@
-<script setup>
-import { ref, reactive, computed } from 'vue';
+<script setup lang="ts">
+import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+// faEye/faEyeSlash는 안 쓰면 삭제해도 됨
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-import { authAPI } from '@/api/auth.js';
+import { authAPI } from '@/api/auth';
 
-library.add(faEye, faEyeSlash);
 library.add(faChevronLeft);
 
 const router = useRouter();
 
 const userId = ref('');
 const email = ref('');
-const errors = reactive({ userId: '', email: '', verificationCode: '' });
+const errors = reactive<{ userId: string; email: string; verificationCode: string }>({
+  userId: '',
+  email: '',
+  verificationCode: '',
+});
 const loading = ref(false);
 const submitError = ref('');
 const verificationCode = ref('');
+
 const sentCode = ref(false);
 const isEmailVerified = ref(false);
+
+const cooldownSeconds = ref(0);
+let cooldownTimer: number | null = null;
+const lastSentEmail = ref('');
+
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isEmailValid = computed(() => emailRe.test(email.value));
+
+const cooldownText = computed(() => {
+  const m = Math.floor(cooldownSeconds.value / 60)
+    .toString()
+    .padStart(2, '0');
+  const s = (cooldownSeconds.value % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+});
+
+function startCooldown(seconds = 300) {
+  clearCooldown();
+  cooldownSeconds.value = seconds;
+  cooldownTimer = window.setInterval(() => {
+    cooldownSeconds.value -= 1;
+    if (cooldownSeconds.value <= 0) clearCooldown();
+  }, 1000);
+}
+function clearCooldown() {
+  if (cooldownTimer) {
+    clearInterval(cooldownTimer);
+    cooldownTimer = null;
+  }
+  cooldownSeconds.value = 0;
+}
+
+onUnmounted(() => clearCooldown());
+
+watch([email, userId], () => {
+  clearCooldown();
+  sentCode.value = false;
+  isEmailVerified.value = false;
+  errors.email = '';
+  errors.userId = '';
+});
 
 function goBack() {
   router.back();
@@ -28,35 +73,41 @@ function goBack() {
 function validateUserId() {
   errors.userId = userId.value.trim() ? '' : '가입 시 등록한 아이디를 입력해주세요';
 }
-
 function validateEmail() {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email.value.trim()) {
-    errors.email = '가입 시 등록한 이메일을 입력해 주세요';
-  } else if (!re.test(email.value)) {
-    errors.email = '유효하지 않은 이메일입니다';
-  } else {
-    errors.email = '';
-  }
+  if (!email.value.trim()) errors.email = '가입 시 등록한 이메일을 입력해 주세요';
+  else if (!emailRe.test(email.value)) errors.email = '유효하지 않은 이메일입니다';
+  else errors.email = '';
 }
 
 async function sendVerificationCode() {
-  validateEmail();
-  if (errors.email) return;
+  if (!userId.value.trim()) {
+    errors.userId = '아이디를 입력해주세요';
+    return;
+  }
+  if (!isEmailValid.value) {
+    validateEmail();
+    return;
+  }
+  if (cooldownSeconds.value > 0) return;
 
+  loading.value = true;
   try {
-    // authAPI 사용 - 비밀번호 재설정용 이메일 인증번호 발송
     const response = await authAPI.sendPasswordResetCode(email.value);
-
-    if (response.isSuccess || response.code === 200) {
+    if (response?.isSuccess === true || response?.code === 200) {
       sentCode.value = true;
-      alert('인증 코드가 이메일로 발송되었습니다');
+      errors.email = '';
+      lastSentEmail.value = email.value;
+      startCooldown(300);
     } else {
-      alert(response.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.');
+      errors.email = response?.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.';
     }
-  } catch (error) {
-    console.error('이메일 발송 실패:', error);
-    alert(error.response?.data?.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.');
+  } catch (err: any) {
+    console.error('이메일 발송 실패:', err);
+    errors.email = err?.response?.data?.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.';
+    sentCode.value = false;
+    isEmailVerified.value = false;
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -65,9 +116,7 @@ async function verifyCode() {
     errors.verificationCode = '인증 코드를 입력해주세요.';
     return;
   }
-
   try {
-    // authAPI 사용 - 비밀번호 재설정용 인증번호 확인
     const response = await authAPI.verifyPasswordResetCode({
       email: email.value,
       verificationCode: verificationCode.value,
@@ -76,51 +125,56 @@ async function verifyCode() {
     if (response.isSuccess || response.code === 200) {
       isEmailVerified.value = true;
       errors.verificationCode = '';
-      alert('이메일 인증이 완료되었습니다.');
+
+      const verifyRes = await authAPI.verifyAccount({
+        loginId: userId.value,
+        email: email.value,
+      });
+
+      const token = verifyRes.result ?? null;
+      if (!token) {
+        isEmailVerified.value = false;
+        submitError.value = verifyRes.message || '아이디/이메일이 일치하지 않습니다.';
+        return;
+      }
+      await router.push({ name: 'ResetPasswdPage', query: { token } });
     } else {
       isEmailVerified.value = false;
       errors.verificationCode = response.message || '인증 코드가 일치하지 않습니다.';
     }
-  } catch (error) {
-    console.error('이메일 인증 실패:', error);
+  } catch (err: any) {
+    console.error('이메일 인증 실패:', err);
     isEmailVerified.value = false;
-    errors.verificationCode = error.response?.data?.message || '인증 코드가 일치하지 않습니다.';
+    errors.verificationCode = err?.response?.data?.message || '인증 코드가 일치하지 않습니다.';
   }
 }
 
-const canSubmit = computed(() => {
-  return userId.value.trim() && email.value.trim() && !errors.userId && !errors.email && isEmailVerified.value;
-});
+const canSubmit = computed(
+  () => userId.value.trim() && email.value.trim() && !errors.userId && !errors.email && isEmailVerified.value
+);
 
 async function handleSubmit() {
   validateUserId();
   validateEmail();
   submitError.value = '';
-
   if (!canSubmit.value) return;
 
   loading.value = true;
   try {
-    // authAPI 사용 - 계정 확인 및 토큰 발급
-    const response = await authAPI.verifyAccount({
-      loginId: userId.value,
-      email: email.value,
-    });
-
+    const response = await authAPI.verifyAccount({ loginId: userId.value, email: email.value });
     if (response.isSuccess || response.code === 200 || response.result) {
-      // 토큰을 받았으므로 비밀번호 재설정 페이지로 이동
-      // result 필드에 토큰이 있거나, response 자체가 토큰일 수 있음
-      const token = response.result || response;
-      await router.push({
-        name: 'ResetPasswdPage',
-        query: { token: token },
-      });
+      const token = response.result;
+      if (!token) {
+        submitError.value = response.message || '아이디 또는 이메일이 일치하지 않습니다';
+        return;
+      }
+      await router.push({ name: 'ResetPasswdPage', query: { token } });
     } else {
       submitError.value = response.message || '아이디 또는 이메일이 일치하지 않습니다';
     }
-  } catch (error) {
-    console.error('계정 확인 실패:', error);
-    submitError.value = error.response?.data?.message || '요청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+  } catch (err: any) {
+    console.error('계정 확인 실패:', err);
+    submitError.value = err?.response?.data?.message || '요청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
   } finally {
     loading.value = false;
   }
@@ -129,7 +183,7 @@ async function handleSubmit() {
 
 <template>
   <div class="header">
-    <font-awesome-icon icon="fa-solid fa-chevron-left" class="backIcon" @click="goBack" />
+    <FontAwesomeIcon :icon="['fas', 'chevron-left']" class="backIcon" @click="goBack" />
     <h1 class="logo">MoZi</h1>
   </div>
   <div class="title">비밀번호 찾기</div>
@@ -137,38 +191,66 @@ async function handleSubmit() {
   <div class="form-wrapper">
     <form @submit.prevent="handleSubmit" class="form-container">
       <section class="writeID section-field">
-        <label>
-          아이디
-          <input name="userId" type="text" v-model="userId" placeholder="아이디를 입력하세요" @blur="validateUserId" />
-          <span v-if="errors.userId" class="error">{{ errors.userId }}</span>
-        </label>
+        <label> 아이디</label>
+        <input name="userId" type="text" v-model="userId" placeholder="아이디를 입력하세요" @blur="validateUserId" />
+        <span v-if="errors.userId" class="error">{{ errors.userId }}</span>
       </section>
 
       <div class="certification">
-        <section class="writeEmail section-field">
-          <label>
-            이메일
-            <input name="email" type="email" v-model="email" placeholder="이메일을 입력하세요" @blur="validateEmail" />
-          </label>
-          <span :class="['error-message', { visible: errors.email }]">{{ errors.email || '' }}</span>
-          <button type="button" @click="sendVerificationCode">인증</button>
+        <!-- 이메일 -->
+        <section class="section-field">
+          <label for="email">이메일</label>
+
+          <div class="email-row">
+            <input
+              id="email"
+              name="email"
+              type="email"
+              v-model="email"
+              @input="
+                isEmailVerified = false;
+                sentCode = false;
+                errors.email = '';
+              "
+              placeholder="이메일을 입력하세요"
+              @blur="validateEmail"
+              :readonly="isEmailVerified" />
+            <button
+              type="button"
+              class="btn"
+              @click="sendVerificationCode"
+              :disabled="loading || !userId.trim() || !isEmailValid || isEmailVerified || cooldownSeconds > 0">
+              {{ sentCode ? '재전송' : '인증' }}
+            </button>
+          </div>
+
+          <div class="verify-row" v-if="errors.email || sentCode || cooldownSeconds > 0">
+            <p class="msg" :class="{ error: !!errors.email, success: !errors.email && sentCode }">
+              {{ errors.email || (sentCode ? '인증 코드가 이메일로 전송되었습니다.' : '') }}
+            </p>
+
+            <span v-if="cooldownSeconds > 0" class="cooldown"> {{ cooldownText }} 후 재전송 </span>
+          </div>
         </section>
 
-        <section v-if="sentCode" class="verificationCode section-field">
-          <label>
-            인증 코드
+        <!-- 인증 코드 -->
+        <section v-if="sentCode" class="section-field">
+          <label for="code">인증 코드</label>
+          <div class="row-append">
             <input
+              id="code"
               name="verificationCode"
               type="text"
               v-model="verificationCode"
-              placeholder="인증 코드를 입력하세요" />
-            <span v-if="errors.verificationCode" class="error">{{ errors.verificationCode }}</span>
-          </label>
-          <button type="button" @click="verifyCode">확인</button>
+              placeholder="인증 코드를 입력하세요"
+              maxlength="6" />
+            <button type="button" class="btn" @click="verifyCode" :disabled="verificationCode.length !== 6">
+              확인
+            </button>
+          </div>
+          <p v-if="errors.verificationCode" class="msg error">{{ errors.verificationCode }}</p>
+          <p v-if="isEmailVerified" class="msg success">✔ 이메일 인증이 완료되었습니다.</p>
         </section>
-
-        <!-- 인증 완료 메시지 -->
-        <div v-if="isEmailVerified" class="verification-success">✅ 이메일 인증이 완료되었습니다.</div>
       </div>
 
       <button
@@ -206,45 +288,54 @@ body {
 .header {
   position: relative;
   display: flex;
-  justify-content: center; /* 로고는 가운데 */
-  align-items: center; /* 세로 중앙 */
+  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 60px;
   margin-top: 2rem;
 }
-/* 로고 중앙 */
+
 .logo {
   font-size: 48px;
   color: #36c18c;
   margin: 0;
+  font-weight: bold;
 }
+
 .backIcon {
   position: absolute;
   left: 10px;
   top: 60%;
   transform: translateY(-50%);
   font-size: 30px;
-  color: black;
+  color: #666;
   cursor: pointer;
+  transition: color 0.2s;
 }
-/* 타이틀 */
+
+.backIcon:hover {
+  color: #36c18c;
+}
+
 .title {
   font-size: 24px;
   color: #776e6e;
   text-align: center;
   margin-top: 1rem;
+  font-weight: 600;
 }
 /* 폼 외부구조 */
 .form-wrapper {
   width: 100%;
   max-width: 100%;
   align-items: center;
-  height: 20vh;
-  margin-top: 3rem;
+  height: 30vh;
+  margin-top: 4rem;
 }
 .form-container {
   max-width: 300px;
-  width: 100%;
+  width: 288px;
+  height: 300px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -252,6 +343,7 @@ body {
   border-radius: 5px;
 }
 .form-container input {
+  height: 48px;
   width: 100%;
   padding: 0.75rem;
   font-size: 16px;
@@ -269,8 +361,9 @@ input {
   font-size: 16px; /* 동일한 폰트 크기 */
   padding: 0.75rem; /* 동일한 내측 여백 */
   box-sizing: border-box; /* 패딩, 보더 포함 고정 높이 유지 */
-  height: 3rem; /* 통일된 높이 고정 */
+  height: 48px; /* 통일된 높이 고정 */
   background-color: none;
+  margin-bottom: 0px;
 }
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -282,42 +375,10 @@ input::placeholder {
   font-size: 16px;
   font-family: inherit;
 }
-.writeEmail button,
-.writeID input {
-  font-size: inherit;
-  height: 3rem;
-}
 /* 이메일 입력창  */
 .writeEmail {
   position: relative;
   margin-bottom: 1.5rem;
-}
-.writeEmail input {
-  padding-right: 4.5rem;
-}
-.writeEmail button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 0.5rem;
-  height: 2.2rem;
-  padding: 0 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  background-color: #36c18c;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.writeEmail button:disabled,
-.verificationCode button:disabled,
-.certification section button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
 }
 
 .form-container input {
@@ -328,34 +389,13 @@ input::placeholder {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-.form-container input,
-.form-container button {
+.form-container input {
   width: 100%;
-  box-sizing: border-box;
 }
-/* 인증코드 입력창 */
+/* 인증코드 입력 */
 .verificationCode {
   position: relative;
-}
-.verificationCode button {
-  position: absolute;
-  top: 60%;
-  transform: translateY(-50%);
-  right: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 2.4rem;
-  background-color: #36c18c;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.verificationCode button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  margin-top: 0.5rem;
 }
 
 .error {
@@ -385,24 +425,30 @@ input::placeholder {
   cursor: pointer;
   background-color: #36c18c;
   color: #fff;
+  margin-top: 30px;
 }
 .active-btn:hover {
   background-color: #2fa876;
 }
-.inactive-btn,
+.inactive-btn {
+  background-color: #ccc;
+  cursor: not-allowed;
+  pointer-events: none;
+  margin-top: 30px;
+}
+
 button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
   pointer-events: none;
 }
 .section-field {
-  margin-bottom: 1.5rem;
+  margin-top: 2rem;
 }
 .section-field label {
-  font-size: 14px;
-  margin-bottom: 0.5rem;
   display: block;
-  flex-direction: column;
+  margin-bottom: 0px;
+  font-weight: 600;
 }
 .section-field label > input {
   margin-top: 0.5rem;
@@ -421,44 +467,35 @@ button:disabled {
   border-radius: 4px;
 }
 
+/* 성공 메시지 */
+.success-message {
+  color: #28a745;
+  font-size: 12px;
+  margin-top: 0.5rem;
+}
+
 .certification {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 .certification section {
   position: relative;
   align-items: center;
-  margin-bottom: 1.5rem;
-}
-/* 인증, 확인 버튼 */
-.certification section button {
-  position: absolute;
-  top: 55%;
-  transform: translateY(-55%);
-  right: 0.5rem;
-  padding: 0 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 30px;
-  width: 50px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #36c18c;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  margin-bottom: 0.5rem;
 }
 
-.certification section button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+/* 인증 메시지 */
+.status-msg {
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 4px;
 }
-
-.certification section input {
-  width: 100%;
-  padding-right: 4rem;
+.status-msg.success {
+  color: green;
+}
+.status-msg.error {
+  color: red;
 }
 
 .loading-message {
@@ -471,5 +508,168 @@ button:disabled {
 .submit-error {
   text-align: center;
   margin-top: 1rem;
+}
+
+/* 컨테이너 폭 살짝 키우면 회원가입 화면과 유사 */
+.form-container {
+  max-width: 340px;
+}
+
+/* 공통 섹션 */
+.section-field {
+  margin-bottom: 1.5rem;
+  margin-top: 1rem;
+}
+.section-field label {
+  font-size: 16px;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* 버튼 + 쿨다운 문구 세로 배치 */
+.btn-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* 버튼/문구를 오른쪽 정렬 */
+}
+
+/* 쿨다운 문구 스타일 */
+.btn-col .cooldown {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+}
+
+.section-field .row input {
+  flex: 1;
+  height: 48px;
+  padding: 0 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.section-field .row .btn {
+  height: 48px;
+  padding: 0 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  background: #36c18c;
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.section-field .row .btn:disabled {
+  background: #f2f4f6; /* 비활성 배경 */
+  color: #b0b8c1; /* 비활성 텍스트 */
+  cursor: not-allowed;
+}
+
+.section-field .msg,
+.section-field .error {
+  /* userId 에러 span도 포함 */
+  text-align: left; /* 중앙정렬 해제 */
+  padding-left: 6px; /* 살짝 들여쓰기 */
+  margin-top: 4px;
+  display: block; /* span도 줄바꿈되도록 */
+  font-size: 12px;
+}
+.msg.error {
+  color: red;
+}
+.msg.success {
+  color: #28a745;
+}
+.writeID {
+  margin-bottom: 0.75rem; /* 기존 값보다 줄임 (약 12px) */
+}
+/* 인풋 + 버튼 한 줄 */
+.email-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.email-row input {
+  flex: 1;
+  height: 48px;
+  padding: 0 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.email-row .btn {
+  height: 48px;
+  min-width: 84px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 4px;
+  background: #36c18c;
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.email-row .btn:disabled {
+  background: #f2f4f6;
+  color: #b0b8c1;
+  cursor: not-allowed;
+}
+
+/* 메시지 + 쿨다운을 한 줄로 좌/우 배치 */
+.verify-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 왼쪽: 메시지, 오른쪽: 타이머 */
+  gap: 8px;
+  margin-top: 6px;
+}
+.verify-row .msg {
+  margin: 0; /* 기존 msg 여백 제거 */
+  padding-left: 0; /* 인풋 기준 들여쓰기 제거 (행 내부 정렬 위해) */
+  font-size: 12px;
+}
+.verify-row .msg.success {
+  color: #28a745;
+}
+.verify-row .msg.error {
+  color: red;
+}
+.verify-row .cooldown {
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+}
+/* 인증코드 입력 줄 인라인 정렬 */
+.row-append {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.row-append input {
+  flex: 1;
+  height: 48px;
+  padding: 0 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.row-append .btn {
+  height: 48px;
+  min-width: 84px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 4px;
+  background: #36c18c;
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.row-append .btn:disabled {
+  background: #f2f4f6;
+  color: #b0b8c1;
+  cursor: not-allowed;
 }
 </style>
