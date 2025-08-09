@@ -16,7 +16,16 @@
       <div class="bank-info">
         <img :src="saving?.logoUrl" alt="은행로고" class="bank-logo" />
         <div class="product-info">
-          <h1 class="product-name">{{ saving?.productName }}</h1>
+          <!-- ✅ 상품명과 같은 줄에 스크랩 아이콘 -->
+          <div class="product-name-row">
+            <h1 class="product-name">{{ saving?.productName }}</h1>
+            <i
+              class="fa-regular fa-bookmark bookmark"
+              :class="{ scraped: isScraped }"
+              @click="toggleScrap"
+              aria-label="스크랩 토글"
+            ></i>
+          </div>
           <p class="bank-name">{{ saving?.bankName }}</p>
         </div>
       </div>
@@ -112,11 +121,15 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getBankSavingUrl } from './util/bankSavingUrl.js';
 import { getBankLogoUrl } from './util/bankLogo.js';
+import api from '@/api'; // ✅ 리스트와 동일 axios 인스턴스
 
 const route = useRoute();
 const router = useRouter();
 const saving = ref(null);
 const bankSavingUrl = ref('');
+
+// ✅ 스크랩 상태
+const isScraped = ref(false);
 
 const bestOption = computed(() => {
   if (!saving.value?.options || saving.value.options.length === 0) return null;
@@ -137,6 +150,42 @@ const periodRange = computed(() => {
   return minPeriod === maxPeriod ? `${minPeriod}개월` : `${minPeriod}~${maxPeriod}개월`;
 });
 
+// ✅ 스크랩 상태 확인 (productType: SAVING, productId: route id)
+const checkScrapStatus = async () => {
+  try {
+    const list = await api.get('/scrap/finance'); // 인터셉터에서 data만 반환
+    const productId = Number(route.params.id);
+    isScraped.value = list.some(
+      (s) => s.productType === 'SAVING' && s.product?.savingId === productId
+    );
+  } catch (e) {
+    console.error('스크랩 상태 확인 실패:', e);
+    isScraped.value = false;
+  }
+};
+
+// ✅ 스크랩 토글 (params 사용, 리스트와 동일 패턴)
+const toggleScrap = async () => {
+  const productId = Number(route.params.id);
+  if (!productId) return;
+
+  try {
+    if (isScraped.value) {
+      await api.delete('/scrap/finance', {
+        params: { productType: 'SAVING', productId },
+      });
+      isScraped.value = false;
+    } else {
+      await api.post('/scrap/finance', null, {
+        params: { productType: 'SAVING', productId },
+      });
+      isScraped.value = true;
+    }
+  } catch (e) {
+    console.error('스크랩 토글 실패:', e);
+  }
+};
+
 onMounted(async () => {
   try {
     const savingId = route.params.id;
@@ -150,6 +199,9 @@ onMounted(async () => {
     };
     
     bankSavingUrl.value = getBankSavingUrl(saving.value.bankCode);
+
+    // ✅ 진입 시 스크랩 상태 확인
+    await checkScrapStatus();
   } catch (error) {
     console.error('적금 상품 정보를 가져오는데 실패했습니다:', error);
   }
@@ -204,16 +256,35 @@ onMounted(async () => {
   border-radius: 8px;
 }
 
-.product-info {
-  flex: 1;
-}
+.product-info { flex: 1; }
 
+/* ✅ 상품명과 같은 줄에 스크랩 아이콘 */
+.product-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .product-name {
   font-size: 20px;
   font-weight: 600;
   color: #191f28;
   margin: 0 0 4px 0;
   line-height: 1.3;
+  flex: 1; /* 아이콘을 오른쪽으로 밀기 */
+}
+.bookmark {
+  font-size: 1.4rem; /* 살짝 크게 */
+  color: #bdbdbd;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.bookmark.scraped {
+  color: #569fff;
+}
+.bookmark.scraped::before {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  content: '\f02e';
 }
 
 .bank-name {
@@ -268,10 +339,7 @@ onMounted(async () => {
 }
 
 /* 액션 버튼 */
-.action-section {
-  padding: 20px;
-}
-
+.action-section { padding: 20px; }
 .action-button {
   display: block;
   width: 100%;
@@ -285,148 +353,48 @@ onMounted(async () => {
   font-weight: 600;
   transition: background-color 0.2s;
 }
-
-.action-button:hover {
-  background: #2fa477;
-}
+.action-button:hover { background: #2fa477; }
 
 /* 테이블 섹션 */
-.table-section {
-  padding: 0 20px 20px 20px;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #191f28;
-  margin: 0 0 16px 0;
-}
-
-.table-container {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #f2f3f5;
-}
-
-.rate-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
+.table-section { padding: 0 20px 20px 20px; }
+.section-title { font-size: 18px; font-weight: 600; color: #191f28; margin: 0 0 16px 0; }
+.table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #f2f3f5; }
+.rate-table { width: 100%; border-collapse: collapse; }
 .rate-table th {
-  background: #f8f9fa;
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 14px;
-  font-weight: 600;
-  color: #8b95a1;
-  border-bottom: 1px solid #f2f3f5;
+  background: #f8f9fa; padding: 12px 16px; text-align: left; font-size: 14px; font-weight: 600; color: #8b95a1; border-bottom: 1px solid #f2f3f5;
 }
-
 .rate-table td {
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #191f28;
-  border-bottom: 1px solid #f2f3f5;
+  padding: 12px 16px; font-size: 14px; color: #191f28; border-bottom: 1px solid #f2f3f5;
 }
-
-.rate-table tr:last-child td {
-  border-bottom: none;
-}
-
-.rate-table .highlight {
-  color: #2fa477;
-  font-weight: 600;
-}
+.rate-table tr:last-child td { border-bottom: none; }
+.rate-table .highlight { color: #2fa477; font-weight: 600; }
 
 /* 정보 섹션 */
-.info-section {
-  padding: 0 20px 20px 20px;
-}
-
+.info-section { padding: 0 20px 20px 20px; }
 .info-item {
-  display: flex;
-  flex-direction: column; /* ← 세로 정렬 */
-  align-items: flex-start;
-  padding: 16px 0;
-  border-bottom: 1px solid #f2f3f5;
+  display: flex; flex-direction: column; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid #f2f3f5;
 }
+.info-item:last-child { border-bottom: none; }
+.info-label { font-size: 12px; color: #8b95a1; font-weight: 500; margin-bottom: 4px; }
+.info-value { font-size: 14px; color: #191f28; width: 100%; line-height: 1.4; }
 
-.info-item:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-size: 12px;
-  color: #8b95a1;
-  font-weight: 500;
-  margin-bottom: 4px; /* ← label과 value 간 여백 */
-}
-
-.info-value {
-  font-size: 14px;
-  color: #191f28;
-  width: 100%; /* 텍스트를 줄바꿈 가능하게 */
-  line-height: 1.4;
-}
 /* 예금자보호 섹션 */
-.protection-section {
-  padding: 20px;
-  background: #f8f9fa;
-  margin-top: 20px;
-}
-
+.protection-section { padding: 20px; background: #f8f9fa; margin-top: 20px; }
 .protection-content h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #191f28;
-  margin: 0 0 8px 0;
+  font-size: 16px; font-weight: 600; color: #191f28; margin: 0 0 8px 0;
 }
-
-.protection-content p {
-  font-size: 14px;
-  color: #8b95a1;
-  margin: 0;
-  line-height: 1.5;
-}
+.protection-content p { font-size: 14px; color: #8b95a1; margin: 0; line-height: 1.5; }
 
 /* 반응형 */
 @media (max-width: 480px) {
-  .header {
-    padding: 16px 16px 0 16px;
-  }
-  
-  .rate-section {
-    padding: 20px 16px;
-  }
-  
-  .action-section {
-    padding: 16px;
-  }
-  
-  .table-section {
-    padding: 0 16px 16px 16px;
-  }
-  
-  .info-section {
-    padding: 0 16px 16px 16px;
-  }
-  
-  .protection-section {
-    padding: 16px;
-  }
-  
-  .product-name {
-    font-size: 18px;
-  }
-  
-  .rate-main .rate-value {
-    font-size: 28px;
-  }
-  
-  .rate-value {
-    font-size: 20px;
-  }
+  .header { padding: 16px 16px 0 16px; }
+  .rate-section { padding: 20px 16px; }
+  .action-section { padding: 16px; }
+  .table-section { padding: 0 16px 16px 16px; }
+  .info-section { padding: 0 16px 16px 16px; }
+  .protection-section { padding: 16px; }
+  .product-name { font-size: 18px; }
+  .rate-main .rate-value { font-size: 28px; }
+  .rate-value { font-size: 20px; }
 }
-</style> 
+</style>

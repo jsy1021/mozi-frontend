@@ -64,6 +64,7 @@
             :key="item.productCode || item.productId || (item.bankCode + '-' + item.productName) || index"
             :deposit="item"
             :productType="currentCategory"
+            sourceTab="search"
           />
         </transition-group>
       </div>

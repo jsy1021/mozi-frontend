@@ -64,7 +64,7 @@
         </span>
       </div>
       <RouterLink
-        :to="{ name: 'policyDetail', params: { id: policy.policyId } }"
+        :to="{ name: 'policyDetail', params: { id: policy.policyId }, query: { fromTab: sourceTab } }"
         class="detail-btn"
       >
         자세히보기
@@ -84,6 +84,8 @@ const props = defineProps({
     type: Boolean,
     default: false, // 기본은 점수 출력
   },
+  // 상세로 이동 시 Footer 탭 유지를 위한 출발 탭 정보
+  sourceTab: { type: String, default: 'recommend' },
 });
 
 const bookmarked = ref(props.isScrapped);

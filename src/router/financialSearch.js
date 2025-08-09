@@ -4,25 +4,26 @@ export default [
     name: 'financialSearchPage',
     component: () =>
       import('../pages/search/financialSearch/FinancialSearchPage.vue'),
-    meta: { isHeader: true, isFooter: true, requiresAuth: true },
+    meta: { tab: 'search', isHeader: true, isFooter: true, requiresAuth: true },
   },
   {
-    path: '/financialSearch/deposit/:id', // 예금 상세 페이지용 경로
+    path: '/financialSearch/deposit/:id',
     name: 'depositDetail',
     component: () =>
       import('../pages/search/financialSearch/DepositDetailPage.vue'),
-    meta: { isHeader: true, isFooter: true, requiresAuth: true },
+    meta: { tab: 'search', isHeader: true, isFooter: true, requiresAuth: true },
   },
   {
-    path: '/financialSearch/saving/:id', // 적금 상세 페이지용 경로
+    path: '/financialSearch/saving/:id',
     name: 'savingDetail',
     component: () =>
       import('../pages/search/financialSearch/SavingDetailPage.vue'),
-    meta: { isHeader: true, isFooter: true, requiresAuth: true },
+    meta: { tab: 'search', isHeader: true, isFooter: true, requiresAuth: true },
   },
   {
-    path: '/financialSearch/:id', // 이전 경로 지원 (예금으로 리다이렉트)
+    path: '/financialSearch/:id',
     name: 'legacyFinancialDetail',
     redirect: (to) => ({ path: `/financialSearch/deposit/${to.params.id}` }),
+    meta: { tab: 'search' }, // 선택이지만 넣어두면 깔끔
   },
-];
+]
