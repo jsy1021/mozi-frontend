@@ -2,61 +2,56 @@
   <div class="container py-3">
     <h4 class="fw-bold mb-3">내 스크랩</h4>
 
-    <!-- 카테고리 탭 -->
-    <ul
-      class="nav nav-tabs justify-content-between small mb-2"
-      style="font-size: 0.85rem"
-    >
-      <li
-        v-for="tab in ['정책', '금융']"
-        :key="tab"
-        class="nav-item"
-        style="flex: 1; text-align: center"
-      >
-        <a
-          href="#"
-          :class="[
-            'nav-link',
-            activeTab === (tab === '정책' ? 'policy' : 'finance')
-              ? 'active'
-              : '',
-          ]"
-          @click.prevent="changeTab(tab === '정책' ? 'policy' : 'finance')"
-          style="padding: 6px 4px"
+    <!-- 카테고리 탭 (mozi-tabs 적용) -->
+    <ul class="nav mozi-tabs mb-2 small">
+      <li v-for="tab in ['정책', '금융']" :key="tab" class="nav-item">
+        <button
+          type="button"
+          class="nav-link"
+          :class="{
+            active: activeTab === (tab === '정책' ? 'policy' : 'finance')
+          }"
+          @click="changeTab(tab === '정책' ? 'policy' : 'finance')"
         >
           {{ tab }}
-        </a>
+        </button>
       </li>
     </ul>
 
-    <!-- 정책 스크랩 리스트 -->
-    <div v-if="activeTab === 'policy'">
-      <policyCard
-        v-for="policy in policyScraps || []"
-        :key="policy.policyId"
-        :policy="policy"
-        :isScrapped="true"
-      />
-      <div
-        v-if="policyScraps && policyScraps.length === 0"
-        class="text-muted text-center"
-      >
-        스크랩한 정책이 없습니다 🥲
-      </div>
-    </div>
+    <!-- 탭 콘텐츠 (슬라이드-페이드 전환) -->
+    <transition name="slide-fade" mode="out-in">
+      <div :key="activeTab">
+        <!-- 정책 스크랩 리스트 -->
+        <div v-if="activeTab === 'policy'">
+          <policyCard
+            v-for="policy in policyScraps || []"
+            :key="policy.policyId"
+            :policy="policy"
+            :isScrapped="true"
+          />
+          <div
+            v-if="policyScraps && policyScraps.length === 0"
+            class="text-muted text-center"
+          >
+            스크랩한 정책이 없습니다 🥲
+          </div>
+        </div>
 
-    <!-- 금융 스크랩 리스트 -->
-    <div v-else>
-      <financialCard
-        v-for="product in financeScraps"
-        :key="product.savingId || product.depositId"
-        :deposit="product"
-        :productType="product.productType"
-      />
-      <div v-if="financeScraps.length === 0" class="text-muted text-center">
-        스크랩한 금융 상품이 없습니다 🥲
+        <!-- 금융 스크랩 리스트 -->
+        <div v-else>
+          <financialCard
+            v-for="product in financeScraps"
+            :key="product.savingId || product.depositId"
+            :deposit="product"
+            :productType="product.productType"
+            sourceTab="asset"
+          />
+          <div v-if="financeScraps.length === 0" class="text-muted text-center">
+            스크랩한 금융 상품이 없습니다 🥲
+          </div>
+        </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -67,7 +62,7 @@ import axios from 'axios';
 import policyCard from '../search/policySearch/policyCard.vue';
 import financialCard from '../search/financialSearch/financialCard.vue';
 import { getScrappedPolicies } from '@/api/scrapApi';
-import api from '@/api'; // axios 인스턴스 사용
+import api from '@/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -76,12 +71,9 @@ const activeTab = ref(route.query.tab || 'policy');
 const policyScraps = ref([]);
 const financeScraps = ref([]);
 
-// 금융 스크랩 데이터 가져오기
 const fetchFinanceScraps = async () => {
   try {
-    const response = await api.get('/scrap/finance'); // 인터셉터에서 data만 반환
-    console.log('스크랩 데이터:', response);
-
+    const response = await api.get('/scrap/finance');
     const scrapDetails = response.map((scrap) => {
       const product = scrap.product;
       return {
@@ -98,30 +90,18 @@ const fetchFinanceScraps = async () => {
         createdAt: scrap.createdAt,
       };
     });
-
-    // createdAt 기준 내림차순 정렬
     scrapDetails.sort((a, b) => {
       const dateA = new Date(
-        a.createdAt[0],
-        a.createdAt[1] - 1,
-        a.createdAt[2],
-        a.createdAt[3],
-        a.createdAt[4],
-        a.createdAt[5]
+        a.createdAt[0], a.createdAt[1] - 1, a.createdAt[2],
+        a.createdAt[3], a.createdAt[4], a.createdAt[5]
       );
       const dateB = new Date(
-        b.createdAt[0],
-        b.createdAt[1] - 1,
-        b.createdAt[2],
-        b.createdAt[3],
-        b.createdAt[4],
-        b.createdAt[5]
+        b.createdAt[0], b.createdAt[1] - 1, b.createdAt[2],
+        b.createdAt[3], b.createdAt[4], b.createdAt[5]
       );
       return dateB - dateA;
     });
-
     financeScraps.value = scrapDetails;
-    console.log('처리된 스크랩 데이터:', financeScraps.value);
   } catch (error) {
     console.error('금융 스크랩 데이터 가져오기 실패:', error);
     financeScraps.value = [];
@@ -129,28 +109,62 @@ const fetchFinanceScraps = async () => {
 };
 
 onMounted(async () => {
-  console.log('📣 정책 스크랩 요청 시작');
   const scrapped = await getScrappedPolicies();
-  console.log('🎯 받아온 정책 스크랩 목록:', scrapped);
   policyScraps.value = scrapped;
-  // 초기 탭이 금융이면 데이터 로드
   if (activeTab.value === 'finance') {
     await fetchFinanceScraps();
   }
 });
 
-// 탭 변경 시 URL 업데이트 및 데이터 로드
 const changeTab = async (tab) => {
   activeTab.value = tab;
-
-  // URL query parameter 업데이트
-  await router.replace({
-    query: { ...route.query, tab },
-  });
-
-  // 탭에 따른 데이터 로드
+  await router.replace({ query: { ...route.query, tab } });
   if (tab === 'finance') {
     await fetchFinanceScraps();
   }
 };
 </script>
+
+<style scoped>
+
+h4.fw-bold {
+  text-align: center;
+}
+/* mozi-tabs 공용 스타일 */
+.mozi-tabs {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid #ddd;
+}
+.mozi-tabs .nav-item {
+  flex: 1;
+  text-align: center;
+}
+.mozi-tabs .nav-link {
+  width: 100%;
+  text-align: center;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  color: #6b7684 !important;
+  font-weight: 500;
+  padding: 6px 4px;
+  transition: color .18s ease, border-bottom-color .18s ease, background-color .18s ease;
+  cursor: pointer;
+}
+.mozi-tabs .nav-link.active {
+  border-bottom: 2px solid #36C18C !important;
+  color: #6b7684 !important;
+}
+
+/* 탭 콘텐츠 전환 */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: opacity .18s ease, transform .18s ease;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(8px);
+}
+</style>

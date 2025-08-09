@@ -1,9 +1,5 @@
 <script setup>
-import { useRoute } from 'vue-router';
 import IconScrap from '../icons/IconScrap.vue';
-
-const route = useRoute();
-const isActive = (tabName) => route.name === tabName;
 </script>
 
 <template>
@@ -14,10 +10,10 @@ const isActive = (tabName) => route.name === tabName;
     </router-link>
 
     <div class="buttons">
-      <router-link :to="{ name: 'scrapPage' }">
-        <IconScrap :active="isActive('scrapPage')" />
+      <router-link :to="{ name: 'scrapPage' }" class="scrap">
+        <IconScrap :active="false" />
       </router-link>
-      <router-link :to="{ name: 'hamburgerMenu' }">
+      <router-link :to="{ name: 'hamburgerMenu' }" class="hamburger">
         <i class="fa-solid fa-bars"></i>
       </router-link>
     </div>
@@ -73,6 +69,12 @@ const isActive = (tabName) => route.name === tabName;
 
 .buttons i {
   font-size: 20px;
-  color: #1a1a1a;
 }
+
+/* 햄버거 아이콘: 기본(비활성) #C2C6CE, 활성 시 #1A1A1A */
+.buttons .hamburger i { color: #C2C6CE; }
+.buttons .hamburger.router-link-active i { color: #1A1A1A; }
+
+/* 스크랩 아이콘: 항상 비활성 색상 유지 */
+.buttons .scrap svg { stroke: #C2C6CE; }
 </style>

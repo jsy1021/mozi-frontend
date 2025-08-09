@@ -55,6 +55,11 @@ import api from '@/api'; // axios 인스턴스 사용
 const props = defineProps({
   deposit: Object,
   productType: String,
+  // 이 카드가 렌더링된 출발 탭: 'search' | 'recommend' | 'goal' | 'main' | 'asset'
+  sourceTab: {
+    type: String,
+    default: 'search',
+  },
 });
 
 const router = useRouter();
@@ -132,12 +137,12 @@ const goToDetail = () => {
   if (props.productType === '적금') {
     const savingId = props.deposit.savingId;
     if (savingId) {
-      router.push(`/financialSearch/saving/${savingId}`);
+      router.push({ path: `/financialSearch/saving/${savingId}`, query: { fromTab: props.sourceTab } });
     }
   } else {
     const depositId = props.deposit.depositId;
     if (depositId) {
-      router.push(`/financialSearch/deposit/${depositId}`);
+      router.push({ path: `/financialSearch/deposit/${depositId}`, query: { fromTab: props.sourceTab } });
     }
   }
 };

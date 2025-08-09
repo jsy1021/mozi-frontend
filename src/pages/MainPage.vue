@@ -452,7 +452,7 @@ watch(
         :key="index"
         class="policy-slide"
       >
-        <RecommendPolicyCard :policy="policy" :showDday="true" />
+        <RecommendPolicyCard :policy="policy" :showDday="true" sourceTab="main" />
       </SwiperSlide>
     </Swiper>
   </div>
@@ -489,6 +489,7 @@ watch(
         <FinancialCard
           :deposit="item"
           :productType="item.type"
+          sourceTab="main"
           style="margin-bottom: 5px"
         />
       </SwiperSlide>

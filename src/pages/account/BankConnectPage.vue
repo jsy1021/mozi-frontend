@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useBankStore } from '@/stores/bank';
 import BankLoginModal from '@/pages/account/BankLoginModal.vue';
-import { getConnectedBanks } from '@/api/accountApi'; // 실제 API 경로 맞게 수정
+import { getConnectedBanks } from '@/api/accountApi';
 
 const router = useRouter();
 const route = useRoute();
@@ -14,7 +14,6 @@ const showModal = ref(false);
 const modalBank = ref(null);
 
 const banks = bankStore.banks;
-
 const hasConnectedBank = computed(() => banks.some((b) => b.connected));
 
 function selectBank(code) {
@@ -22,39 +21,19 @@ function selectBank(code) {
 }
 
 function handleConnect(bank) {
-  if (bank.connected) return; // 이미 연결된 은행은 무시
+  if (bank.connected) return;      // 이미 연결된 은행은 모달 열지 않음
   modalBank.value = bank;
   showModal.value = true;
-}
-
-function handleAgree() {
-  if (hasConnectedBank.value) {
-    const fromPage = route.query.from;
-    if (fromPage === 'summary') {
-      router.push({
-        path: '/account/BankSummaryPage',
-        query: { refresh: 'true' },
-      });
-    } else {
-      router.push({
-        path: '/',
-        query: { refresh: 'true' },
-      });
-    }
-  } else {
-    alert('최소 하나 이상의 은행을 연동해주세요.');
-  }
 }
 
 function goBack() {
   router.back();
 }
 
-// 최초 mount 시 서버로부터 연동 은행 코드 받아오기
 onMounted(async () => {
   try {
-    const response = await getConnectedBanks();
-    const connectedCodes = response.bankCodeList; // ex) ['0004', '0011']
+    const res = await getConnectedBanks();
+    const connectedCodes = res.bankCodeList || [];
     bankStore.initializeConnectedBanks(connectedCodes);
   } catch (e) {
     console.error('연결된 은행 조회 실패:', e);
@@ -65,69 +44,45 @@ onMounted(async () => {
 <template>
   <div class="wrapper">
     <div class="content">
-      <!-- Header -->
+      <!-- 헤더 -->
       <div class="header-row">
-        <div class="back-btn" @click="goBack">
+        <button class="back-btn" @click="goBack" aria-label="뒤로가기">
           <i class="fa-solid fa-angle-left"></i>
-        </div>
+        </button>
         <p class="title">계좌 연동</p>
       </div>
-      <!-- 
-      <div
-        class="section-subtitle"
-        style="font-size: 18px; margin-bottom: -10px"
-      >
-        은행
-      </div> -->
-
-      <!-- 은행 리스트 -->
-      <div class="bank-list">
-        <div
+      <p class="subtitle">연동할 은행을 선택해주세요</p>
+      <!-- 은행 그리드 (항상 3열) -->
+      <div class="bank-grid">
+        <button
           v-for="bank in banks"
           :key="bank.code"
           class="bank-card"
-          @click="selectBank(bank.code)"
+          :class="{
+            selected: selectedBankCode === bank.code,
+            connected: bank.connected
+          }"
+          @click="
+            selectBank(bank.code);
+            handleConnect(bank);
+          "
         >
-          <div class="bank-info">
-            <img :src="bank.logo" class="bank-logo" />
-            <p
-              style="
-                font-size: 16px;
-                font-weight: 550;
-                color: #585858;
-                margin-top: 16px;
-              "
-            >
-              {{ bank.name }}
-            </p>
-          </div>
-          <button
-            class="badge-link"
+          <!-- 우상단 배지: 연결 전 '+', 연결 후 체크 -->
+          <span
+            class="badge"
+            :class="bank.connected ? 'badge-checked' : 'badge-plus'"
             @click.stop="handleConnect(bank)"
-            :disabled="bank.connected"
-            :style="{
-              backgroundColor: bank.connected ? '#F2F4F6' : '#36C18C',
-              color: bank.connected ? '#6B7684' : '#FFFFFF',
-              cursor: bank.connected ? 'default' : 'pointer',
-            }"
+            aria-hidden="true"
           >
-            {{ bank.connected ? '완료' : '연동' }}
-          </button>
-        </div>
-      </div>
+            <i v-if="bank.connected" class="fa-solid fa-check"></i>
+            <i v-else class="fa-solid fa-plus"></i>
+          </span>
 
-      <!-- 동의하기 버튼 -->
-      <button
-        class="agree-btn"
-        :disabled="!hasConnectedBank"
-        :style="{
-          color: '#FFFFFF',
-          backgroundColor: hasConnectedBank ? '#36C18C' : '#36C18C80',
-        }"
-        @click="handleAgree"
-      >
-        동의하기
-      </button>
+          <!-- 로고 + 은행명 -->
+          <img :src="bank.logo" :alt="bank.name" class="bank-logo" />
+          <span class="bank-name">{{ bank.name }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- 모달 -->
@@ -140,112 +95,135 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* 레이아웃 */
 .wrapper {
   display: flex;
   justify-content: center;
   min-height: 700px;
   background-color: #f8f8f8;
 }
+
 .content {
-  width: 300px;
+  width: 100%;
+  max-width: 360px;        /* 모바일 기준 폭, 필요하면 340~400 조절 */
   text-align: center;
+  padding: 0 8px 24px;
 }
+
+/* 헤더 */
 .header-row {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 30px 0 30px 0;
+  margin: 22px 0 16px;
 }
+
 .back-btn {
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  cursor: pointer;
   color: #a0a0a0;
   font-size: 18px;
+  background: none;
+  border: none;
+  padding: 6px;
   cursor: pointer;
 }
+
 .title {
-  margin: 0 auto;
   font-size: 18px;
-  font-weight: 550;
-  margin: 0 auto;
-  color: #757575;
+  font-weight: 600;
+  color: #565e6c;
+  margin: 0;
 }
-.section-title,
-.section-subtitle {
+
+.subtitle {
   text-align: left;
-  font-size: 14px;
-  font-weight: 550;
-  color: #585858;
-  margin-left: 5px;
-  margin-bottom: 0px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7684;
+  margin: 4px 0 10px 2px; /* 위/아래 여백과 살짝 왼쪽 들여쓰기 */
 }
-.bank-list {
+
+/* ====== 카드 그리드 (항상 3열) ====== */
+.bank-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 고정 3열 */
+  gap: 12px;
+}
+
+/* 카드 스타일: 이미지 예시처럼 라운드 + 보더 + 약한 그림자 */
+.bank-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  margin-top: -20px;
-}
-.bank-card {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  background-color: #ffffff;
-  padding: 10px;
-  margin: 5px 0 -30px 0;
+  gap: 8px;
+  padding: 14px 8px 12px;
+  min-height: 92px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e8ecef;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   cursor: pointer;
-  border-radius: 6px;
+  transition: transform 0.08s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
+
+.bank-card:active {
+  transform: scale(0.98);
+}
+
 .bank-card.selected {
-  background-color: #e0f7fa;
-  border: 2px solid #00acc1;
+  border-color: #b6e7f3;          /* 선택시 미세 하이라이트 */
+  background: #f9feff;
 }
-.bank-info {
-  display: flex;
+
+/* 연결된 카드(완료)는 은은하게 구분 */
+.bank-card.connected {
+  border-color: #e2f3ec;
+  background: #fbfefc;
+}
+
+/* 우상단 배지 (+ 또는 체크) */
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
 }
+
+/* 미연동: 연한 회색 원 배경 + 회색 플러스 */
+.badge-plus {
+  background: #f2f4f6;
+  color: #9aa4b2;
+}
+
+/* 연동 완료: 초록 배경 + 흰 체크 */
+.badge-checked {
+  background: #36c18c;
+  color: #ffffff;
+}
+
+/* 로고/텍스트 */
 .bank-logo {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
 }
-.badge-link {
-  padding: 2px 6px;
-  width: 40px;
-  border-radius: 5px;
-  font-size: 8px;
-  font-weight: 500;
-  border: none;
-  white-space: nowrap;
-  box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
-  transition: box-shadow 0.2s;
-}
-.badge-link:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
-}
-.badge-link:disabled {
-  transform: scale(0.95);
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
-}
-.agree-btn {
-  display: block;
-  width: 100%;
-  margin-top: 30px;
-  margin-bottom: 30px;
-  padding: 10px 0;
-  border-radius: 4px;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
-  transition: 0.2s;
-}
-.agree-btn:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+
+.bank-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3d434b;
+  line-height: 1.2;
+  word-break: keep-all;
 }
 </style>
