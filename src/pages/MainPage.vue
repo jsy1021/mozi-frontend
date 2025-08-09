@@ -337,7 +337,7 @@ watch(
   <!-- 계좌 정보 -->
   <div style="display: flex">
     <p style="margin: 10px 10px 0px 25px; color: #6b7684; font-weight: bolder">
-      나의 계좌
+      자산
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"

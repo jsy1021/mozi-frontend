@@ -1,7 +1,7 @@
 <template>
     <div class="container py-4">
       <!-- 제목 -->
-      <h4 class="fw-bold mb-3 text-center">탐색하기</h4>
+      <h4 class="fw-bold mb-3 text-center">탐색</h4>
       <p class="text-muted small text-center mb-4">
         원하는 서비스를 선택해 자세히 탐색해보세요
       </p>

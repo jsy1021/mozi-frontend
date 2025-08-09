@@ -1,11 +1,14 @@
 <template>
   <div class="policy-detail">
     <!-- 🔙 상단 뒤로가기 -->
-    <header class="header">
-      <button class="back-btn" @click="router.back()">
-        <i class="fa-solid fa-arrow-left"></i>
-      </button>
-    </header>
+    <div class="header">
+      <div class="page-header mb-3">
+        <span class="back-btn" @click="goBack">
+          <i class="fa-solid fa-angle-left"></i>
+        </span>
+        <h4 class="page-title">정책 상세 정보</h4>
+      </div>  
+    </div>
 
     <main class="content">
       <!-- 정책 카테고리 -->
@@ -195,7 +198,9 @@ onMounted(async () => {
     console.error('정책 상세 조회 실패:', err);
   }
 });
-
+const goBack = () => {
+  router.back();
+};
 const formatPeriod = (start, end) => {
   if (!start && !end) return '상시';
   const format = (date) => date?.replace(/-/g, '.') || '미정';
@@ -274,17 +279,33 @@ const convertLabel = (code, type) => {
 </script>
 
 <style scoped>
+/* 헤더 */
+.header {
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #f2f3f5;
+}
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 제목을 중앙 */
+  position: relative;
+}
+.back-btn {
+  position: absolute;
+  left: 0;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #333;
+  padding: 4px 8px; /* 클릭 영역 확보 */
+}
+.page-title {
+  margin: 0;
+  font-weight: bold;
+  text-align: center;
+}
 .policy-detail {
   background: #f9fafb;
   min-height: 100vh;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  background: #fff;
-  border-bottom: 1px solid #eee;
 }
 
 .back-btn {

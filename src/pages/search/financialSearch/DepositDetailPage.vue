@@ -3,6 +3,17 @@
   <div class="deposit-detail-container">
     <!-- 헤더 -->
     <div class="header">
+      <div class="page-header mb-3">
+      <span class="back-btn" @click="goBack">
+        <i class="fa-solid fa-angle-left"></i>
+      </span>
+      <h4 class="page-title">상품 상세 정보</h4>
+
+      </div>
+    </div>
+
+    <!-- 금리 정보 -->
+    <div class="rate-section">
       <div class="bank-info">
         <img :src="deposit?.logoUrl" alt="은행로고" class="bank-logo" />
         <div class="product-info">
@@ -10,10 +21,6 @@
           <p class="bank-name">{{ deposit?.bankName }}</p>
         </div>
       </div>
-    </div>
-
-    <!-- 금리 정보 -->
-    <div class="rate-section">
       <div class="rate-card">
         <div class="rate-main">
           <span class="rate-label">최고 금리</span>
@@ -97,13 +104,18 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute,useRouter } from 'vue-router';
 import { getBankDepositUrl } from './util/bankDepositUrl.js';
 import { getBankLogoUrl } from './util/bankLogo.js';
 
 const route = useRoute();
 const deposit = ref(null);
 const bankDepositUrl = ref('');
+const router = useRouter();
+
+const goBack = () => {
+  router.back();
+};
 
 const bestOption = computed(() => {
   if (!deposit.value?.options || deposit.value.options.length === 0) return null;
@@ -140,6 +152,25 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 제목을 중앙 */
+  position: relative;
+}
+.back-btn {
+  position: absolute;
+  left: 0;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #333;
+  padding: 4px 8px; /* 클릭 영역 확보 */
+}
+.page-title {
+  margin: 0;
+  font-weight: bold;
+  text-align: center;
+}
 .deposit-detail-container {
   min-height: 100vh;
   background: #ffffff;
@@ -227,7 +258,7 @@ onMounted(async () => {
 
 .rate-main .rate-value {
   font-size: 32px;
-  color: #0064ff;
+  color: #36c18c;
 }
 
 /* 액션 버튼 */
@@ -238,7 +269,7 @@ onMounted(async () => {
 .action-button {
   display: block;
   width: 100%;
-  background: #0064ff;
+  background: #36c18c;
   color: white;
   text-align: center;
   padding: 16px;
@@ -250,7 +281,7 @@ onMounted(async () => {
 }
 
 .action-button:hover {
-  background: #0052cc;
+  background: #2fa477;
 }
 
 /* 테이블 섹션 */
@@ -299,7 +330,7 @@ onMounted(async () => {
 }
 
 .rate-table .highlight {
-  color: #0064ff;
+  color: #2fa477;
   font-weight: 600;
 }
 
