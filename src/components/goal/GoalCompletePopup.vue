@@ -12,7 +12,7 @@
   <div class="popup-overlay" @click.self="$emit('close')">
     <div class="popup-content">
       <p class="popup-title">🎉 목표 달성 축하합니다! 🎉</p>
-      <p>열심히 달려오신 만큼, 큰 성과를 이루셨어요!</p>
+      <p class="popup-txt">열심히 달려오신 만큼 수고하셨습니다.<br/> 큰 성과를 이루셨어요!</p>
       <button class="close-btn" @click="$emit('close')">닫기</button>
     </div>
   </div>
@@ -45,8 +45,12 @@
 }
 
 .popup-title{
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bolder;
+}
+
+.popup-txt{
+  font-size: 13px;
 }
 
 .close-btn {
