@@ -1,30 +1,27 @@
 import api from './index.js';
 
-export const scrapPolicy = (plcyNo) => {
-  return api.post(`/scrap/policy/${plcyNo}`);
+const toNo = (no) => encodeURIComponent(String(no ?? '').trim());
+
+export const scrapPolicy = async (plcyNo) => {
+  console.log('📌 scrapPolicy 호출:', plcyNo);
+  const res = await api.post(`/scrap/policy/${toNo(plcyNo)}`);
+  return res;
 };
 
-export const cancelScrap = (plcyNo) => {
-  return api.delete(`/scrap/policy/${plcyNo}`);
+export const cancelScrap = async (plcyNo) => {
+  console.log('📌 cancelScrap 호출:', plcyNo);
+  const res = await api.delete(`/scrap/policy/${toNo(plcyNo)}`);
+  return res;
 };
 
-// export const getScrappedPolicyIds = () =>
-//   api.get('/scrap').then((res) => res.data.result ?? []);
+export const getScrappedPolicyIds = async () => {
+  const res = await api.get('/scrap');
+  const data = Array.isArray(res) ? res : res?.data;
+  return Array.isArray(data) ? data.map((n) => String(n).trim()) : [];
+};
 
-export const getScrappedPolicyIds = () =>
-  api.get('/scrap').then((res) => {
-    console.log('🔍 스크랩 응답:', res);
-    return res.data?.result ?? []; // ✅ 이게 핵심
-  });
-
-// export const getScrappedPolicies = () =>
-//   api.get('/scrap/policy/list').then((res) => res.data);
-
-// export const getScrappedPolicies = () =>
-//   api.get('/scrap/policy/list').then((res) => res.data ?? []);
-
-export const getScrappedPolicies = () =>
-  api.get('/scrap/policy/list').then((res) => {
-    console.log('🟢 scrapApi 응답:', res); // res가 곧 data
-    return res ?? [];
-  });
+export const getScrappedPolicies = async () => {
+  const res = await api.get('/scrap/policy/list');
+  const data = Array.isArray(res) ? res : res?.data;
+  return Array.isArray(data) ? data : [];
+};
