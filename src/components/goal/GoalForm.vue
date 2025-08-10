@@ -47,10 +47,10 @@
         <div class="amount-input">
           <input
             id="targetAmount"
-            type="number"
-            v-model="form.targetAmount"
+            type="text"
+            :value="displayTargetAmount"
+            @input="handleAmountInput"
             placeholder="0"
-            min="0"
             :readonly="!!presetData?.targetAmount || (isEdit && isBillionGoal)"
             :class="{ 
               'preset-input': !!presetData?.targetAmount || (isEdit && isBillionGoal),
@@ -61,7 +61,7 @@
           <span class="currency">원</span>
         </div>
         <!-- 프리셋 또는 1억 모으기 수정 시 안내 메시지 -->
-        <div v-if="presetData?.targetAmount || (isEdit && isBillionGoal)" class="preset-info">
+         <div v-if="presetData?.targetAmount || (isEdit && isBillionGoal)" class="preset-info">
           <i class="fas fa-lock"></i>
           <span>
             {{ presetData?.targetAmount 
@@ -398,75 +398,9 @@ const formatDateForInput = (dateString) => {
   return dateString.split(' ')[0].split('T')[0];
 };
 
-// 폼 초기화 (수정 모드일 때 또는 프리셋 데이터가 있을 때)
-const initializeForm = () => {
-  // 프리셋 데이터가 있는 경우 (1억 모으기 등)
-  if (props.presetData) {
-    form.goalName = props.presetData.goalName || '';
-    form.targetAmount = props.presetData.targetAmount || '';
-    form.keyword = props.presetData.keyword || '';
-    form.memo = props.presetData.memo || '';
-  }
-
-  // 수정 모드인 경우 (기존 데이터 우선)
-  if (props.isEdit && props.goalData) {
-    form.goalName = props.goalData.name || '';
-    form.targetAmount = props.goalData.targetAmount || '';
-    form.currentAmount = props.goalData.currentAmount || 0;
-    // 날짜 포맷 변환 적용
-    form.targetDate = formatDateForInput(props.goalData.targetDate) || '';
-    form.keyword = props.goalData.keyword || '';
-    form.memo = props.goalData.memo || '';
-  }
-};
-
-// 폼 제출
-const handleSubmit = () => {
-  if (!validateForm()) return;
-
-  // goalApi의 formatGoalData 사용하여 데이터 포맷팅
-  const formData = goalApi.formatGoalData({
-    goalName: form.goalName,
-    targetAmount: parseInt(form.targetAmount),
-    currentAmount: props.isEdit ? parseInt(form.currentAmount || 0) : 0,
-    goalDate: form.targetDate,
-    keyword: form.keyword,
-    memo: form.memo,
-  });
-
-  // 계좌팀 요청 형식으로 데이터 구성
-  const accountData = {
-    goalId: props.goalData?.id || null,
-    accountNumberList: form.selectedAccountNumbers,
-  };
-
-  emit('submit', { ...formData, accountData });
-};
-
 // 취소
 const handleCancel = () => {
   emit('cancel');
-};
-
-// 폼 유효성 검사
-const validateForm = () => {
-  if (!form.goalName.trim()) {
-    alert('목표명을 입력해주세요.');
-    return false;
-  }
-  if (!form.targetAmount || form.targetAmount <= 0) {
-    alert('올바른 목표 금액을 입력해주세요.');
-    return false;
-  }
-  if (!form.targetDate) {
-    alert('목표 기간을 설정해주세요.');
-    return false;
-  }
-  if (!form.keyword) {
-    alert('목표 키워드를 선택해주세요.');
-    return false;
-  }
-  return true;
 };
 
 // props 변경 감지
@@ -533,6 +467,121 @@ onMounted(() => {
   initializeForm();
   loadAccounts();
 });
+// 금액 포맷팅 함수 (콤마 추가)
+const formatAmountInput = (value) => {
+  if (!value) return '';
+  // 숫자만 추출
+  const numericValue = value.toString().replace(/[^\d]/g, '');
+  // 천단위 콤마 추가
+  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+// 금액 입력 이벤트 핸들러
+const handleAmountInput = (event) => {
+  const input = event.target;
+  const cursorPosition = input.selectionStart;
+  const originalValue = input.value;
+  
+  // 숫자만 추출
+  const numericValue = originalValue.replace(/[^\d]/g, '');
+  
+  // 콤마 포맷팅 적용
+  const formattedValue = formatAmountInput(numericValue);
+  
+  // form 데이터에는 숫자만 저장
+  form.targetAmount = numericValue;
+  
+  // input에는 포맷된 값 표시
+  input.value = formattedValue;
+  
+  // 커서 위치 조정 (콤마 추가로 인한 위치 변화 고려)
+  const commasBeforeCursor = (originalValue.slice(0, cursorPosition).match(/,/g) || []).length;
+  const commasAfterFormat = (formattedValue.slice(0, cursorPosition).match(/,/g) || []).length;
+  const newCursorPosition = cursorPosition + (commasAfterFormat - commasBeforeCursor);
+  
+  setTimeout(() => {
+    input.setSelectionRange(newCursorPosition, newCursorPosition);
+  }, 0);
+};
+
+// 폼 초기화 함수 수정 (기존 initializeForm 함수에서 targetAmount 부분만 수정)
+const initializeForm = () => {
+  // 프리셋 데이터가 있는 경우 (1억 모으기 등)
+  if (props.presetData) {
+    form.goalName = props.presetData.goalName || '';
+    // 콤마 포맷팅 적용
+    if (props.presetData.targetAmount) {
+      form.targetAmount = props.presetData.targetAmount.toString();
+    }
+    form.keyword = props.presetData.keyword || '';
+    form.memo = props.presetData.memo || '';
+  }
+
+  // 수정 모드인 경우 (기존 데이터 우선)
+  if (props.isEdit && props.goalData) {
+    form.goalName = props.goalData.name || '';
+    // 콤마 포맷팅 적용
+    if (props.goalData.targetAmount) {
+      form.targetAmount = props.goalData.targetAmount.toString();
+    }
+    form.currentAmount = props.goalData.currentAmount || 0;
+    form.targetDate = formatDateForInput(props.goalData.targetDate) || '';
+    form.keyword = props.goalData.keyword || '';
+    form.memo = props.goalData.memo || '';
+  }
+};
+
+// computed로 표시용 금액 생성
+const displayTargetAmount = computed(() => {
+  return formatAmountInput(form.targetAmount);
+});
+
+// 폼 제출 시에는 숫자만 전송 (기존 handleSubmit 함수 수정)
+const handleSubmit = () => {
+  if (!validateForm()) return;
+
+  const formData = goalApi.formatGoalData({
+    goalName: form.goalName,
+    // 숫자로 변환하여 전송
+    targetAmount: parseInt(form.targetAmount.toString().replace(/[^\d]/g, '') || 0),
+    currentAmount: props.isEdit ? parseInt(form.currentAmount || 0) : 0,
+    goalDate: form.targetDate,
+    keyword: form.keyword,
+    memo: form.memo,
+  });
+
+  const accountData = {
+    goalId: props.goalData?.id || null,
+    accountNumberList: form.selectedAccountNumbers,
+  };
+
+  emit('submit', { ...formData, accountData });
+};
+
+// 폼 유효성 검사 함수 수정
+const validateForm = () => {
+  if (!form.goalName.trim()) {
+    alert('목표명을 입력해주세요.');
+    return false;
+  }
+  
+  const numericAmount = parseInt(form.targetAmount.toString().replace(/[^\d]/g, '') || 0);
+  if (!numericAmount || numericAmount <= 0) {
+    alert('올바른 목표 금액을 입력해주세요.');
+    return false;
+  }
+  
+  if (!form.targetDate) {
+    alert('목표 기간을 설정해주세요.');
+    return false;
+  }
+  if (!form.keyword) {
+    alert('목표 키워드를 선택해주세요.');
+    return false;
+  }
+  return true;
+};
+
 </script>
 
 <style scoped>

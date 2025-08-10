@@ -17,7 +17,16 @@
       <div class="bank-info">
         <img :src="deposit?.logoUrl" alt="은행로고" class="bank-logo" />
         <div class="product-info">
-          <h1 class="product-name">{{ deposit?.productName }}</h1>
+          <!-- ✅ 상품명과 같은 가로줄에 아이콘 배치 -->
+          <div class="product-name-row">
+            <h1 class="product-name">{{ deposit?.productName }}</h1>
+            <i
+              class="fa-regular fa-bookmark bookmark"
+              :class="{ scraped: isScraped }"
+              @click="toggleScrap"
+              aria-label="스크랩 토글"
+            ></i>
+          </div>
           <p class="bank-name">{{ deposit?.bankName }}</p>
         </div>
       </div>
@@ -107,11 +116,14 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute,useRouter } from 'vue-router';
 import { getBankDepositUrl } from './util/bankDepositUrl.js';
 import { getBankLogoUrl } from './util/bankLogo.js';
+import api from '@/api'; // ✅ 추가: 공용 axios 인스턴스
 
 const route = useRoute();
 const deposit = ref(null);
 const bankDepositUrl = ref('');
 const router = useRouter();
+
+const isScraped = ref(false);       // ✅ 스크랩 상태
 
 const goBack = () => {
   router.back();
@@ -132,6 +144,39 @@ const periodRange = computed(() => {
   return minPeriod === maxPeriod ? `${minPeriod}개월` : `${minPeriod}~${maxPeriod}개월`;
 });
 
+// ✅ 스크랩 상태 확인 (리스트 컴포넌트 패턴과 동일)
+const checkScrapStatus = async () => {
+  try {
+    const response = await api.get('/scrap/finance'); // 인터셉터에서 data만 반환
+    const productId = Number(route.params.id);
+    const isAlready = response.some(
+      (s) => s.productType === 'DEPOSIT' && s.product?.depositId === productId
+    );
+    isScraped.value = isAlready;
+  } catch (e) {
+    console.error('스크랩 상태 확인 실패:', e);
+    isScraped.value = false;
+  }
+};
+
+// ✅ 스크랩 토글 (params 사용)
+const toggleScrap = async () => {
+  const productId = Number(route.params.id);
+  if (!productId) return;
+
+  try {
+    if (isScraped.value) {
+      await api.delete('/scrap/finance', { params: { productType: 'DEPOSIT', productId } });
+      isScraped.value = false;
+    } else {
+      await api.post('/scrap/finance', null, { params: { productType: 'DEPOSIT', productId } });
+      isScraped.value = true;
+    }
+  } catch (e) {
+    console.error('스크랩 토글 실패:', e);
+  }
+};
+
 onMounted(async () => {
   try {
     const depositId = route.params.id;
@@ -145,6 +190,9 @@ onMounted(async () => {
     };
     
     bankDepositUrl.value = getBankDepositUrl(deposit.value.bankCode);
+
+    // ✅ 진입 시 스크랩 상태 확인
+    await checkScrapStatus();
   } catch (error) {
     console.error('예금 상품 정보를 가져오는데 실패했습니다:', error);
   }
@@ -202,12 +250,35 @@ onMounted(async () => {
   flex: 1;
 }
 
+/* ✅ 상품명 + 아이콘 같은 가로줄 */
+.product-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .product-name {
   font-size: 20px;
   font-weight: 600;
   color: #191f28;
   margin: 0 0 4px 0;
   line-height: 1.3;
+  flex: 1; /* ← 아이콘을 오른쪽 끝으로 밀기 */
+}
+
+/* ✅ 스크랩 아이콘 */
+.bookmark {
+  font-size: 1.4rem;
+  color: #bdbdbd;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.bookmark.scraped {
+  color: #569fff;
+}
+.bookmark.scraped::before {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  content: '\f02e';
 }
 
 .bank-name {
