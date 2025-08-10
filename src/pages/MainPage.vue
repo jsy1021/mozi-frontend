@@ -4,14 +4,12 @@ import { useRouter, useRoute } from 'vue-router';
 import { getMainBankSummary } from '@/api/accountApi';
 import { useBankStore } from '@/stores/bank';
 import { useGoalStore } from '@/stores/goalStore';
-import PolicyCard from '@/pages/search/policySearch/policyCard.vue';
 import FinancialCard from '@/pages/search/financialSearch/financialCard.vue';
 import GoalCard from '@/components/goal/GoalCard.vue';
 import GoalEmptyCard from '@/components/goal/GoalEmptyCard.vue';
 import goalApi from '@/api/goalApi';
-
+import { getScrappedPolicyIds } from '@/api/scrapApi';
 import policyApi from '@/api/policyApi';
-import recommendCarousel from './recommend/policy/recommendCarousel.vue';
 import { getTopSavings, getTopDeposits } from '@/api/financialApi';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
@@ -215,9 +213,15 @@ const loadSummary = async () => {
 
 const loadDeadlinePolicies = async () => {
   try {
-    const result = await policyApi.getDeadlinePolicies(31);
-    console.log('🔥 마감 임박 정책:', result); // ← 이거 찍히는지 확인
-    deadlinePolicies.value = result;
+    const [result, scrapped] = await Promise.all([
+      policyApi.getDeadlinePolicies(31),
+      getScrappedPolicyIds(),
+    ]);
+    const nos = (scrapped ?? []).map((n) => String(n).trim());
+    deadlinePolicies.value = (result ?? []).map((p) => {
+      const no = String(p.plcyNo ?? '').trim();
+      return { ...p, plcyNo: no, bookmarked: nos.includes(no) };
+    });
   } catch (error) {
     console.error('🔥 마감 임박 정책 로딩 실패:', error);
   }
@@ -448,11 +452,24 @@ watch(
       class="policy-swiper"
     >
       <SwiperSlide
-        v-for="(policy, index) in deadlinePolicies"
-        :key="index"
+        v-for="policy in deadlinePolicies"
+        :key="policy.plcyNo || policy.policyId"
         class="policy-slide"
       >
-        <RecommendPolicyCard :policy="policy" :showDday="true" sourceTab="main" />
+        <RecommendPolicyCard
+          :policy="policy"
+          :is-scrapped="policy.bookmarked"
+          :showDday="true"
+          sourceTab="main"
+          @bookmark-changed="
+            ({ plcyNo, bookmarked }) => {
+              const i = deadlinePolicies.value.findIndex(
+                (p) => String(p.plcyNo).trim() === String(plcyNo).trim()
+              );
+              if (i !== -1) deadlinePolicies.value[i].bookmarked = bookmarked;
+            }
+          "
+        />
       </SwiperSlide>
     </Swiper>
   </div>

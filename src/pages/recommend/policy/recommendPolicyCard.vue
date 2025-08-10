@@ -7,7 +7,6 @@
         class="policy-icon"
       />
       <h5 class="policy-title">{{ policy.plcyNm }}</h5>
-      <!-- <span class="score-badge">{{ policy.score }}점</span> -->
       <i
         class="fa-regular fa-bookmark bookmark"
         :class="{ scraped: bookmarked }"
@@ -64,7 +63,11 @@
         </span>
       </div>
       <RouterLink
-        :to="{ name: 'policyDetail', params: { id: policy.policyId }, query: { fromTab: sourceTab } }"
+        :to="{
+          name: 'policyDetail',
+          params: { id: policy.policyId },
+          query: { fromTab: sourceTab },
+        }"
         class="detail-btn"
       >
         자세히보기
@@ -74,12 +77,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { scrapPolicy, cancelScrap } from '@/api/scrapApi';
 
 const props = defineProps({
   policy: Object,
-  isScrapped: Boolean,
+  isScrapped: { type: Boolean, default: false }, // 부모에서 내려줌
   showDday: {
     type: Boolean,
     default: false, // 기본은 점수 출력
@@ -88,19 +91,36 @@ const props = defineProps({
   sourceTab: { type: String, default: 'recommend' },
 });
 
-const bookmarked = ref(props.isScrapped);
-const userId = 1; // TODO: 로그인 연동 시 교체
+const emit = defineEmits(['bookmark-changed']);
 
+const plcyNo = computed(() => String(props.policy?.plcyNo ?? '').trim());
+const bookmarked = ref(!!props.isScrapped);
+
+// ✅ 부모 값 바뀌면 동기화
+watch(
+  () => props.isScrapped,
+  (v) => {
+    bookmarked.value = !!v;
+  }
+);
+
+// ✅ 북마크 토글 (옵티미스틱 + 롤백)
 const toggleBookmark = async () => {
+  if (!plcyNo.value) return;
+  const prev = bookmarked.value;
   try {
-    if (bookmarked.value) {
-      await cancelScrap(userId, props.policy.plcyNo);
-    } else {
-      await scrapPolicy(userId, props.policy.plcyNo);
-    }
-    bookmarked.value = !bookmarked.value;
-  } catch (err) {
-    console.error('스크랩 오류', err);
+    bookmarked.value = !prev;
+    if (prev) await cancelScrap(plcyNo.value);
+    else await scrapPolicy(plcyNo.value);
+
+    // ✅ 부모 리스트도 즉시 반영
+    emit('bookmark-changed', {
+      plcyNo: plcyNo.value,
+      bookmarked: bookmarked.value,
+    });
+  } catch (e) {
+    console.error('스크랩 오류', e);
+    bookmarked.value = prev; // 롤백
   }
 };
 
