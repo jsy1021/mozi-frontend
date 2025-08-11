@@ -7,17 +7,30 @@
           <i class="fa-solid fa-angle-left"></i>
         </span>
         <h4 class="page-title">정책 상세 정보</h4>
-      </div>  
+      </div>
     </div>
 
     <main class="content">
-      <!-- 정책 카테고리 -->
-      <div class="tags">
-        <span class="tag main">{{ policy.lclsfNm }}</span>
-        <span class="tag sub">{{ policy.mclsfNm }}</span>
+      <!-- 정책 카테고리 + 스크랩 -->
+      <div class="tags-row">
+        <div class="tags-left">
+          <span class="tag main">{{ policy.lclsfNm }}</span>
+          <span class="tag sub">{{ policy.mclsfNm }}</span>
+        </div>
+
+        <i
+          :class="[
+            'bookmark',
+            'fa-bookmark',
+            isScrapped ? 'fa-solid scraped' : 'fa-regular',
+          ]"
+          @click="toggleScrap"
+          aria-label="스크랩 토글"
+        />
       </div>
 
-      <!-- 정책명 -->
+      <!-- 정책명  -->
+
       <h1 class="title">{{ policy.plcyNm }}</h1>
 
       <!-- 요약 -->
@@ -178,11 +191,16 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import policyApi from '@/api/policyApi';
 import { fetchRegionNamesByZipCodes } from '@/api/regionApi';
+import { getScrappedPolicyIds, scrapPolicy, cancelScrap } from '@/api/scrapApi';
 
 const route = useRoute();
 const router = useRouter();
 const policy = ref({});
 const regionNames = ref([]);
+
+// 북마크 상태
+const isScrapped = ref(false);
+let toggling = false;
 
 onMounted(async () => {
   const id = route.params.id;
@@ -194,6 +212,22 @@ onMounted(async () => {
       const zipList = res.zipCd.split(',').map((z) => z.trim());
       regionNames.value = await fetchRegionNamesByZipCodes(zipList);
     }
+
+    // 스크랩 상태 동기화
+    const list = await getScrappedPolicyIds();
+    const scrappedIds = (Array.isArray(list) ? list : [])
+      .map((x) => (typeof x === 'object' ? x?.plcyNo : x))
+      .filter(Boolean)
+      .map((x) => String(x).trim());
+
+    const plcyNo = String(res.plcyNo ?? '').trim();
+    isScrapped.value = scrappedIds.includes(plcyNo);
+
+    console.log('🔎 상세 스크랩 동기화:', {
+      plcyNo,
+      scrappedIds,
+      isScrapped: isScrapped.value,
+    });
   } catch (err) {
     console.error('정책 상세 조회 실패:', err);
   }
@@ -201,6 +235,27 @@ onMounted(async () => {
 const goBack = () => {
   router.back();
 };
+
+// 스크랩
+const toggleScrap = async () => {
+  if (toggling) return;
+  const plcyNo = String(policy.value?.plcyNo ?? '').trim();
+  if (!plcyNo) return;
+
+  const prev = isScrapped.value;
+  isScrapped.value = !prev;
+  try {
+    toggling = true;
+    if (prev) await cancelScrap(plcyNo);
+    else await scrapPolicy(plcyNo);
+  } catch (e) {
+    console.error('스크랩 토글 실패:', e);
+    isScrapped.value = prev;
+  } finally {
+    toggling = false;
+  }
+};
+
 const formatPeriod = (start, end) => {
   if (!start && !end) return '상시';
   const format = (date) => date?.replace(/-/g, '.') || '미정';
@@ -319,10 +374,19 @@ const convertLabel = (code, type) => {
   padding: 1rem;
 }
 
-.tags {
+.tags-row {
   display: flex;
+  align-items: center;
   gap: 0.4rem;
   margin-bottom: 0.6rem;
+}
+
+.tags-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .tag {
@@ -406,5 +470,17 @@ const convertLabel = (code, type) => {
   color: #007bff;
   font-size: 0.9rem;
   text-decoration: none;
+}
+
+.bookmark {
+  color: #bdbdbd;
+  font-size: 1.2rem;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.bookmark.scraped {
+  color: #569fff;
+  font-weight: 900;
 }
 </style>

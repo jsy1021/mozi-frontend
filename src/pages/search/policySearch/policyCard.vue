@@ -80,25 +80,52 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { scrapPolicy, cancelScrap } from '@/api/scrapApi';
+import api from '@/api';
 
 const props = defineProps({
   policy: Object,
-  isScrapped: {
-    type: Boolean,
-    default: false,
-  },
+  isScrapped: { type: Boolean, default: false },
 });
+
+const bookmarked = ref(props.isScrapped);
+
+const emit = defineEmits(['bookmark-changed']);
+
+// ✅ 부모에서 isScrapped 바뀌면 로컬도 동기화
+watch(
+  () => props.isScrapped,
+  (v) => {
+    bookmarked.value = v;
+  }
+);
 
 const hasIncomeCondition = computed(() => {
   const code = String(props.policy?.earnCndSeCd || '').trim();
   return ['0043002', '0043003'].includes(code);
 });
 
-const bookmarked = ref(props.isScrapped);
+// 토글
+const toggleBookmark = async () => {
+  try {
+    const plcyNo = String(props.policy?.plcyNo ?? '').trim();
+    if (!plcyNo) return;
 
-const emit = defineEmits(['updateBookmark']);
+    if (bookmarked.value) {
+      await cancelScrap(plcyNo);
+      bookmarked.value = false;
+    } else {
+      await scrapPolicy(plcyNo);
+      bookmarked.value = true;
+    }
+
+    // 부모 리스트 즉시 반영하도록 이벤트 발행
+    emit('bookmark-changed', { plcyNo, bookmarked: bookmarked.value });
+  } catch (e) {
+    console.error('스크랩 토글 실패:', e);
+  }
+};
 
 function isClosed(aplyYmd) {
   if (!aplyYmd || !aplyYmd.includes('~')) return false;
@@ -107,42 +134,6 @@ function isClosed(aplyYmd) {
   const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, ''); // "20250805"
   return end < yyyyMMdd;
 }
-
-// 북마크 토글
-const toggleBookmark = async () => {
-  try {
-    const plcyNo = props.policy.plcyNo;
-
-    console.log('📌 북마크 클릭됨:', {
-      현재상태: props.isScrapped,
-      정책ID: plcyNo,
-    });
-
-    if (props.isScrapped) {
-      await cancelScrap(plcyNo);
-      console.log('❌ 스크랩 해제 요청 보냄');
-      emit('updateBookmark', { plcyNo, value: false });
-      bookmarked.value = false;
-    } else {
-      await scrapPolicy(plcyNo);
-      console.log('✅ 스크랩 등록 요청 보냄');
-      emit('updateBookmark', { plcyNo, value: true });
-      bookmarked.value = true;
-    }
-  } catch (err) {
-    console.error('⚠️ 스크랩 처리 오류:', err);
-  }
-};
-
-import { watch } from 'vue';
-
-watch(
-  () => props.isScrapped,
-  (newVal) => {
-    bookmarked.value = newVal;
-  },
-  { immediate: true }
-);
 </script>
 
 <style scoped>

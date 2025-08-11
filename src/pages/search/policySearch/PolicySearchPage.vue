@@ -74,8 +74,8 @@
           v-for="policy in filteredList"
           :key="policy.plcyNo"
           :policy="policy"
-          :isScrapped="policy.bookmarked"
-          @updateBookmark="handleBookmarkChange"
+          :is-scrapped="policy.bookmarked"
+          @bookmark-changed="onBookmarkChanged"
         />
       </div>
     </transition>
@@ -88,7 +88,6 @@ import { useRouter } from 'vue-router';
 import PolicyCard from './policyCard.vue';
 import policyApi from '@/api/policyApi';
 import policyFilter from './policyFilter.vue';
-import { getScrappedPolicyIds } from '@/api/scrapApi';
 import {
   fetchRegionNamesByZipCodes,
   fetchZipCodesBySido,
@@ -104,28 +103,31 @@ import {
 } from './util/policyEnums';
 import { profileAPI } from '@/api/profile';
 
+import { getScrappedPolicyIds } from '@/api/scrapApi';
+
 // 상태 변수
 const searchKeyword = ref('');
 const currentCategory = ref('전체');
+const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
 const showFilter = ref(false);
 const showSearch = ref(false);
 const customIncome = ref('');
 const customAge = ref('');
 const regionNameMap = ref({});
 const policyList = ref([]);
-const categories = ['전체', '일자리', '주거', '교육', '문화', '기타'];
 const userProfile = ref(null);
 const router = useRouter();
+const scrappedNos = ref([]);
 
+// 뒤로가기
 const goBack = () => {
   router.back();
 };
 
-// 북마크 업데이트
-const handleBookmarkChange = ({ plcyNo, value }) => {
-  policyList.value = policyList.value.map((p) =>
-    p.plcyNo === plcyNo ? { ...p, bookmarked: value } : p
-  );
+// 스크랩
+const onBookmarkChanged = ({ plcyNo, bookmarked }) => {
+  const i = policyList.value.findIndex((x) => x.plcyNo === plcyNo);
+  if (i !== -1) policyList.value[i].bookmarked = bookmarked;
 };
 
 // 필터 상태
@@ -179,6 +181,23 @@ const selectedTagsWithCategory = computed(() => {
 // 정책 필터링
 const filteredList = computed(() => {
   let list = Array.isArray(policyList.value) ? policyList.value : [];
+
+  const kw = searchKeyword.value.trim().toLowerCase();
+  if (kw) {
+    list = list.filter((p) => {
+      const fields = [
+        p.plcyNm, // 정책명
+        p.plcyKywdNm, // 키워드 (쉼표 구분)
+        p.mclsfNm, // 중분류
+        p.lclsfNm, // 대분류
+      ];
+      return fields.some((v) =>
+        String(v || '')
+          .toLowerCase()
+          .includes(kw)
+      );
+    });
+  }
 
   // 지역 → 연령 → 혼인 → 소득 → 학력 → 취업 → 전공 → 특화 → 카테고리 탭 순서
 
@@ -554,13 +573,14 @@ onMounted(async () => {
   }
 
   try {
-    const [profile, data, scrappedIds] = await Promise.all([
+    const [profile, policies, scrapped] = await Promise.all([
       profileAPI.getProfile(),
       policyApi.getList(),
       getScrappedPolicyIds(),
     ]);
 
     userProfile.value = profile;
+    scrappedNos.value = (scrapped ?? []).map((no) => String(no).trim());
 
     // 퍼스널 자동 적용
     if (userProfile.value) {
@@ -607,11 +627,11 @@ onMounted(async () => {
       if (specialtyCode) filterState.value.special = [specialtyCode];
     }
 
-    const cleanScrappedIds = scrappedIds.map((id) => String(id).trim());
-    policyList.value = data.map((p) => ({
-      ...p,
-      bookmarked: cleanScrappedIds.includes(String(p.plcyNo).trim()),
-    }));
+    policyList.value = (Array.isArray(policies) ? policies : []).map((p) => {
+      const plcyNo = String(p.plcyNo ?? '').trim();
+      const bookmarked = scrappedNos.value.includes(plcyNo);
+      return { ...p, plcyNo, bookmarked };
+    });
   } catch (e) {
     console.error('❌ 초기 데이터 로딩 실패:', e);
   }
@@ -639,11 +659,12 @@ onMounted(async () => {
   font-weight: 500;
   padding: 6px 4px;
   /* 탭 버튼 전환도 부드럽게 */
-  transition: color 0.18s ease, border-bottom-color 0.18s ease, background-color 0.18s ease;
+  transition: color 0.18s ease, border-bottom-color 0.18s ease,
+    background-color 0.18s ease;
 }
 .mozi-tabs .nav-link.active {
   border: none !important;
-  border-bottom: 2px solid #36C18C !important;
+  border-bottom: 2px solid #36c18c !important;
   background: transparent !important;
   color: #6b7684 !important;
 }
@@ -700,11 +721,11 @@ onMounted(async () => {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   outline: none;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .search-input:focus {
-  border-color: #36C18C;
-  box-shadow: 0 0 0 3px rgba(54,193,140,.15);
+  border-color: #36c18c;
+  box-shadow: 0 0 0 3px rgba(54, 193, 140, 0.15);
 }
 
 .filter-btn {
