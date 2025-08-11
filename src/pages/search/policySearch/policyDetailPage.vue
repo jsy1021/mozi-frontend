@@ -6,7 +6,9 @@
         <span class="back-btn" @click="goBack">
           <i class="fa-solid fa-angle-left"></i>
         </span>
-        <h4 class="page-title">정책 상세 정보</h4>
+        <div style="font-size: 18px; font-weight: bold; color: #757575">
+          정책 상세 정보
+        </div>
       </div>
     </div>
 
@@ -350,7 +352,7 @@ const convertLabel = (code, type) => {
   left: 0;
   cursor: pointer;
   font-size: 1.2rem;
-  color: #333;
+  color: #757575;
   padding: 4px 8px; /* 클릭 영역 확보 */
 }
 .page-title {

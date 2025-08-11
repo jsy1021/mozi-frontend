@@ -5,7 +5,7 @@
       <span class="back-btn" @click="goBack">
         <i class="fa-solid fa-angle-left"></i>
       </span>
-      <h4 class="page-title">금융 탐색</h4>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">금융 탐색</div>
     </div>
 
     <!-- 🔎 검색/필터 툴바 -->
@@ -15,7 +15,7 @@
     v-model="searchKeyword"
     type="text"
     class="search-input"
-    placeholder="찾을 상품을 입력해주세요"
+    placeholder="상품명 입력"
   />
   <button
     v-if="searchKeyword"
@@ -38,8 +38,88 @@
     <FinancialFilter
       v-if="showFilter"
       @filter-applied="handleFilter"
-      @close="showFilter = false"
+      @close-filter="showFilter = false"
     />
+
+    <!-- 🔍 필터 태그 표시 -->
+    <div v-if="hasActiveFilters" class="filter-tags mb-2">
+      <div class="filter-tags-container">
+        <!-- 기간 필터 태그 -->
+        <span 
+          v-if="selectedFilter.period !== '' && selectedFilter.period != null" 
+          class="filter-tag"
+        >
+          <span class="filter-tag-text">
+            {{ getPeriodLabel(selectedFilter.period) }}
+          </span>
+          <button 
+            class="filter-tag-remove" 
+            @click="removeFilter('period')"
+            aria-label="기간 필터 제거"
+          >
+            ×
+          </button>
+        </span>
+
+        <!-- 금리 정렬 필터 태그 -->
+        <span 
+          v-if="selectedFilter.rateSort" 
+          class="filter-tag"
+        >
+          <span class="filter-tag-text">
+            {{ getRateSortLabel(selectedFilter.rateSort) }}
+          </span>
+          <button 
+            class="filter-tag-remove" 
+            @click="removeFilter('rateSort')"
+            aria-label="금리 정렬 필터 제거"
+          >
+            ×
+          </button>
+        </span>
+
+        <!-- 은행 필터 태그들 -->
+        <span 
+          v-for="bankCode in (selectedFilter.banks || [])" 
+          :key="bankCode"
+          class="filter-tag"
+        >
+          <span class="filter-tag-text">
+            <img 
+              :src="getBankLogoUrl(bankCode)" 
+              :alt="getBankName(bankCode)"
+              class="filter-tag-bank-logo"
+            />
+            {{ getBankName(bankCode) }}
+          </span>
+          <button 
+            class="filter-tag-remove" 
+            @click="removeBankFilter(bankCode)"
+            aria-label="은행 필터 제거"
+          >
+            ×
+          </button>
+        </span>
+
+        <!-- 가입 방법 필터 태그들 -->
+        <span 
+          v-for="joinWay in (selectedFilter.joinWays || [])" 
+          :key="joinWay"
+          class="filter-tag"
+        >
+          <span class="filter-tag-text">
+           {{ joinWay }}
+          </span>
+          <button 
+            class="filter-tag-remove" 
+            @click="removeJoinWayFilter(joinWay)"
+            aria-label="가입 방법 필터 제거"
+          >
+            ×
+          </button>
+        </span>
+      </div>
+    </div>
 
     <!-- ✅ 카테고리 탭 (mozi-tabs 스타일 적용 + 전환) -->
     <ul class="nav mozi-tabs mb-2">
@@ -91,6 +171,7 @@ const selectedFilter = ref({
   period: '',
   rateSort: '',
   banks: [],
+  joinWays: []
 });
 const goBack = () => {
   router.back();
@@ -221,6 +302,79 @@ const currentProductList = computed(() => {
   return list;
 });
 
+// 필터 태그 관련 computed 속성
+const hasActiveFilters = computed(() => {
+  return (
+    (selectedFilter.value.period !== '' && selectedFilter.value.period != null) ||
+    (selectedFilter.value.rateSort !== '' && selectedFilter.value.rateSort != null) ||
+    (selectedFilter.value.banks && selectedFilter.value.banks.length > 0) ||
+    (selectedFilter.value.joinWays && selectedFilter.value.joinWays.length > 0)
+  );
+});
+
+// 필터 태그 관련 메서드들
+const getPeriodLabel = (period) => {
+  const periodMap = {
+    6: '~ 6개월',
+    12: '~12개월',
+    24: '~24개월',
+    36: '~36개월'
+  };
+  return periodMap[period] || period;
+};
+
+const getRateSortLabel = (rateSort) => {
+  const rateSortMap = {
+    'high': '높은 금리순',
+    'base': '기본 금리순'
+  };
+  return rateSortMap[rateSort] || rateSort;
+};
+
+const getBankName = (bankCode) => {
+  const bankNameMap = {
+    '0010927': 'KB국민',
+    '0010020': '신한',
+    '0010001': '우리',
+    '0013909': '하나',
+    '0010002': 'SC제일',
+    '0015130': '카카오뱅크',
+    '0010026': 'IBK 기업',
+    '0014674': '케이뱅크',
+    '0017801': '토스뱅크',
+    '0010017': '부산',
+    '0010016': 'IM뱅크',
+    '0014807': 'SH수협',
+    '0010019': '광주',
+    '0013175': 'NH농협'
+  };
+  return bankNameMap[bankCode] || bankCode;
+};
+
+const removeFilter = (filterType) => {
+  if (filterType === 'period') {
+    selectedFilter.value.period = '';
+  } else if (filterType === 'rateSort') {
+    selectedFilter.value.rateSort = '';
+  }
+};
+
+const removeBankFilter = (bankCode) => {
+  if (selectedFilter.value.banks) {
+    selectedFilter.value.banks = selectedFilter.value.banks.filter(
+      code => code !== bankCode
+    );
+  }
+};
+
+const removeJoinWayFilter = (joinWay) => {
+  if (selectedFilter.value.joinWays) {
+    selectedFilter.value.joinWays = selectedFilter.value.joinWays.filter(
+      way => way !== joinWay
+    );
+  }
+};
+
 watch(currentCategory, (tab) => {
   if (tab === '예금') fetchDeposits();
   if (tab === '적금') fetchSavings();
@@ -342,7 +496,7 @@ onMounted(() => {
   left: 0;
   cursor: pointer;
   font-size: 1.2rem;
-  color: #333;
+  color: #757575;
   padding: 4px 8px; /* 클릭 범위 확보 */
 }
 
@@ -350,5 +504,89 @@ onMounted(() => {
   margin: 0;
   font-weight: bold;
   text-align: center;
+}
+
+/* 🔍 필터 태그 스타일 */
+.filter-tags {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.filter-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #475569;
+  transition: all 0.15s ease;
+}
+
+.filter-tag:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-tag-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 4px;
+}
+
+.filter-tag-bank-logo {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.filter-tag-remove {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.filter-tag-remove:hover {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .filter-tags-container {
+    gap: 4px;
+  }
+  
+  .filter-tag {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .filter-tag-remove {
+    width: 14px;
+    height: 14px;
+    font-size: 12px;
+  }
 }
 </style>
