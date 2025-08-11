@@ -14,14 +14,33 @@ const showModal = ref(false);
 const modalBank = ref(null);
 
 const banks = bankStore.banks;
-const hasConnectedBank = computed(() => banks.some((b) => b.connected));
+
+// 추가
+const mode = computed(() => String(route.query.mode || 'first'));
+const redirect = computed(() =>
+  String(route.query.redirect || '/account/BankSummaryPage')
+);
+
+const connectedCount = computed(() => banks.filter((b) => b.connected).length);
+const hasConnected = computed(() => connectedCount.value > 0);
+
+// 처음(first): 1개 이상 연동되면 활성화
+// 추가(add): 항상 활성화 (원하면 조건 바꿔도 됨)
+const canProceed = computed(() =>
+  mode.value === 'first' ? hasConnected.value : true
+);
+
+function handleNext() {
+  if (!canProceed.value) return;
+  router.replace(redirect.value);
+}
 
 function selectBank(code) {
   selectedBankCode.value = code;
 }
 
 function handleConnect(bank) {
-  if (bank.connected) return;      // 이미 연결된 은행은 모달 열지 않음
+  if (bank.connected) return; // 이미 연결된 은행은 모달 열지 않음
   modalBank.value = bank;
   showModal.value = true;
 }
@@ -60,7 +79,7 @@ onMounted(async () => {
           class="bank-card"
           :class="{
             selected: selectedBankCode === bank.code,
-            connected: bank.connected
+            connected: bank.connected,
           }"
           @click="
             selectBank(bank.code);
@@ -83,6 +102,14 @@ onMounted(async () => {
           <span class="bank-name">{{ bank.name }}</span>
         </button>
       </div>
+      <button
+        class="Agreecard-btn"
+        :style="{ backgroundColor: canProceed ? '#36C18C' : '#36C18C80' }"
+        :disabled="!canProceed"
+        @click="handleNext"
+      >
+        다음
+      </button>
     </div>
 
     <!-- 모달 -->
@@ -100,14 +127,14 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   min-height: 700px;
-  background-color: #f8f8f8;
+  background-color: #fff;
 }
 
 .content {
   width: 100%;
-  max-width: 360px;        /* 모바일 기준 폭, 필요하면 340~400 조절 */
+  max-width: 300px; /* 모바일 기준 폭, 필요하면 340~400 조절 */
   text-align: center;
-  padding: 0 8px 24px;
+  padding: 0 0 24px;
 }
 
 /* 헤더 */
@@ -116,7 +143,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 22px 0 16px;
+  margin: 32px 0 50px;
 }
 
 .back-btn {
@@ -135,7 +162,7 @@ onMounted(async () => {
 .title {
   font-size: 18px;
   font-weight: 600;
-  color: #565e6c;
+  color: #757575;
   margin: 0;
 }
 
@@ -144,7 +171,7 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 500;
   color: #6b7684;
-  margin: 4px 0 10px 2px; /* 위/아래 여백과 살짝 왼쪽 들여쓰기 */
+  margin: 4px 0 20px 2px; /* 위/아래 여백과 살짝 왼쪽 들여쓰기 */
 }
 
 /* ====== 카드 그리드 (항상 3열) ====== */
@@ -168,7 +195,8 @@ onMounted(async () => {
   border: 1px solid #e8ecef;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.08s ease, box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .bank-card:active {
@@ -176,7 +204,7 @@ onMounted(async () => {
 }
 
 .bank-card.selected {
-  border-color: #b6e7f3;          /* 선택시 미세 하이라이트 */
+  border-color: #b6e7f3; /* 선택시 미세 하이라이트 */
   background: #f9feff;
 }
 
@@ -225,5 +253,25 @@ onMounted(async () => {
   color: #3d434b;
   line-height: 1.2;
   word-break: keep-all;
+}
+
+.Agreecard-btn {
+  display: block;
+  width: 100%;
+  margin: 65px 0 0;
+  padding: 10px 0;
+  border-radius: 4px;
+  border: 0 solid white;
+  color: #ffffff;
+  box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
+  font-size: 16px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.Agreecard-btn:active {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  background: #bdbdbd;
+  transform: scale(0.98);
+  transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
 </style>

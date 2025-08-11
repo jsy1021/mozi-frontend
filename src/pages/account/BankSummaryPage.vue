@@ -1,16 +1,18 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { getBankSummary, refreshAccounts } from '@/api/accountApi';
 import { useBankStore } from '@/stores/bank';
 
 const router = useRouter();
-const totalBalance = ref(0);
+const route = useRoute();
 
+const totalBalance = ref(0);
 const bankSummaryList = ref([]);
 const mainBankCode = ref('');
 const isConnected = ref(false);
 const isLoading = ref(false);
+
 const bankStore = useBankStore();
 const banks = bankStore.banks;
 
@@ -19,11 +21,29 @@ const getBankLogoUrl = (bankCode) => {
   return bank?.logo || '/images/financial/default.png';
 };
 
-const goBack = () => router.push('/');
 const goToDeletePage = () => router.push('/account/BankUnlinkPage');
 const goToBankMainSetting = () => router.push('/account/BankMainSettingPage');
-const goToConnectPage = () =>
-  router.push({ path: '/account/BankConnectPage', query: { from: 'summary' } });
+const goToConnectPage = () => {
+  if (isConnected.value) {
+    router.push({
+      path: '/account/BankConnectPage',
+      query: {
+        mode: 'add',
+        redirect: '/account/BankSummaryPage', // 고정 복귀 지점
+      },
+    });
+    return;
+  } else {
+    router.push({
+      path: '/account/AccountAgreementPage',
+      query: {
+        mode: 'first',
+        redirect: route.fullPath, // 돌아갈 곳 저장(메인 or 요약)
+      },
+    });
+    return;
+  }
+};
 
 const refreshAccountData = async () => {
   try {
@@ -57,31 +77,20 @@ onMounted(async () => {
 
 <template>
   <div class="wrapper">
-    <!-- 상단 헤더: 제목 가운데, 우측에 새로고침 -->
     <div class="header">
-      <div style="font-size: 18px; font-weight: bold; color: #757575">자산</div>
-      <span
-        v-if="isConnected"
-        class="icon-button"
-        @click="refreshAccountData"
-        aria-label="자산 새로고침"
-      >
+      <div class="header-title">자산</div>
+      <span v-if="isConnected" class="icon-button" @click="refreshAccountData">
         <i class="fa-solid fa-rotate"></i>
       </span>
     </div>
 
     <template v-if="isConnected">
-      <!-- ✅ 카드 리스트 컨테이너로 총 자산을 이동 -->
-      <div class="card-list">
-        <!-- 총 자산 행 -->
-        <div class="total-row">
-          총 자산<br/> {{ totalBalance.toLocaleString() }}원
-        </div>
+      <!-- ✅ 총 자산 박스 분리 유지 -->
+      <div class="total-box">
+        총 자산: {{ totalBalance.toLocaleString() }}원
+      </div>
 
-        <!-- 총 자산과 카드들 사이 구분선 -->
-        <hr class="card-divider" v-if="bankSummaryList.length > 0" />
-
-        <!-- 은행 카드들 -->
+      <div class="card-list" v-if="bankSummaryList.length > 0">
         <div
           class="bank-card"
           v-for="(bank, index) in bankSummaryList"
@@ -97,15 +106,19 @@ onMounted(async () => {
 
           <div class="bank-text">
             <div class="bank-amount">
-              {{ bank.totalBalance.toLocaleString() }}원
+              총: {{ bank.totalBalance.toLocaleString() }}원
             </div>
+
             <div class="bank-account">
-              <template v-if="bank.accountCount === 0">계좌 0개</template>
+              <template v-if="bank.accountCount === 0"> 계좌 0개 </template>
               <template v-else>
+                <!-- ✅ 버그 수정: 말줄임 + '외 N개'만 표시 -->
                 <span class="account-name-ellipsis">
                   {{ bank.representativeAccountName }}
                 </span>
-                <span class="account-etc">외 {{ bank.accountCount - 1 }}개</span>
+                <span class="account-etc">
+                  외 {{ bank.accountCount - 1 }}개
+                </span>
               </template>
             </div>
           </div>
@@ -115,7 +128,6 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- 은행 연동 추가 버튼 -->
         <button class="connect-btn-full" @click="goToConnectPage">
           은행 연동 추가하기
         </button>
@@ -158,7 +170,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* ========== 레이아웃 기본 ========== */
 .wrapper {
   position: relative;
   padding: 16px;
@@ -166,65 +177,46 @@ onMounted(async () => {
   min-height: 100vh;
 }
 
-/* ========== 상단 헤더(제목 중앙, 좌측 뒤로가기, 우측 새로고침) ========== */
+/* 헤더 */
 .header {
   position: relative;
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: center; /* 제목 중앙 정렬 */
   margin-bottom: 16px;
 }
-
-.back-btn {
-  position: absolute;
-  left: 0;
-  cursor: pointer;
-  font-size: 1.2rem;
-  color: #333;
-  padding: 4px 8px; /* 클릭 범위 확보 */
-}
-.back-btn:hover { color: #222; }
-
 .header-title {
-  margin: 0;
+  position: static;
   font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: #757575;
 }
-
-/* 우측 새로고침 버튼 */
 .icon-button {
-  position: absolute;
-  right: 0;
   font-size: 17px;
-  color: #6b7684;
+  color: #757575;
   cursor: pointer;
-  padding: 4px 8px;
-  transition: color .15s ease, transform .1s ease;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 }
-.icon-button:hover { color: #4b5563; }
-.icon-button:active { transform: scale(0.96); }
+.icon-button:hover {
+  color: #757575;
+}
 
-/* ========== 총 자산(카드 리스트 상단 행) ========== */
-.total-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 8px 8px;
-  font-size: 15px;
+/* 총 자산 박스 (분리 유지) */
+.total-box {
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
   color: #2f423f;
-  font-weight: 700;
+  border: 1px solid #ddd;
 }
 
-/* 카드 구분선 (총자산과 은행카드 사이) */
-.card-divider {
-  height: 1px;
-  background: #e5e7eb;
-  margin: 6px 0 8px;
-  border: 0;
-}
-
-/* ========== 카드 리스트 컨테이너 ========== */
+/* 카드 리스트 */
 .card-list {
   background: #fff;
   border: 1px solid #ddd;
@@ -235,7 +227,6 @@ onMounted(async () => {
   overflow-y: auto;
 }
 
-/* ========== 은행 카드 ========== */
 .bank-card {
   position: relative;
   display: flex;
@@ -244,77 +235,82 @@ onMounted(async () => {
   padding: 5px 0;
   background-color: #fff;
   cursor: pointer;
-  min-height: 75px; /* 카드 높이 일정 */
+  min-height: 75px;
   transition: all 0.15s ease;
   border-bottom: 1px solid #eee;
 }
-.bank-card:first-child { border-top: none; }
-.bank-card.no-border { border-bottom: none; }
+.bank-card.no-border {
+  border-bottom: none;
+}
 .bank-card:active {
   background-color: #f2f4f6;
   transform: scale(0.98);
 }
 
-/* 메인은행(별) */
 .icon-star-wrap {
   position: absolute;
   top: 0px;
   right: 0px;
   z-index: 2;
 }
-.bank-star {
-  font-size: 14px;
-  color: #ffd43b;
-}
-
-/* 우측 화살표 */
 .icon-arrow-wrap {
   position: absolute;
   top: 50%;
   right: 3px;
   transform: translateY(-50%);
 }
+.bank-star {
+  font-size: 14px;
+  color: #ffd43b;
+}
 .bank-arrow {
   font-size: 14px;
   color: #bbb;
 }
 
-/* 은행 로고/텍스트 */
 .bank-logo {
   width: 36px;
   height: 36px;
   object-fit: contain;
   margin-right: 12px;
 }
-.bank-text { flex: 1; display: flex; flex-direction: column; }
+.bank-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-right: 30px;
+}
 .bank-amount {
   font-weight: bold;
   font-size: 14px;
 }
+
+/* ✅ 말줄임/외 N개: 중복/상충 CSS 정리 */
 .bank-account {
   font-size: 13px;
   color: #555;
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
 }
-
-/* 계좌명만 말줄임 */
 .account-name-ellipsis {
   flex: 0 1 auto;
   min-width: 0;
-  max-width: 70%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   display: inline-block;
 }
-/* "외 N개" 고정 폭 */
-.account-etc { flex-shrink: 0; white-space: nowrap; }
+.account-etc {
+  flex-shrink: 0; /* "외 N개"는 줄어들지 않게 */
+  white-space: nowrap;
+}
 
-/* ========== 연동 추가 버튼 ========== */
+/* 연동 추가 버튼 */
 .connect-btn-full {
-  margin: 10px auto 0;
+  margin: 0 auto;
   width: 60%;
   padding: 8px 16px;
   background-color: #f5f6f8;
@@ -326,16 +322,15 @@ onMounted(async () => {
   transition: all 0.2s ease;
   display: block;
   text-align: center;
-  font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 .connect-btn-full:hover {
   background-color: #e0e0e0;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* ========== 하단 링크들 ========== */
+/* 하단 링크 */
 .nav-links {
   margin-top: 23px;
   font-size: 15px;
@@ -348,12 +343,14 @@ onMounted(async () => {
   font-size: 15px;
   cursor: pointer;
 }
-.link-item i { margin-left: 4px; }
 
-/* ========== 로딩 오버레이 ========== */
+/* 로딩 오버레이 */
 .loading-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(240, 240, 240, 0.7);
   display: flex;
   justify-content: center;
@@ -370,7 +367,8 @@ onMounted(async () => {
   border: 6px solid #f3f3f3;
   border-top: 6px solid #36c18c;
   border-radius: 50%;
-  width: 50px; height: 50px;
+  width: 50px;
+  height: 50px;
   animation: spin 1.5s linear infinite;
 }
 .loading-text {
@@ -378,9 +376,13 @@ onMounted(async () => {
   font-size: 14px;
   color: #666;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
-/* ========== 빈 상태 뷰(계좌 없음) ========== */
+/* 빈 상태 */
 .fixed-center-box {
   position: absolute;
   top: 38%;
@@ -410,10 +412,9 @@ onMounted(async () => {
   border-radius: 8px;
   background: #36c18c;
   font-size: 16px;
-  color: #fff;
+  color: white;
   cursor: pointer;
-  transition: background-color .2s;
+  transition: background-color 0.2s;
   border: none;
 }
-.card-btn:hover { background: #2ea67a; }
 </style>
