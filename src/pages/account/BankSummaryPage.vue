@@ -174,7 +174,6 @@ onMounted(async () => {
   position: relative;
   padding: 16px;
   background-color: #fff;
-  min-height: 100vh;
 }
 
 /* 헤더 */
@@ -392,6 +391,7 @@ onMounted(async () => {
   text-align: center;
   transform: translate(-50%, -50%);
   user-select: none;
+  margin-top: 280px;
 }
 .no-data-image {
   width: 200px;
