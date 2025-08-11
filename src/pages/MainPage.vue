@@ -347,7 +347,7 @@ watch(
   <!-- 계좌 정보 -->
   <div style="display: flex">
     <p style="margin: 10px 10px 0px 25px; color: #6b7684; font-weight: bolder">
-      자산
+      나의 자산
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"
@@ -359,7 +359,7 @@ watch(
   <div style="margin: 0px 20px; padding-top: 10px">
     <div v-if="isUnlinked" class="card card-unlinked">
       <div class="card-text">연동시 더 많은 기능을 이용할 수 있어요!</div>
-      <button class="card-btn" @click="goToAccountAuth">계좌연동</button>
+      <button class="card-btn" @click="goToAccountAuth">계좌 연동</button>
     </div>
 
     <div v-else-if="bankSummaryList" class="card">
