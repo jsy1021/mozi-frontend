@@ -105,9 +105,11 @@
                 class="region-text-group"
               >
                 <div class="sido-line">
-                  <strong class="sido">{{ g.sido }}</strong>
+                  <span class="sido-badge">{{ g.sido }}</span>
                   <button
-                    v-if="g.guguns.length > MAX_GUGUNS"
+                    v-if="
+                      groupedRegions.length > 1 && g.guguns.length > MAX_GUGUNS
+                    "
                     class="toggle"
                     @click="toggleSido(g.sido)"
                   >
@@ -346,14 +348,15 @@ const groupedRegions = computed(() => {
 });
 
 const joinGuguns = (sido, arr) => {
-  if (arr.length <= MAX_GUGUNS) return arr.join(', ');
+  const singleSido = groupedRegions.value.length === 1;
+  if (singleSido) return arr.join(', ');
 
+  if (arr.length <= MAX_GUGUNS) return arr.join(', ');
   const list = isExpanded(sido) ? arr : arr.slice(0, MAX_GUGUNS);
   const remain = arr.length - list.length;
   const text = list.join(', ');
   return isExpanded(sido) ? text : `${text}, 외 ${remain}개`;
 };
-
 const formatPeriod = (start, end) => {
   if (!start && !end) return '상시';
   const format = (date) => date?.replace(/-/g, '.') || '미정';
@@ -611,32 +614,33 @@ const convertLabel = (code, type) => {
   gap: 10px;
   margin-top: 4px;
 }
-
 .region-text-group .sido-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin-bottom: 2px;
 }
 
-.region-text-group .sido {
-  font-size: 0.85rem;
-  font-weight: 600;
+.sido-badge {
+  background: none;
+  border: none;
   color: #222;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0;
 }
 
 .region-text-group .toggle {
   background: transparent;
   border: 0;
-  color: #36c18c;
   cursor: pointer;
   padding: 0;
-  font-size: 0.8rem;
+  color: #36c18c;
+  font-size: 0.78rem;
 }
 
 .region-text-group .gugun-line {
-  font-size: 0.82rem;
-  font-weight: 400;
+  font-size: 0.85rem;
   color: #666;
   line-height: 1.6;
   word-break: keep-all;
