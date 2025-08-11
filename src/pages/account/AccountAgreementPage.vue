@@ -1,18 +1,26 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useBankStore } from '@/stores/bank';
 const bankStore = useBankStore();
 const bankList = bankStore.banks;
 
 const router = useRouter();
+const route = useRoute();
 
 const requiredAgreeChecked = ref(false);
 const optionalAgreeChecked = ref(false);
 
 function handleAgree() {
   if (requiredAgreeChecked.value) {
-    router.push({ path: '/account/BankConnectPage', query: { from: 'agree' } });
+    router.push({
+      path: '/account/BankConnectPage',
+      query: {
+        mode: route.query.mode ?? 'first',
+        redirect: route.query.redirect || '/account/BankSummaryPage',
+        agreed: 'true',
+      },
+    });
   } else {
     alert('필수 항목에 동의해야 합니다.');
   }
@@ -298,7 +306,7 @@ function closeModal() {
   display: flex;
   justify-content: center;
   height: 700px;
-  background-color: #f8f8f8;
+  background-color: #fff;
 }
 
 .content {

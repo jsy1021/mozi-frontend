@@ -94,7 +94,13 @@ const handlePromptNeverShow = () => {
 };
 
 function goToAccountAuth() {
-  router.push('/account/AccountAgreementPage');
+  router.push({
+    path: '/account/AccountAgreementPage',
+    query: {
+      mode: 'first',
+      redirect: route.fullPath, // 돌아갈 곳 저장(메인 or 요약)
+    },
+  });
 }
 
 function goToTotalPage() {
@@ -363,6 +369,7 @@ watch(
           align-items: center;
           justify-content: space-between;
           height: 100%;
+          min-width: 0;
         "
       >
         <img
@@ -370,7 +377,9 @@ watch(
           alt="은행 로고"
           style="height: 47px; margin: 0"
         />
-        <div style="text-align: left; margin: 20px 0 25px -80px">
+        <div
+          style="text-align: left; margin-left: 12px; flex: 1 1 0; min-width: 0"
+        >
           <div style="font-size: 16px; font-weight: 500; margin-bottom: -3px">
             {{
               bankSummaryList?.totalBalance
@@ -391,7 +400,8 @@ watch(
             <!-- 계좌명만 말줄임 -->
             <span
               style="
-                max-width: 90px; /* 카드 폭에 맞게 조절 */
+                flex: 0 1 auto;
+                min-width: 0; /* 카드 폭에 맞게 조절 */
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -402,7 +412,9 @@ watch(
             </span>
 
             <!-- 외 N개 계좌는 항상 보이게 -->
-            <span> 외 {{ (bankSummaryList?.accountCount || 1) - 1 }}개 </span>
+            <span style="flex: 0 0 auto">
+              외 {{ (bankSummaryList?.accountCount || 1) - 1 }}개
+            </span>
           </div>
         </div>
         <div
