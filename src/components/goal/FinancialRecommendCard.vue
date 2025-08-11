@@ -233,7 +233,7 @@ onMounted(async () => {
 
 @media (max-width: 480px) {
   .financial-card { padding: 14px 16px 10px 16px; }
-  .product-title { font-size: 13px; }
+  .product-title { font-size: 14px; }
   .small-text { font-size: 12px; }
   .bank-logo { width: 28px; height: 28px; }
 }

@@ -59,7 +59,7 @@ onMounted(async () => {
   <div class="wrapper">
     <!-- 상단 헤더: 제목 가운데, 우측에 새로고침 -->
     <div class="header">
-      <h4 class="fw-bold mb-3 text-center">자산</h4>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">자산</div>
       <span
         v-if="isConnected"
         class="icon-button"

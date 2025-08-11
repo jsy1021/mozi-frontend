@@ -1,6 +1,6 @@
 <template>
   <div class="container py-3">
-    <h4 class="fw-bold mb-3">내 스크랩</h4>
+    <div style="font-size: 18px; font-weight: bold; color: #757575; margin-bottom: 1rem; text-align: center;">내 스크랩</div>
 
     <!-- 카테고리 탭 (mozi-tabs 적용) -->
     <ul class="nav mozi-tabs mb-2 small">

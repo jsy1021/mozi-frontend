@@ -2,7 +2,7 @@
   <div class="goal-main-container">
     <!-- 페이지 헤더 -->
     <div class="page-header">
-      <h4 class="fw-bold mb-3 text-center">목표</h4>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">목표</div>
       <router-link :to="{ name: 'goalCreate' }" class="add-button">
         <i class="fas fa-plus"></i>
       </router-link>
@@ -200,7 +200,7 @@ window.addEventListener('focus', loadGoals);
 .add-button {
   position: absolute;
   right: 5px; /* 타이틀 중앙에 영향 없게 우측 배치 */
-  color: #333;
+  color: #757575;
   font-size: 18px;
   text-decoration: none;
   padding: 8px;

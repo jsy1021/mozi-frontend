@@ -224,7 +224,7 @@ function goToGoalPage() {
 }
 .product-title {
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 14px;
   color: #222;
   flex: 1;
 }

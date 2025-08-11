@@ -1,9 +1,9 @@
 <template>
   <div class="goal-form-container">
     <div class="page-header">
-      <h1 class="page-title">
+      <div style="font-size: 18px; font-weight: bold; color: #757575">
         {{ presetData?.goalName ? `${presetData.goalName} 설정` : '나의 목표' }}
-      </h1>
+      </div>
       <!-- 1억 모우기 프리셋일 때 특별한 아이콘 표시 -->
       <div v-if="presetData?.goalName === '1억 모으기'" class="billion-icon">
         <i class="fas fa-star"></i>

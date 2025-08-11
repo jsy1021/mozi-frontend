@@ -3,13 +3,13 @@
     <!-- 상단 타이틀 -->
     <div class="position-relative d-flex align-items-center mb-3">
       <!-- 타이틀 가운데 정렬 -->
-      <h4 class="fw-bold mb-0 title-center">추천</h4>
+      <div style="font-size: 18px; font-weight: bold; color: #757575; flex: 1; text-align: center;">추천</div>
     </div>
 
     <!-- 추천 인트로 -->
     <div class="p-3 rounded bg-light mb-3 text-center">
-      <p class="mb-1 fw-semibold">{{ userName }}님을 위한 맞춤 추천</p>
-      <small class="text-muted">목표와 프로필을 기반으로 추천을 제공합니다.</small>
+      <p class="mb-1 fw-semibold" style="font-size: 14px;">{{ userName }}님을 위한 맞춤 추천</p>
+      <small class="text-muted"style="font-size: 12px;">목표와 프로필을 기반으로 추천을 제공합니다.</small>
     </div>
 
     <!-- 추천 탭 -->

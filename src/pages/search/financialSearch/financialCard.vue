@@ -175,7 +175,6 @@ onMounted(() => {
 }
 .product-title {
   font-weight: bold;
-  font-size: 1.1rem;
   color: #222;
   flex: 1;
 }
