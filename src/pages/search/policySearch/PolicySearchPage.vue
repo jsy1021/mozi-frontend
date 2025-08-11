@@ -5,7 +5,9 @@
       <span class="back-btn" @click="goBack">
         <i class="fa-solid fa-angle-left"></i>
       </span>
-      <div style="font-size: 18px; font-weight: bold; color: #757575">정책 탐색</div>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">
+        정책 탐색
+      </div>
     </div>
 
     <!-- 검색창 + 필터 버튼 -->
@@ -185,7 +187,11 @@ const filteredList = computed(() => {
   if (kw) {
     list = list.filter((p) => {
       const fields = [p.plcyNm, p.plcyKywdNm, p.mclsfNm, p.lclsfNm];
-      return fields.some((v) => String(v || '').toLowerCase().includes(kw));
+      return fields.some((v) =>
+        String(v || '')
+          .toLowerCase()
+          .includes(kw)
+      );
     });
   }
 
@@ -237,8 +243,10 @@ const filteredList = computed(() => {
   // 학력
   if (
     filterState.value.education.length > 0 &&
-    !(filterState.value.education.length === 1 &&
-      filterState.value.education[0] === '0049010')
+    !(
+      filterState.value.education.length === 1 &&
+      filterState.value.education[0] === '0049010'
+    )
   ) {
     const selectedCodes = filterState.value.education;
     list = list.filter((p) => {
@@ -301,7 +309,12 @@ const filteredList = computed(() => {
       if (category === '교육') return lcl.includes('교육');
       if (category === '주거') return lcl.includes('주거');
       if (category === '문화') return lcl.includes('복지문화');
-      return !(lcl.includes('일자리') || lcl.includes('교육') || lcl.includes('주거') || lcl.includes('복지문화'));
+      return !(
+        lcl.includes('일자리') ||
+        lcl.includes('교육') ||
+        lcl.includes('주거') ||
+        lcl.includes('복지문화')
+      );
     });
   }
 
@@ -390,7 +403,14 @@ const summaryTags = computed(() => {
 
     const filteredList = list.filter(
       (label) =>
-        !['제한없음', '0055003', '0049010', '0013010', '0011009', '0014010'].includes(label)
+        ![
+          '제한없음',
+          '0055003',
+          '0049010',
+          '0013010',
+          '0011009',
+          '0014010',
+        ].includes(label)
     );
     if (filteredList.length === 0) continue;
 
@@ -422,24 +442,46 @@ const summaryTags = computed(() => {
 
 // 요약 태그 제거
 const removeTag = (tag) => {
-  if (tag.category === 'age') { customAge.value = ''; return; }
-  if (tag.category === 'income') { customIncome.value = ''; return; }
+  if (tag.category === 'age') {
+    customAge.value = '';
+    return;
+  }
+  if (tag.category === 'income') {
+    customIncome.value = '';
+    return;
+  }
 
   const reverseRegionMap = computed(() =>
-    Object.fromEntries(Object.entries(regionNameMap.value).map(([zip, name]) => [name, zip]))
+    Object.fromEntries(
+      Object.entries(regionNameMap.value).map(([zip, name]) => [name, zip])
+    )
   );
-  const reverseMaritalMap = Object.fromEntries(Object.entries(maritalStatusMap).map(([k,v]) => [v,k]));
-  const reverseEducationMap = Object.fromEntries(Object.entries(educationMap).map(([k,v]) => [v,k]));
-  const reverseEmploymentMap = Object.fromEntries(Object.entries(employmentMap).map(([k,v]) => [v,k]));
-  const reverseMajorMap = Object.fromEntries(Object.entries(majorMap).map(([k,v]) => [v,k]));
-  const reverseSpecialMap = Object.fromEntries(Object.entries(specialMap).map(([k,v]) => [v,k]));
+  const reverseMaritalMap = Object.fromEntries(
+    Object.entries(maritalStatusMap).map(([k, v]) => [v, k])
+  );
+  const reverseEducationMap = Object.fromEntries(
+    Object.entries(educationMap).map(([k, v]) => [v, k])
+  );
+  const reverseEmploymentMap = Object.fromEntries(
+    Object.entries(employmentMap).map(([k, v]) => [v, k])
+  );
+  const reverseMajorMap = Object.fromEntries(
+    Object.entries(majorMap).map(([k, v]) => [v, k])
+  );
+  const reverseSpecialMap = Object.fromEntries(
+    Object.entries(specialMap).map(([k, v]) => [v, k])
+  );
 
   const getValueToRemove = (label) => {
-    if (tag.category === 'region') return reverseRegionMap.value[label] || label;
+    if (tag.category === 'region')
+      return reverseRegionMap.value[label] || label;
     if (tag.category === 'age') return label.replace('대', '');
-    if (tag.category === 'maritalStatus') return reverseMaritalMap[label] || label;
-    if (tag.category === 'education') return reverseEducationMap[label] || label;
-    if (tag.category === 'employment') return reverseEmploymentMap[label] || label;
+    if (tag.category === 'maritalStatus')
+      return reverseMaritalMap[label] || label;
+    if (tag.category === 'education')
+      return reverseEducationMap[label] || label;
+    if (tag.category === 'employment')
+      return reverseEmploymentMap[label] || label;
     if (tag.category === 'major') return reverseMajorMap[label] || label;
     if (tag.category === 'special') return reverseSpecialMap[label] || label;
     return label;
@@ -448,31 +490,54 @@ const removeTag = (tag) => {
   if (tag.originalLabels) {
     tag.originalLabels.forEach((label) => {
       const v = getValueToRemove(label);
-      filterState.value[tag.category] = filterState.value[tag.category].filter((x) => x !== v);
+      filterState.value[tag.category] = filterState.value[tag.category].filter(
+        (x) => x !== v
+      );
     });
   } else {
     const v = getValueToRemove(tag.label);
-    filterState.value[tag.category] = filterState.value[tag.category].filter((x) => x !== v);
+    filterState.value[tag.category] = filterState.value[tag.category].filter(
+      (x) => x !== v
+    );
   }
 };
 
 // filterState 변경 → 세션 저장
-watch(filterState, (v) => {
-  sessionStorage.setItem('filterState', JSON.stringify(v));
-}, { deep: true });
+watch(
+  filterState,
+  (v) => {
+    sessionStorage.setItem('filterState', JSON.stringify(v));
+  },
+  { deep: true }
+);
 
 // 지역 코드 → 지역명 매핑
-watch(() => filterState.value.region, async (zipCodes) => {
-  if (!zipCodes || zipCodes.length === 0) return;
-  const names = await fetchRegionNamesByZipCodes(zipCodes);
-  regionNameMap.value = Object.fromEntries(zipCodes.map((z, i) => [z, names[i]]));
-}, { immediate: true });
+watch(
+  () => filterState.value.region,
+  async (zipCodes) => {
+    if (!zipCodes || zipCodes.length === 0) return;
+    const names = await fetchRegionNamesByZipCodes(zipCodes);
+    regionNameMap.value = Object.fromEntries(
+      zipCodes.map((z, i) => [z, names[i]])
+    );
+  },
+  { immediate: true }
+);
 
 // 초기 로딩
 onMounted(async () => {
   const saved = sessionStorage.getItem('filterState');
   if (saved) {
-    const EMPTY = { region: [], age: [], maritalStatus: [], income: [], education: [], employment: [], major: [], special: [] };
+    const EMPTY = {
+      region: [],
+      age: [],
+      maritalStatus: [],
+      income: [],
+      education: [],
+      employment: [],
+      major: [],
+      special: [],
+    };
     filterState.value = { ...EMPTY, ...JSON.parse(saved) };
   }
 
@@ -499,23 +564,35 @@ onMounted(async () => {
       }
       if (userProfile.value.age) customAge.value = userProfile.value.age;
 
-      const mrgSttsCode = getCodeFromEnum(MaritalStatusEnum, userProfile.value.marital_status);
+      const mrgSttsCode = getCodeFromEnum(
+        MaritalStatusEnum,
+        userProfile.value.marital_status
+      );
       if (mrgSttsCode) filterState.value.maritalStatus = [mrgSttsCode];
 
       if (userProfile.value.annual_income) {
         customIncome.value = String(userProfile.value.annual_income);
       }
 
-      const educationCode = getCodeFromEnum(EducationLevelEnum, userProfile.value.education_level);
+      const educationCode = getCodeFromEnum(
+        EducationLevelEnum,
+        userProfile.value.education_level
+      );
       if (educationCode) filterState.value.education = [educationCode];
 
-      const employmentCode = getCodeFromEnum(EmploymentStatusEnum, userProfile.value.employment_status);
+      const employmentCode = getCodeFromEnum(
+        EmploymentStatusEnum,
+        userProfile.value.employment_status
+      );
       if (employmentCode) filterState.value.employment = [employmentCode];
 
       const majorCode = getCodeFromEnum(MajorEnum, userProfile.value.major);
       if (majorCode) filterState.value.major = [majorCode];
 
-      const specialtyCode = getCodeFromEnum(SpecialtyEnum, userProfile.value.specialty);
+      const specialtyCode = getCodeFromEnum(
+        SpecialtyEnum,
+        userProfile.value.specialty
+      );
       if (specialtyCode) filterState.value.special = [specialtyCode];
     }
 
@@ -686,16 +763,16 @@ const onPolicyFilterReset = () => {
   .filter-tags {
     padding: 10px;
   }
-  
+
   .filter-tags-container {
     gap: 4px;
   }
-  
+
   .filter-tag {
     font-size: 11px;
     padding: 3px 6px;
   }
-  
+
   .filter-tag-remove {
     width: 14px;
     height: 14px;
