@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useBankStore } from '@/stores/bank';
+const bankStore = useBankStore();
+const bankList = bankStore.banks;
 
 const router = useRouter();
 
@@ -27,7 +30,7 @@ function toggleOptional() {
   optionalAgreeChecked.value = !optionalAgreeChecked.value;
 }
 
-// ✅ 모두 동의 함수
+// 모두 동의 함수
 function setAllAgree() {
   requiredAgreeChecked.value = true;
   optionalAgreeChecked.value = true;
@@ -35,106 +38,139 @@ function setAllAgree() {
 
 const showModal = ref(false);
 const modalContent = ref('');
+const modalType = ref('text'); // 'text' or 'bankList'
 
-function openModal(content) {
+const personalAgree = `
+<div class="modal-text">
+  <p>회사는 다음과 같이 개인정보를 수집·이용합니다.</p>
+  <ol>
+    <li>수집 항목
+      <ul>
+        <li>필수항목: 성명, 생년월일, 휴대전화번호, 계좌번호, 은행명, 잔액등</li>
+      </ul>
+    </li>
+    <li>수집·이용 목적
+      <ul>
+        <li>계좌 연동 서비스 제공</li>
+        <li>보유계좌 및 잔액 조회</li>
+      </ul>
+    </li>
+    <li>보유 및 이용기간
+      <ul>
+        <li>서비스 해지 또는 동의 철회 시까지</li>
+      </ul>
+    </li>
+    <li>동의 거부 권리 안내
+      <ul>
+        <li>이용자는 본 개인정보 수집·이용에 동의하지 않을 권리가 있으며, 동의하지 않을 경우 서비스 이용이 제한될 수 있습니다.</li>
+      </ul>
+    </li>
+  </ol>
+  </div>
+`;
+
+const personalInfoAgree = ` <div class="modal-text">
+    <table class="agree-table">
+  <thead>
+    <tr>
+      <th>정보 보내는 곳</th>
+      <th>정보 받는 곳</th>
+      <th>제공 목적</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>㈜모지(Mozi)</td>
+      <td>㈜헥토데이터</td>
+      <td>금융기관 계좌 연동을 위한 본인 인증</td>
+    </tr>
+    </tbody>
+    <thead>
+    <tr>
+      <th colspan="2">제공 항목</th>
+      <th>보유 및 이용 기간</th>
+    </tr>
+      </thead>
+      <tbody>
+    <tr>
+      <td colspan="2">금융기관 로그인 정보(아이디, 비밀번호)</td>
+      <td>MOzi: 로그인 정보 저장하지 않음<br/>CODEF: 약관·법령 및 운영정책에 따른 기간</td>
+    </tr>
+     </tbody>
+  
+</table>`;
+
+const connectedIDAgree = ` <div class="modal-text">
+    <table class="agree-table">
+  <thead>
+    <tr>
+      <th>정보 보내는 곳</th>
+      <th>정보 받는 곳</th>
+      <th>제공 목적</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>㈜헥토데이터</td>
+      <td>㈜모지(Mozi)</td>
+      <td>금융기관 인증 완료 사용자를 식별하고, 지속적인 계좌 조회를 위한 연동 유지</td>
+    </tr>
+    </tbody>
+    <thead>
+    <tr>
+      <th colspan="2">제공 항목</th>
+      <th>보유 및 이용 기간</th>
+    </tr>
+      </thead>
+      <tbody>
+    <tr>
+      <td colspan="2">connectedId</td>
+      <td>서비스 해지 또는 동의 철회 시까지</td>
+    </tr>
+     </tbody>
+  
+</table>`;
+
+const accountDataAgree = ` <div class="modal-text">
+    <table class="agree-table">
+  <thead>
+    <tr>
+      <th>정보 보내는 곳</th>
+      <th>정보 받는 곳</th>
+      <th>제공 목적</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>귀하가 선택한 금융기관</td>
+      <td>㈜헥토데이터, ㈜모지(Mozi)</td>
+      <td>보유계좌 및 잔액 조회</td>
+    </tr>
+    </tbody>
+    <thead>
+    <tr>
+      <th colspan="2">제공 항목</th>
+      <th>보유 및 이용 기간</th>
+    </tr>
+      </thead>
+      <tbody>
+    <tr>
+      <td colspan="2">계좌목록 정보(계좌번호, 계좌명, 상품종류, 잔액 등</td>
+      <td>서비스 해지 또는 동의 철회 시까지</td>
+    </tr>
+     </tbody>
+  
+</table>`;
+
+function openModal(content, type = 'text') {
   modalContent.value = content;
+  modalType.value = type;
   showModal.value = true;
 }
 
 function closeModal() {
   showModal.value = false;
 }
-
-// ✅ 약관 텍스트들
-const termsOfService = `제1조(목적)
-본 약관은 [회사명] (이하 "회사")이 제공하는 [서비스명] (이하 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
-
-제2조(이용계약의 성립)
-1. 이용계약은 이용자가 본 약관에 동의하고, 회사가 이를 승낙함으로써 성립합니다.
-2. 회사는 서비스의 기술적·운영상의 이유로 가입 승낙을 유보하거나 거절할 수 있습니다.
-
-제3조(이용자의 의무)
-이용자는 다음 각 호의 행위를 하여서는 안 됩니다.
-1. 허위 정보 등록 또는 타인의 정보 도용
-2. 회사 서비스의 운영을 방해하는 행위
-3. 회사의 지적재산권 등 권리를 침해하는 행위
-
-제4조(회사의 의무)
-회사는 관련 법령과 본 약관이 정하는 바에 따라 서비스를 안정적으로 제공하기 위해 최선을 다합니다.
-
-제5조(서비스 이용의 제한 및 해지)
-회사는 이용자가 본 약관을 위반하거나, 서비스 운영을 방해하는 경우 사전 통지 없이 이용계약을 해지하거나 이용을 제한할 수 있습니다.
-
-제6조(면책조항)
-1. 회사는 천재지변, 정전, 통신장애 등 불가항력 사유로 인해 서비스를 제공할 수 없는 경우 책임을 지지 않습니다.
-2. 회사는 이용자의 귀책사유로 인한 서비스 이용 장애에 대해 책임을 지지 않습니다.
-
-제7조(약관의 변경)
-회사는 본 약관을 변경할 수 있으며, 변경된 약관은 공지사항을 통해 사전 고지합니다. 변경된 약관에 동의하지 않을 경우 이용자는 서비스 이용을 중단할 수 있습니다.
-
-제8조(준거법 및 재판관할)
-본 약관은 대한민국 법령에 따라 해석되며, 본 서비스와 관련된 분쟁은 회사 본사 소재지를 관할하는 법원을 제1심 관할법원으로 합니다.
-`;
-
-const personalAgree = `회사는 다음과 같이 개인정보를 수집·이용합니다.
-
-1. 수집 항목
-- 필수항목: 성명, 생년월일, 휴대전화번호, 계좌번호, 은행명
-
-2. 수집·이용 목적
-- 계좌 연동 서비스 제공
-- 본인 확인 및 고객 문의 응대
-- 전자금융거래 기록 보관
-
-3. 보유 및 이용기간
-- 회원 탈퇴 시 또는 수집 목적 달성 시까지
-(단, 관련 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관함)
-
-4. 동의 거부 권리 안내
-- 이용자는 본 개인정보 수집·이용에 동의하지 않을 권리가 있으며, 동의하지 않을 경우 서비스 이용이 제한될 수 있습니다.
-`;
-
-const AnotherpersonalAgree = `회사는 서비스 제공을 위해 아래와 같이 개인정보를 제3자에게 제공합니다.
-
-1. 제공받는 자
-- 계좌 연동 대상 금융기관, 제휴기관
-
-2. 제공 항목
-- 성명, 생년월일, 계좌번호, 은행명
-
-3. 제공 목적
-- 계좌정보 연동 및 본인 확인
-
-4. 보유 및 이용기간
-- 제공 목적 달성 시까지
-
-5. 동의 거부 권리 안내
-- 이용자는 제3자 제공에 대한 동의를 거부할 권리가 있으며, 동의하지 않을 경우 일부 서비스 이용이 제한될 수 있습니다.
-`;
-
-const MtermsOfService = `본 약관은 회사가 제공하는 마케팅 정보 및 광고성 정보 수신과 관련된 이용자의 권리 및 의무를 규정합니다.
-
-이용자는 동의를 통해 SMS, 이메일, 앱 푸시 등 다양한 채널로 광고, 이벤트, 할인정보 등을 수신할 수 있습니다.
-
-동의는 선택사항이며, 동의하지 않더라도 서비스 이용에는 제한이 없습니다.
-
-이용자는 언제든지 수신 거부를 할 수 있으며, 수신 거부 시 즉시 마케팅 정보 제공이 중단됩니다.`;
-
-const MpersonalAgree = `회사는 마케팅 정보 제공을 위해 이름, 연락처(휴대폰 번호, 이메일), 서비스 이용 기록 등의 개인정보를 수집·이용합니다.
-
-수집된 개인정보는 마케팅 목적 외 다른 용도로 사용되지 않습니다.
-
-개인정보 보유 및 이용 기간은 동의 철회 시까지이며, 관련 법령에 따라 별도로 보관할 수 있습니다.
-
-이용자는 개인정보 수집 및 이용에 대해 동의를 거부할 권리가 있으나, 이 경우 마케팅 정보 수신은 제한됩니다.`;
-
-const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관련 제3자에게 이용자의 개인정보를 제공할 수 있습니다.
-
-제공되는 정보는 이름, 연락처, 마케팅 수신 동의 여부 등 최소한의 정보에 한합니다.
-
-제3자 제공 목적은 맞춤형 광고, 프로모션 안내 등이며, 제공 기간 및 수단은 계약에 따라 관리됩니다.
-
-이용자는 제3자 제공 동의를 거부할 수 있으며, 이 경우 일부 마케팅 혜택이 제한될 수 있습니다.`;
 </script>
 
 <template>
@@ -156,7 +192,7 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
         </p>
       </div>
 
-      <!-- ✅ 모두 동의 버튼 수정 -->
+      <!-- 모두 동의 버튼 -->
       <div>
         <button class="TotalAgreeCard-btn" @click="setAllAgree">
           약관에 모두 동의
@@ -170,27 +206,21 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
             class="fa-solid fa-check"
             :style="{ color: requiredAgreeChecked ? '#2e8b57' : '#d9d9d9' }"
           ></i>
-          <p class="agree-title">MoZi 필수 항목 모두 동의</p>
+          <p class="agree-title">개인(신용)정보 수집·이용 동의 [필수]</p>
         </div>
         <div class="agree-item-row">
-          <p class="agree-item">서비스 이용약관</p>
+          <p class="agree-item">정보를 보내는 곳: 12개 은행</p>
           <i
             class="fa-solid fa-angle-right"
-            @click="openModal(termsOfService)"
+            @click="openModal(bankList, 'bankList')"
           ></i>
         </div>
+
         <div class="agree-item-row">
-          <p class="agree-item">개인정보 수집이용 동의</p>
+          <p class="agree-item">개인정보 수집·이용 동의</p>
           <i
             class="fa-solid fa-angle-right"
             @click="openModal(personalAgree)"
-          ></i>
-        </div>
-        <div class="agree-item-row">
-          <p class="agree-item">개인정보 제 3자 제공 동의</p>
-          <i
-            class="fa-solid fa-angle-right"
-            @click="openModal(AnotherpersonalAgree)"
           ></i>
         </div>
       </div>
@@ -202,27 +232,27 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
             class="fa-solid fa-check"
             :style="{ color: optionalAgreeChecked ? '#2e8b57' : '#d9d9d9' }"
           ></i>
-          <p class="agree-title">마케팅 정보 수신 동의(선택)</p>
+          <p class="agree-title">개인(신용)정보 제3자 제공 동의 [필수]</p>
         </div>
         <div class="agree-item-row">
-          <p class="agree-item">서비스 이용약관</p>
+          <p class="agree-item">본인인증 정보 제공 동의</p>
           <i
             class="fa-solid fa-angle-right"
-            @click="openModal(MtermsOfService)"
+            @click="openModal(personalInfoAgree)"
           ></i>
         </div>
         <div class="agree-item-row">
-          <p class="agree-item">개인정보 수집이용 동의</p>
+          <p class="agree-item">연결 식별자(connectedId) 제공 동의</p>
           <i
             class="fa-solid fa-angle-right"
-            @click="openModal(MpersonalAgree)"
+            @click="openModal(connectedIDAgree)"
           ></i>
         </div>
         <div class="agree-item-row">
-          <p class="agree-item">개인정보 제 3자 제공 동의</p>
+          <p class="agree-item">계좌데이터 제공 동의</p>
           <i
             class="fa-solid fa-angle-right"
-            @click="openModal(MAnotherpersonalAgree)"
+            @click="openModal(accountDataAgree)"
           ></i>
         </div>
       </div>
@@ -245,25 +275,35 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-scroll">
-        <pre>{{ modalContent }}</pre>
+        <template v-if="modalType === 'bankList'">
+          <ul class="bank-list">
+            <li v-for="bank in bankList" :key="bank.code" class="bank-item">
+              <img :src="bank.logo" alt="" class="bank-logo" />
+              <span class="bank-name">{{ bank.name }}</span>
+            </li>
+          </ul>
+        </template>
+        <template v-else>
+          <div v-html="modalContent"></div>
+        </template>
       </div>
       <button @click="closeModal" class="modal-botton">닫기</button>
     </div>
   </div>
 </template>
 
-<style scoped>
+<style>
 .wrapper {
+  position: relative;
   display: flex;
-  justify-content: center; /* 가로 중앙 정렬 */
-  /* align-items: center;세로 중앙 정렬 */
-  height: 700px; /* 화면 전체 높이 */
+  justify-content: center;
+  height: 700px;
   background-color: #f8f8f8;
 }
 
 .content {
   text-align: center;
-  width: 300px; /* 원하는 카드 너비로 지정 */
+  width: 300px;
   margin: 0 auto;
 }
 
@@ -273,12 +313,11 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   align-items: center;
   justify-content: center;
   margin: 20px 0 65px 0;
-  /* gap: 100px; 버튼과 h1 사이 간격 */
 }
 
 .back-btn {
   position: absolute;
-  left: 0px; /*뒤로가기 버튼 위치 조정*/
+  left: 0px;
   top: 50%;
   transform: translateY(-50%);
   color: #a0a0a0;
@@ -286,20 +325,19 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   margin-top: -4px;
   cursor: pointer;
 }
-.header-row h1 {
-  margin: 40px auto;
-}
-/* style 부분 */
+
 .agree-list {
   text-align: left;
   margin-top: 30px;
   width: 100%;
 }
+
 .agree-title-row {
   display: flex;
   align-items: center;
-  gap: 8px; /* 제목과 체크박스 사이 간격 */
+  gap: 8px;
 }
+
 .agree-title {
   font-size: 15px;
   font-weight: 500;
@@ -328,13 +366,13 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
 }
 
 .modal-overlay {
-  position: fixed;
-  font-size: 7px;
+  position: absolute; /* fixed → absolute 변경 */
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -345,20 +383,72 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   background: white;
   padding: 20px;
   border-radius: 10px;
-  width: 70%;
+  width: 90%;
   max-width: 400px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   text-align: left;
-  max-height: 80vh; /* 화면 높이 제한 */
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
 }
+
 .modal-scroll {
   overflow-y: auto;
   flex-grow: 1;
   margin-bottom: 16px;
-  max-height: 60vh; /* 실제 스크롤되는 영역의 높이 제한 */
-  padding-right: 6px; /* 스크롤바 공간 */
+  max-height: 60vh;
+  padding-right: 6px;
+}
+
+.bank-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bank-logo {
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+}
+.bank-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #585858;
+}
+.modal-text {
+  font-size: 12px;
+  color: #333;
+  line-height: 1.5;
+}
+.modal-text ol {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+.modal-text ul {
+  margin-left: -10px;
+  margin-bottom: 10px;
+}
+
+.modal-text li {
+  margin-bottom: 6px;
+}
+
+.agree-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+  color: #333;
+}
+.agree-table th,
+.agree-table td {
+  border: 1px solid #ccc;
+  padding: 12px;
+  text-align: left;
+}
+.agree-table thead {
+  background-color: #f0f0f0;
+  font-weight: 600;
 }
 
 /* 모두 동의 카드 스타일 버튼 */
@@ -366,7 +456,6 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   font-size: 13px;
   font-weight: 450;
   color: #36c18c;
-
   display: block;
   width: 100%;
   margin: 20px 0 0 0;
@@ -379,9 +468,9 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   transition: box-shadow 0.2s;
 }
 .TotalAgreeCard-btn:active {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* 그림자 작게, 눌린 느낌 */
-  background: #e0e0e0; /* 배경색 살짝 어둡게 */
-  transform: scale(0.98); /* 버튼이 살짝 작아짐 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  background: #e0e0e0;
+  transform: scale(0.98);
   transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
 
@@ -393,7 +482,6 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   padding: 10px 0;
   border-radius: 4px;
   border: 0 solid white;
-  /* background: #36c18c; */
   color: #ffffff;
   box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
   font-size: 16px;
@@ -401,9 +489,9 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   transition: box-shadow 0.2s;
 }
 .Agreecard-btn:active {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* 그림자 작게, 눌린 느낌 */
-  background: #bdbdbd; /* 더 어둡게 */
-  transform: scale(0.98); /* 살짝 작아짐 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  background: #bdbdbd;
+  transform: scale(0.98);
   transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
 
@@ -412,7 +500,6 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   font-size: 13px;
   font-weight: 450;
   color: #ffff;
-
   display: block;
   width: 100%;
   margin: 0px 0 0 0;
@@ -425,9 +512,9 @@ const MAnotherpersonalAgree = `회사는 광고주, 제휴사 등 마케팅 관�
   transition: box-shadow 0.2s;
 }
 .modal-botton:active {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); /* 그림자 작게, 눌린 느낌 */
-  background: #36c18c; /* 배경색 살짝 어둡게 */
-  transform: scale(0.98); /* 버튼이 살짝 작아짐 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  background: #36c18c;
+  transform: scale(0.98);
   transition: box-shadow 0.1s, background 0.1s, transform 0.1s;
 }
 </style>
