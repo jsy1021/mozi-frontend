@@ -4,7 +4,6 @@ import RecommendCard from './RecommendCard.vue';
 import { useRoute } from 'vue-router';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
-
 import FinancialRecommendCard from './FinancialRecommendCard.vue';
 import PolicyRecommendCard from './PolicyRecommendCard.vue';
 
@@ -18,22 +17,31 @@ const props = defineProps({
   },
 });
 
+const isPolicyLoading = ref(false);
+
 console.log(typeof props.goalId);
 </script>
 
 <template>
-
   <!-- <div> -->
   <div class="goal-recommend">
     <!-- 정책 -->
     <div class="policy" style="margin-bottom: 0; padding-bottom: 0">
       <div class="card-top">
-        <div class="card-title" style="margin-top: 8px;">
+        <div class="card-title" style="margin-top: 8px">
           <p>맞춤형 정책 제안</p>
         </div>
       </div>
       <!-- 정책 카드 -->
-      <PolicyRecommendCard :goal-id="props.goalId" />
+      <div class="card-slot">
+        <div v-show="isPolicyLoading" class="loading-overlay">
+          <div class="spinner"></div>
+        </div>
+        <PolicyRecommendCard
+          :goal-id="props.goalId"
+          @loading="isPolicyLoading = $event"
+        />
+      </div>
     </div>
 
     <!-- 금융 -->
@@ -119,7 +127,6 @@ console.log(typeof props.goalId);
   font-size: 14px;
 }
 
-
 /* 정책 섹션*/
 .policy {
   position: relative;
@@ -192,5 +199,38 @@ console.log(typeof props.goalId);
 .plusbtn a:focus {
   outline: 2px solid #36c18c;
   outline-offset: 2px;
+}
+
+/* 정책 로딩 스피너 */
+.card-slot {
+  position: relative;
+  min-height: 160px;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(0, 0, 0, 0.12);
+  border-top-color: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
