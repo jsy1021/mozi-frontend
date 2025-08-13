@@ -65,18 +65,16 @@ const loadGoalData = async () => {
     }
 
     // 3. GoalForm 컴포넌트 형식에 맞게 데이터 변환
+    // 목표 데이터 로드 시 날짜 변환 수정
     goalData.value = {
       id: goal.goalId,
       name: goal.goalName,
       targetAmount: goal.targetAmount,
-      currentAmount: currentAmount, // 계좌 잔액 합계로 설정
-      // 날짜 포맷 변환: "yyyy-MM-dd HH:mm:ss" -> "yyyy-MM-dd"
-      targetDate: goal.goalDate
-        ? goal.goalDate.split(' ')[0].split('T')[0]
-        : '',
+      currentAmount: currentAmount,
+      // 날짜 포맷 변환 수정
+      targetDate: goal.goalDate ? goal.goalDate.split(' ')[0] : '',
       keyword: goal.keyword,
       memo: goal.memo,
-      //수정: accountNumber 배열로 전달
       selectedAccountNumbers: linkedAccounts.map(
         (account) => account.accountNumber
       ),
@@ -99,7 +97,7 @@ const handleUpdateGoal = async (formData) => {
     const goalPayload = {
       goalName: formData.goalName,
       targetAmount: formData.targetAmount,
-      goalDate: formData.goalDate,
+      goalDate: formData.goalDate, // "YYYY-MM-DD HH:mm:ss" 형식
       keyword: formData.keyword,
       memo: formData.memo,
     };

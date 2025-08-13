@@ -117,13 +117,34 @@ export default {
     return {
       ...goalData,
       goalDate: goalData.goalDate
-        ? new Date(goalData.goalDate)
-            .toISOString()
-            .slice(0, 19)
-            .replace('T', ' ')
+        ? this.formatDateForBackend(goalData.goalDate)
         : null,
       targetAmount: parseFloat(goalData.targetAmount || 0),
     };
+  },
+  // 날짜 포맷팅 헬퍼 메서드 추가
+  formatDateForBackend(dateValue) {
+    if (!dateValue) return null;
+
+    // dateValue가 이미 "YYYY-MM-DD HH:mm:ss" 형식이면 그대로 반환
+    if (typeof dateValue === 'string' && dateValue.includes(' ')) {
+      return dateValue;
+    }
+
+    // "YYYY-MM-DD" 형식이면 시간 추가
+    if (typeof dateValue === 'string' && dateValue.length === 10) {
+      return `${dateValue} 23:59:59`;
+    }
+
+    // Date 객체인 경우 로컬 시간대로 포맷팅
+    if (dateValue instanceof Date) {
+      const year = dateValue.getFullYear();
+      const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+      const day = String(dateValue.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day} 23:59:59`;
+    }
+
+    return null;
   },
 
   // 목표 키워드 한글 변환
