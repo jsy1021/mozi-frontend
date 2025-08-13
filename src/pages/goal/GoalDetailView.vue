@@ -1228,6 +1228,13 @@ function getDDay(dateStr) {
   transition: all 0.2s ease;
 }
 
+/* 메모 -> 박스 안에 다 들어오도록 설정 */
+.goal-memo .txt {
+  word-wrap: break-word; /* 단어 단위로 줄바꿈 */
+  word-break: break-all; /* 글자 단위로 줄바꿈 */
+  white-space: normal;   /* 공백과 줄바꿈을 정상 처리 */
+}
+
 .goal-date-target:hover,
 .goal-memo:hover,
 .goal-account:hover {
