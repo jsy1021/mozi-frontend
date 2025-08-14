@@ -4,7 +4,7 @@ import { ref, onMounted, watch } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faCircleUser } from '@fortawesome/free-regular-svg-icons';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useRoute, useRouter } from 'vue-router';
 import { computed } from 'vue';
 
@@ -22,7 +22,7 @@ const router = useRouter();
 const personalForm = ref(null);
 const canSubmit = computed(() => passwordInput.value.trim() !== '');
 
-library.add(faCircleUser, faXmark);
+library.add(faCircleUser, faXmark, faPen, faTrash);
 
 console.log('현재 라우트 경로:', route.path);
 
@@ -95,9 +95,7 @@ onMounted(async () => {
         email: result.email,
       };
 
-      personalForm.value = result.has_personal_info
-        ? result.personal_info
-        : null;
+      personalForm.value = result.has_personal_info ? result.personal_info : null;
 
       console.log('📦 personalForm:', personalForm.value);
     } else {
@@ -107,6 +105,11 @@ onMounted(async () => {
     console.error('마이페이지 요청 오류:', e);
   }
 });
+
+//탈퇴 페이지로 이동
+function deleteAccount() {
+  router.push({ name: 'DeleteInfo' });
+}
 </script>
 
 <template>
@@ -116,28 +119,13 @@ onMounted(async () => {
       <div class="modal">
         <div class="modal-header">
           <h3>비밀번호 확인</h3>
-          <font-awesome-icon
-            :icon="['fas', 'xmark']"
-            class="close-icon"
-            @click="closeModal"
-          />
+          <font-awesome-icon :icon="['fas', 'xmark']" class="close-icon" @click="closeModal" />
         </div>
         <p class="desc">정보 수정을 위해 비밀번호를 입력해주세요</p>
-        <input
-          v-model="passwordInput"
-          type="password"
-          placeholder="비밀번호 입력"
-          class="pw-input"
-        />
+        <input v-model="passwordInput" type="password" placeholder="비밀번호 입력" class="pw-input" />
         <div v-if="passwordError" class="error-msg">{{ passwordError }}</div>
         <div class="btn-group">
-          <button
-            @click="verifyPassword"
-            :disabled="!canSubmit"
-            :class="{ 'disabled-btn': !canSubmit }"
-          >
-            확인
-          </button>
+          <button @click="verifyPassword" :disabled="!canSubmit" :class="{ 'disabled-btn': !canSubmit }">확인</button>
         </div>
       </div>
     </div>
@@ -148,10 +136,19 @@ onMounted(async () => {
       <div class="info-card">
         <div class="info-header">
           <h3>기본 정보</h3>
-          <button class="edit-btn" @click="openPasswordModal">
-            <font-awesome-icon :icon="['fas', 'pen']" class="edit-icon" />
-            수정
-          </button>
+          <div class="btn-wrapper">
+            <!-- 배경 있는 버전 -->
+            <!-- <button class="edit-btn" @click="openPasswordModal">
+              <font-awesome-icon :icon="['fas', 'pen']" class="edit-icon" />
+            </button>
+            <button class="delete-btn" @click="deleteAccount">
+              <font-awesome-icon :icon="['fas', 'trash']" />
+            </button> -->
+
+            <!-- 배경 없는 버전 -->
+            <font-awesome-icon :icon="['fas', 'pen']" class="icon edit-icon" @click="openPasswordModal" />
+            <font-awesome-icon :icon="['fas', 'trash']" class="icon delete-icon" @click="deleteAccount" />
+          </div>
         </div>
         <div class="user-info-row">
           <div class="avatar">
@@ -181,9 +178,7 @@ onMounted(async () => {
           <div class="grid">
             <div class="item">
               <span class="label">관심지역</span>
-              <span class="value">{{
-                REGION_LABELS[personalForm.region] || personalForm.region
-              }}</span>
+              <span class="value">{{ REGION_LABELS[personalForm.region] || personalForm.region }}</span>
             </div>
             <div class="item">
               <span class="label">연령</span>
@@ -192,8 +187,7 @@ onMounted(async () => {
             <div class="item">
               <span class="label">혼인여부</span>
               <span class="value">{{
-                MARITAL_STATUS_LABELS[personalForm.marital_status] ||
-                personalForm.marital_status
+                MARITAL_STATUS_LABELS[personalForm.marital_status] || personalForm.marital_status
               }}</span>
             </div>
             <div class="item">
@@ -203,44 +197,30 @@ onMounted(async () => {
             <div class="item">
               <span class="label">학력</span>
               <span class="value">{{
-                EDUCATION_LEVEL_LABELS[personalForm.education_level] ||
-                personalForm.education_level
+                EDUCATION_LEVEL_LABELS[personalForm.education_level] || personalForm.education_level
               }}</span>
             </div>
             <div class="item">
               <span class="label">취업상태</span>
               <span class="value">{{
-                EMPLOYMENT_STATUS_LABELS[personalForm.employment_status] ||
-                personalForm.employment_status
+                EMPLOYMENT_STATUS_LABELS[personalForm.employment_status] || personalForm.employment_status
               }}</span>
             </div>
             <div class="item">
               <span class="label">전공</span>
-              <span class="value">{{
-                MAJOR_LABELS[personalForm.major] || personalForm.major
-              }}</span>
+              <span class="value">{{ MAJOR_LABELS[personalForm.major] || personalForm.major }}</span>
             </div>
             <div class="item">
               <span class="label">특화분야</span>
-              <span class="value">{{
-                SPECIALTY_LABELS[personalForm.specialty] ||
-                personalForm.specialty
-              }}</span>
+              <span class="value">{{ SPECIALTY_LABELS[personalForm.specialty] || personalForm.specialty }}</span>
             </div>
           </div>
-          <button class="edit-btn" @click="router.push({ name: 'personal' })">
-            퍼스널 정보 수정
-          </button>
+          <button class="edit-btn" @click="router.push({ name: 'personal' })">퍼스널 정보 수정</button>
         </template>
         <template v-else>
           <h3>퍼스널 정보</h3>
-          <p class="desc">
-            설정하신 개인정보 및 관심사항을 기반으로<br />맞춤 정책을
-            제공합니다.
-          </p>
-          <button class="save-btn" @click="router.push('/user/personal')">
-            퍼스널 정보 입력
-          </button>
+          <p class="desc">설정하신 개인정보 및 관심사항을 기반으로<br />맞춤 정책을 제공합니다.</p>
+          <button class="save-btn" @click="router.push('/user/personal')">퍼스널 정보 입력</button>
         </template>
       </div>
     </div>
@@ -331,6 +311,11 @@ html {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 /* 기본 정보 수정 버튼 스타일 */
+.btn-wrapper {
+  display: flex;
+  gap: 10px; /* 버튼 간격 */
+  align-items: center;
+}
 .info-card .edit-btn {
   display: flex;
   align-items: center;
@@ -338,6 +323,19 @@ html {
   padding: 6px 12px;
   font-size: 13px;
   background-color: #36c18c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.info-card .delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  background-color: #ff4d4f;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -353,8 +351,23 @@ html {
   transform: scale(0.97);
 }
 
-.edit-icon {
+.info-card .delete-btn:hover {
+  background-color: #d9363e;
+}
+
+.info-card .delete-btn:active {
+  transform: scale(0.97);
+}
+.icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  color: #111;
 }
 
 .info-header {
