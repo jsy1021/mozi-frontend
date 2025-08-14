@@ -94,7 +94,13 @@ const handlePromptNeverShow = () => {
 };
 
 function goToAccountAuth() {
-  router.push('/account/AccountAgreementPage');
+  router.push({
+    path: '/account/AccountAgreementPage',
+    query: {
+      mode: 'first',
+      redirect: route.fullPath, // 돌아갈 곳 저장(메인 or 요약)
+    },
+  });
 }
 
 function goToTotalPage() {
@@ -341,7 +347,7 @@ watch(
   <!-- 계좌 정보 -->
   <div style="display: flex">
     <p style="margin: 10px 10px 0px 25px; color: #6b7684; font-weight: bolder">
-      자산
+      나의 자산
     </p>
     <i
       class="fa-solid fa-angle-right fa-sm"
@@ -353,7 +359,7 @@ watch(
   <div style="margin: 0px 20px; padding-top: 10px">
     <div v-if="isUnlinked" class="card card-unlinked">
       <div class="card-text">연동시 더 많은 기능을 이용할 수 있어요!</div>
-      <button class="card-btn" @click="goToAccountAuth">계좌연동</button>
+      <button class="card-btn" @click="goToAccountAuth">계좌 연동</button>
     </div>
 
     <div v-else-if="bankSummaryList" class="card">
@@ -363,6 +369,7 @@ watch(
           align-items: center;
           justify-content: space-between;
           height: 100%;
+          min-width: 0;
         "
       >
         <img
@@ -370,7 +377,9 @@ watch(
           alt="은행 로고"
           style="height: 47px; margin: 0"
         />
-        <div style="text-align: left; margin: 20px 0 25px -80px">
+        <div
+          style="text-align: left; margin-left: 12px; flex: 1 1 0; min-width: 0"
+        >
           <div style="font-size: 16px; font-weight: 500; margin-bottom: -3px">
             {{
               bankSummaryList?.totalBalance
@@ -391,7 +400,8 @@ watch(
             <!-- 계좌명만 말줄임 -->
             <span
               style="
-                max-width: 90px; /* 카드 폭에 맞게 조절 */
+                flex: 0 1 auto;
+                min-width: 0; /* 카드 폭에 맞게 조절 */
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -402,7 +412,9 @@ watch(
             </span>
 
             <!-- 외 N개 계좌는 항상 보이게 -->
-            <span> 외 {{ (bankSummaryList?.accountCount || 1) - 1 }}개 </span>
+            <span style="flex: 0 0 auto">
+              외 {{ (bankSummaryList?.accountCount || 1) - 1 }}개
+            </span>
           </div>
         </div>
         <div

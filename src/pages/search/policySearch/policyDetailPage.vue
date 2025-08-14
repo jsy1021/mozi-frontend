@@ -6,7 +6,9 @@
         <span class="back-btn" @click="goBack">
           <i class="fa-solid fa-angle-left"></i>
         </span>
-        <h4 class="page-title">정책 상세 정보</h4>
+        <div style="font-size: 18px; font-weight: bold; color: #757575">
+          정책 상세 정보
+        </div>
       </div>
     </div>
 
@@ -75,11 +77,11 @@
           </div>
           <div class="info-row">
             <span class="label">신청기간</span>
-            <span>{{ policy.aplyYmd }}</span>
+            <span>{{ formatAplyPeriod(policy.aplyYmd) }}</span>
           </div>
           <div class="info-row">
             <span class="label">지원 규모(명)</span>
-            <span>{{ policy.sprtSclCnt }}</span>
+            <span>{{ displayOrDash(policy.sprtSclCnt) }}</span>
           </div>
         </div>
       </section>
@@ -90,15 +92,37 @@
         <div class="info-list">
           <div class="info-row">
             <span class="label">연령</span>
-            <span
-              >{{ policy.sprtTrgtMinAge }}세 ~
-              {{ policy.sprtTrgtMaxAge }}세</span
-            >
+            <span>{{
+              formatAgeRange(policy.sprtTrgtMinAge, policy.sprtTrgtMaxAge)
+            }}</span>
           </div>
           <div class="info-row">
             <span class="label">거주지역</span>
-            <span>{{ formatZipCode() }}</span>
+            <div class="region-text-groups">
+              <div
+                v-for="g in groupedRegions"
+                :key="g.sido"
+                class="region-text-group"
+              >
+                <div class="sido-line">
+                  <span class="sido-badge">{{ g.sido }}</span>
+                  <button
+                    v-if="
+                      groupedRegions.length > 1 && g.guguns.length > MAX_GUGUNS
+                    "
+                    class="toggle"
+                    @click="toggleSido(g.sido)"
+                  >
+                    {{ isExpanded(g.sido) ? '접기' : '펼치기' }}
+                  </button>
+                </div>
+                <div class="gugun-line">
+                  {{ joinGuguns(g.sido, g.guguns) }}
+                </div>
+              </div>
+            </div>
           </div>
+
           <div class="info-row">
             <span class="label">소득</span>
             <span>{{ convertLabel(policy.earnCndSeCd, 'income') }}</span>
@@ -140,7 +164,7 @@
           </div>
           <div class="info-row">
             <span class="label">참여 제한 대상</span>
-            <span>{{ policy.ptcpPrpTrgtCn }}</span>
+            <span>{{ displayOrDash(policy.ptcpPrpTrgtCn) }}</span>
           </div>
         </div>
       </section>
@@ -150,36 +174,44 @@
         <h2>신청 방법</h2>
         <div class="info-row">
           <span class="label">신청 방법</span>
-          <span>{{ policy.plcyAplyMthdCn }}</span>
+          <span>{{ displayOrDash(policy.plcyAplyMthdCn) }}</span>
         </div>
         <div class="info-row">
           <span class="label">심사 내용</span>
-          <span>{{ policy.srngMthdCn }}</span>
+          <span>{{ displayOrDash(policy.srngMthdCn) }}</span>
         </div>
 
         <div class="info-row">
           <span class="label">신청 URL</span>
-          <p class="link">
+          <template v-if="policy.aplyUrlAddr">
             <a
+              class="btn btn-primary"
               :href="policy.aplyUrlAddr"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {{ policy.aplyUrlAddr }}
+              신청하러 가기
             </a>
-          </p>
+          </template>
+          <template v-else>
+            <span class="value">-</span>
+          </template>
         </div>
         <div class="info-row">
           <span class="label">참고 URL</span>
-          <p class="link">
+          <template v-if="policy.refUrlAddr1">
             <a
-              :href="policy.aplyUrlAddr"
+              class="btn btn-secondary"
+              :href="policy.refUrlAddr1"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {{ policy.refUrlAddr1 }}
+              자세히 보기
             </a>
-          </p>
+          </template>
+          <template v-else>
+            <span class="value">-</span>
+          </template>
         </div>
       </section>
     </main>
@@ -187,7 +219,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import policyApi from '@/api/policyApi';
 import { fetchRegionNamesByZipCodes } from '@/api/regionApi';
@@ -256,6 +288,75 @@ const toggleScrap = async () => {
   }
 };
 
+const toDotDate = (s) => {
+  if (!s) return '';
+  const digits = String(s).replace(/\D/g, '');
+  if (digits.length === 8)
+    return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6, 8)}`;
+  if (digits.length === 6) return `${digits.slice(0, 4)}.${digits.slice(4, 6)}`;
+  return String(s).replace(/[\/\-]/g, '.');
+};
+
+const formatAplyPeriod = (raw) => {
+  const s = String(raw ?? '').trim();
+  if (!s) return '-';
+  if (/상시/i.test(s)) return '상시';
+  const parts = s.split(/\s*(?:~|–|—|to)\s*/i).filter(Boolean);
+  if (parts.length === 2)
+    return `${toDotDate(parts[0])} ~ ${toDotDate(parts[1])}`;
+  return toDotDate(s);
+};
+
+const formatAgeRange = (min, max) => {
+  // 둘 다 숫자 0이면 "누구나"
+  if ((Number(min) || 0) === 0 && (Number(max) || 0) === 0) {
+    return '누구나';
+  }
+  return `${min ?? '-'}세 ~ ${max ?? '-'}세`;
+};
+
+// 데이터 없을 때 '-'로 대체
+const displayOrDash = (val) => {
+  if (val === null || val === undefined) return '-';
+  if (typeof val === 'string' && val.trim() === '') return '-';
+  return val;
+};
+
+const MAX_GUGUNS = 5; // 기본으로 보여줄 개수
+const expanded = ref({});
+
+const isExpanded = (sido) => !!expanded.value[sido];
+const toggleSido = (sido) => (expanded.value[sido] = !expanded.value[sido]);
+
+const groupedRegions = computed(() => {
+  const list = regionNames.value || [];
+  const map = new Map();
+
+  list.forEach((full) => {
+    const parts = String(full).trim().split(/\s+/);
+    if (parts.length < 2) return;
+    const sido = parts[0];
+    const gugun = parts.slice(1).join(' ');
+    if (!map.has(sido)) map.set(sido, new Set());
+    map.get(sido).add(gugun);
+  });
+
+  return Array.from(map.entries()).map(([sido, set]) => ({
+    sido,
+    guguns: Array.from(set),
+  }));
+});
+
+const joinGuguns = (sido, arr) => {
+  const singleSido = groupedRegions.value.length === 1;
+  if (singleSido) return arr.join(', ');
+
+  if (arr.length <= MAX_GUGUNS) return arr.join(', ');
+  const list = isExpanded(sido) ? arr : arr.slice(0, MAX_GUGUNS);
+  const remain = arr.length - list.length;
+  const text = list.join(', ');
+  return isExpanded(sido) ? text : `${text}, 외 ${remain}개`;
+};
 const formatPeriod = (start, end) => {
   if (!start && !end) return '상시';
   const format = (date) => date?.replace(/-/g, '.') || '미정';
@@ -350,7 +451,7 @@ const convertLabel = (code, type) => {
   left: 0;
   cursor: pointer;
   font-size: 1.2rem;
-  color: #333;
+  color: #757575;
   padding: 4px 8px; /* 클릭 영역 확보 */
 }
 .page-title {
@@ -482,5 +583,67 @@ const convertLabel = (code, type) => {
 .bookmark.scraped {
   color: #569fff;
   font-weight: 900;
+}
+
+.btn-primary {
+  background-color: #36c18c;
+  border-color: #36c18c;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #2fa879;
+  border-color: #2fa879;
+}
+
+.btn-secondary {
+  background-color: #36c18c;
+  border-color: #36c18c;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background-color: #2fa879;
+  border-color: #2fa879;
+}
+
+/* 시·도 제목 + 구/군 텍스트 스타일 */
+.region-text-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.region-text-group .sido-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.sido-badge {
+  background: none;
+  border: none;
+  color: #222;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0;
+}
+
+.region-text-group .toggle {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  color: #36c18c;
+  font-size: 0.78rem;
+}
+
+.region-text-group .gugun-line {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.6;
+  word-break: keep-all;
+  white-space: normal;
 }
 </style>

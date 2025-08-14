@@ -2,7 +2,7 @@
   <div class="goal-main-container">
     <!-- 페이지 헤더 -->
     <div class="page-header">
-      <h4 class="fw-bold mb-3 text-center">목표</h4>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">목표</div>
       <router-link :to="{ name: 'goalCreate' }" class="add-button">
         <i class="fas fa-plus"></i>
       </router-link>
@@ -177,7 +177,7 @@ window.addEventListener('focus', loadGoals);
 .goal-main-container {
   padding: 20px;
   background-color: #ffffff; /* ✅ 배경색 흰색 */
-  min-height: 100vh;
+  /* min-height: 100vh; */
 }
 
 /* 페이지 헤더 - 타이틀 가운데 정렬 */
@@ -200,7 +200,7 @@ window.addEventListener('focus', loadGoals);
 .add-button {
   position: absolute;
   right: 5px; /* 타이틀 중앙에 영향 없게 우측 배치 */
-  color: #333;
+  color: #757575;
   font-size: 18px;
   text-decoration: none;
   padding: 8px;
@@ -271,8 +271,12 @@ window.addEventListener('focus', loadGoals);
 }
 
 @keyframes shine {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .banner-section:hover {
@@ -294,9 +298,11 @@ window.addEventListener('focus', loadGoals);
   animation: sparkle 2s ease-in-out infinite alternate;
 }
 
-.banner-text { flex: 1; }
+.banner-text {
+  flex: 1;
+}
 .banner-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 4px;
@@ -306,15 +312,26 @@ window.addEventListener('focus', loadGoals);
   color: #ffffff;
   opacity: 0.9;
 }
-.banner-arrow { font-size: 16px; color: #ffffff; }
+.banner-arrow {
+  font-size: 16px;
+  color: #ffffff;
+}
 
 @keyframes sparkle {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(1.1); opacity: 1; }
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 
 /* 목표 카드 리스트 */
-.goals-container { flex: 1; }
+.goals-container {
+  flex: 1;
+}
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -337,12 +354,26 @@ window.addEventListener('focus', loadGoals);
 
 /* 모바일 최적화 */
 @media (max-width: 480px) {
-  .goal-main-container { padding: 15px; }
-  .page-header { margin-bottom: 15px; }
-  .page-title { font-size: 16px; }
-  .banner-content { gap: 12px; }
-  .banner-title { font-size: 14px; }
-  .banner-subtitle { font-size: 12px; }
-  .goals-grid { gap: 10px; }
+  .goal-main-container {
+    padding: 15px;
+  }
+  .page-header {
+    margin-bottom: 15px;
+  }
+  .page-title {
+    font-size: 16px;
+  }
+  .banner-content {
+    gap: 12px;
+  }
+  .banner-title {
+    font-size: 14px;
+  }
+  .banner-subtitle {
+    font-size: 12px;
+  }
+  .goals-grid {
+    gap: 10px;
+  }
 }
 </style>

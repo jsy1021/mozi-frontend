@@ -103,23 +103,28 @@ router.beforeEach((to, from) => {
       query: { redirect: to.fullPath },
     };
   }
+  
   // 4. 탭 상태 동기화: fromTab 쿼리 우선, 없으면 경로 기반
   const tabStore = useTabStore();
   const fromTab = typeof to.query?.fromTab === 'string' ? to.query.fromTab : null;
   const allowed = ['main', 'recommend', 'goal', 'asset', 'search'];
+  
   if (fromTab && allowed.includes(fromTab)) {
     tabStore.setTab(fromTab);
   } else {
     const path = to.path || '';
-    if (path === '/') tabStore.setTab('main');
-    else if (path.startsWith('/goal')) tabStore.setTab('goal');
-    else if (path.startsWith('/account')) tabStore.setTab('asset');
-    else if (path.startsWith('/recommend')) tabStore.setTab('recommend');
-    else if (path.startsWith('/financialSearch') || path.startsWith('/policySearch') || path.startsWith('/search')) {
-      // 상세 경로라도 from 경로가 goal/recommend였다면 유지
-      const prevTab = from?.fullPath ? tabStore.currentTab : null;
-      if (prevTab === 'goal' || prevTab === 'recommend') tabStore.setTab(prevTab);
-      else tabStore.setTab('search');
+    if (path === '/') {
+      tabStore.setTab('main');
+    } else if (path.startsWith('/goal')) {
+      tabStore.setTab('goal');
+    } else if (path.startsWith('/account')) {
+      tabStore.setTab('asset');
+    } else if (path.startsWith('/recommend')) {
+      tabStore.setTab('recommend');
+    } else if (path.startsWith('/financialSearch') || path.startsWith('/policySearch') || path.startsWith('/search')) {
+      // 🔥 수정: 탐색 관련 페이지로 이동했다면 무조건 search로 설정
+      // 이전 탭 상태를 유지하지 않고 항상 search로 변경
+      tabStore.setTab('search');
     }
   }
   return true;

@@ -1,9 +1,9 @@
 <template>
   <div class="goal-form-container">
     <div class="page-header">
-      <h1 class="page-title">
+      <div style="font-size: 18px; font-weight: bold; color: #757575">
         {{ presetData?.goalName ? `${presetData.goalName} 설정` : '나의 목표' }}
-      </h1>
+      </div>
       <!-- 1억 모우기 프리셋일 때 특별한 아이콘 표시 -->
       <div v-if="presetData?.goalName === '1억 모으기'" class="billion-icon">
         <i class="fas fa-star"></i>
@@ -14,9 +14,7 @@
     <div v-if="presetData?.goalName === '1억 모으기'" class="preset-notice">
       <div class="notice-content">
         <i class="fas fa-info-circle"></i>
-        <span
-          >1억 모으기 도전에 참가하시는군요! 목표를 향해 함께 달려봐요 🎯</span
-        >
+        <span>1억 모으기 도전에 참가하시는군요! 목표를 향해 함께 달려봐요 🎯</span>
       </div>
     </div>
 
@@ -42,7 +40,7 @@
         </div>
       </div>
 
-        <div class="form-group">
+      <div class="form-group">
         <label for="targetAmount">목표 금액</label>
         <div class="amount-input">
           <input
@@ -75,7 +73,18 @@
       <!-- 목표 기간 -->
       <div class="form-group">
         <label for="targetDate">목표 기간</label>
-        <input id="targetDate" type="date" v-model="form.targetDate" required />
+        <input
+          id="targetDate"
+          type="date"
+          v-model="form.targetDate"
+          :min="todayString"
+          @change="handleDateChange"
+          required
+        />
+        <div v-if="dateError" class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>목표 날짜는 오늘 이후여야 합니다</span>
+        </div>
       </div>
 
       <!-- 목표 키워드 -->
@@ -244,24 +253,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch, computed } from 'vue';
-
+import { ref, reactive, onMounted, computed, nextTick } from 'vue';
 import { useBankStore } from '@/stores/bank';
+import goalApi from '@/api/goalApi';
+import { getAccountList, getAccountsByGoal } from '@/api/accountApi';
 
 const bankStore = useBankStore();
 const banks = bankStore.banks;
-
-// 1억 모으기 목표인지 판별하는 computed
-const isBillionGoal = computed(() => {
-  return props.isEdit && 
-         props.goalData?.name === '1억 모으기' && 
-         props.goalData?.targetAmount === 100000000;
-});
-// 은행 로고 이미지
-const getBankLogoUrl = (bankCode) => {
-  const bank = banks.find((b) => b.code === bankCode);
-  return bank?.logo || '/images/financial/default.png';
-};
 
 // Props 정의
 const props = defineProps({
@@ -282,16 +280,25 @@ const props = defineProps({
 // Emits 정의
 const emit = defineEmits(['submit', 'cancel']);
 
-// API 임포트
-import goalApi from '@/api/goalApi';
-import { getAccountList, getAccountsByGoal } from '@/api/accountApi';
-
-// 계좌 목록 상태
+// 상태 관리
+const dateError = ref(false);
 const accountList = ref([]);
 const loading = ref(false);
-const accountGoalInfo = ref({}); // 계좌별 목표 연결 정보
+const accountGoalInfo = ref({});
 
-// 키워드 목록 - goalApi의 getKeywordLabel 메서드와 매칭
+// 오늘 날짜 구하기 (시간대 문제 해결)
+const getTodayString = () => {
+  const today = new Date();
+  // 로컬 시간대로 정확히 계산
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const todayString = getTodayString();
+
+// 키워드 목록
 const keywords = [
   { key: 'MARRIAGE', label: '결혼' },
   { key: 'EMPLOYMENT', label: '취업' },
@@ -309,10 +316,47 @@ const form = reactive({
   targetDate: '',
   keyword: '',
   memo: '',
-  selectedAccountNumbers: [], //변경: accountId 대신 accountNumber 사용
+  selectedAccountNumbers: [],
 });
 
-//  선택된 계좌들의 잔액 합계 계산
+// 1억 모으기 목표인지 판별하는 computed
+const isBillionGoal = computed(() => {
+  return props.isEdit && 
+         props.goalData?.name === '1억 모으기' && 
+         props.goalData?.targetAmount === 100000000;
+});
+
+// computed로 표시용 금액 생성
+const displayTargetAmount = computed(() => {
+  return formatAmountInput(form.targetAmount);
+});
+
+// 은행 로고 이미지
+const getBankLogoUrl = (bankCode) => {
+  const bank = banks.find((b) => b.code === bankCode);
+  return bank?.logo || '/images/financial/default.png';
+};
+
+// 날짜 변경 핸들러 (시간대 문제 해결)
+const handleDateChange = () => {
+  if (!form.targetDate) {
+    dateError.value = false;
+    return;
+  }
+  
+  // 현재 날짜를 다시 계산해서 비교
+  const currentTodayString = getTodayString();
+  
+  if (form.targetDate <= currentTodayString) {
+    dateError.value = true;
+    alert('목표 날짜는 오늘 이후로 설정해주세요.');
+    form.targetDate = currentTodayString;
+  } else {
+    dateError.value = false;
+  }
+};
+
+// 선택된 계좌들의 잔액 합계 계산
 const updateCurrentAmount = () => {
   const selectedAccounts = accountList.value.filter((account) =>
     form.selectedAccountNumbers.includes(account.accountNumber)
@@ -326,22 +370,17 @@ const updateCurrentAmount = () => {
 // 계좌별 연결된 목표 정보 조회
 const loadAccountGoalInfo = async () => {
   try {
-    // 모든 목표 조회
     const goalsResponse = await goalApi.getGoals();
     const goals = goalsResponse || [];
-
     const goalInfo = {};
 
-    // 각 목표별로 연결된 계좌 조회
     for (const goal of goals) {
       try {
         const linkedResponse = await getAccountsByGoal(goal.goalId);
         const linkedAccounts = linkedResponse.accountList || [];
 
-        // 각 계좌에 목표 정보 매핑
         linkedAccounts.forEach((account) => {
           if (goal.goalId !== props.goalData?.id) {
-            // 현재 수정 중인 목표 제외
             goalInfo[account.accountNumber] = {
               goalId: goal.goalId,
               goalName: goal.goalName,
@@ -366,20 +405,16 @@ const loadAccounts = async () => {
     const response = await getAccountList();
     accountList.value = response.accountList || [];
 
-    // 계좌별 목표 연결 정보 로드
     await loadAccountGoalInfo();
 
-    // 수정 모드이고 goalId가 있으면 연결된 계좌 정보 가져오기
     if (props.isEdit && props.goalData?.id) {
       const linkedResponse = await getAccountsByGoal(props.goalData.id);
       const linkedAccounts = linkedResponse.accountList || [];
 
-      // 연결된 계좌번호 목록 설정
       form.selectedAccountNumbers = linkedAccounts.map(
         (acc) => acc.accountNumber
       );
 
-      // 현재 금액 업데이트
       updateCurrentAmount();
     }
   } catch (error) {
@@ -390,11 +425,9 @@ const loadAccounts = async () => {
   }
 };
 
-// 날짜 포맷 변환 함수 (LocalDateTime -> yyyy-MM-dd)
+// 날짜 포맷 변환 함수
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-
-  // "2024-12-31 23:59:59" 또는 "2024-12-31T23:59:59" 형식을 "2024-12-31"로 변환
   return dateString.split(' ')[0].split('T')[0];
 };
 
@@ -402,15 +435,6 @@ const formatDateForInput = (dateString) => {
 const handleCancel = () => {
   emit('cancel');
 };
-
-// props 변경 감지
-watch(
-  () => props.presetData,
-  () => {
-    initializeForm();
-  },
-  { immediate: true }
-);
 
 // goalApi의 금액 포맷팅 사용
 const formatAmount = (amount) => {
@@ -425,14 +449,12 @@ const getKeywordLabel = (keywordKey) => {
 // 계좌번호 마스킹 처리 함수
 const maskAccountNumber = (accountNumber) => {
   if (accountNumber == null) return '';
-  const s = String(accountNumber).trim(); // 숫자나 null 방어, 공백 제거
+  const s = String(accountNumber).trim();
   const length = s.length;
   if (length <= 4) return s;
 
   const visible = 4;
 
-  // 길이가 짧아서 앞/뒤 4글자 확보가 안 되는 경우(5..8)
-  // => 앞1, 뒤1만 노출하고 가운데는 '-'은 유지하고 나머지는 '*' 처리
   if (length <= visible * 2) {
     const first = s[0];
     const last = s[length - 1];
@@ -444,15 +466,12 @@ const maskAccountNumber = (accountNumber) => {
     return `${first}${middle}${last}`;
   }
 
-  // 일반적인 경우: 앞 4 / 뒤 4 고정
   const firstPart = s.slice(0, visible);
   const lastPart = s.slice(-visible);
   const middleLength = Math.max(0, length - visible * 2);
 
-  // 이 부분은 원하신 대로 '*.repeat(...)' 구조 사용
   let middlePart = '*'.repeat(middleLength).split('');
 
-  // 원본 문자열의 해당 위치가 '-'이면 그대로 '-'로 덮어쓰기
   for (let i = 0; i < middleLength; i++) {
     if (s[visible + i] === '-') {
       middlePart[i] = '-';
@@ -462,17 +481,10 @@ const maskAccountNumber = (accountNumber) => {
   return `${firstPart}${middlePart.join('')}${lastPart}`;
 };
 
-// 컴포넌트 마운트 시 폼 초기화 및 계좌 로드
-onMounted(() => {
-  initializeForm();
-  loadAccounts();
-});
 // 금액 포맷팅 함수 (콤마 추가)
 const formatAmountInput = (value) => {
   if (!value) return '';
-  // 숫자만 추출
   const numericValue = value.toString().replace(/[^\d]/g, '');
-  // 천단위 콤마 추가
   return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
@@ -482,19 +494,12 @@ const handleAmountInput = (event) => {
   const cursorPosition = input.selectionStart;
   const originalValue = input.value;
   
-  // 숫자만 추출
   const numericValue = originalValue.replace(/[^\d]/g, '');
-  
-  // 콤마 포맷팅 적용
   const formattedValue = formatAmountInput(numericValue);
   
-  // form 데이터에는 숫자만 저장
   form.targetAmount = numericValue;
-  
-  // input에는 포맷된 값 표시
   input.value = formattedValue;
   
-  // 커서 위치 조정 (콤마 추가로 인한 위치 변화 고려)
   const commasBeforeCursor = (originalValue.slice(0, cursorPosition).match(/,/g) || []).length;
   const commasAfterFormat = (formattedValue.slice(0, cursorPosition).match(/,/g) || []).length;
   const newCursorPosition = cursorPosition + (commasAfterFormat - commasBeforeCursor);
@@ -504,12 +509,10 @@ const handleAmountInput = (event) => {
   }, 0);
 };
 
-// 폼 초기화 함수 수정 (기존 initializeForm 함수에서 targetAmount 부분만 수정)
+// 폼 초기화 함수
 const initializeForm = () => {
-  // 프리셋 데이터가 있는 경우 (1억 모으기 등)
   if (props.presetData) {
     form.goalName = props.presetData.goalName || '';
-    // 콤마 포맷팅 적용
     if (props.presetData.targetAmount) {
       form.targetAmount = props.presetData.targetAmount.toString();
     }
@@ -517,38 +520,45 @@ const initializeForm = () => {
     form.memo = props.presetData.memo || '';
   }
 
-  // 수정 모드인 경우 (기존 데이터 우선)
   if (props.isEdit && props.goalData) {
     form.goalName = props.goalData.name || '';
-    // 콤마 포맷팅 적용
     if (props.goalData.targetAmount) {
       form.targetAmount = props.goalData.targetAmount.toString();
     }
     form.currentAmount = props.goalData.currentAmount || 0;
-    form.targetDate = formatDateForInput(props.goalData.targetDate) || '';
+    
+    // 날짜 설정 (과거 날짜면 오늘 날짜로)
+    const existingDate = formatDateForInput(props.goalData.targetDate) || '';
+    if (existingDate && existingDate > todayString) {
+      form.targetDate = existingDate;
+    } else {
+      form.targetDate = todayString;
+    }
+    
     form.keyword = props.goalData.keyword || '';
     form.memo = props.goalData.memo || '';
   }
 };
 
-// computed로 표시용 금액 생성
-const displayTargetAmount = computed(() => {
-  return formatAmountInput(form.targetAmount);
-});
-
-// 폼 제출 시에는 숫자만 전송 (기존 handleSubmit 함수 수정)
+// 폼 제출
 const handleSubmit = () => {
   if (!validateForm()) return;
 
-  const formData = goalApi.formatGoalData({
+  // 날짜를 올바른 형식으로 변환 (시간대 문제 해결)
+  const formatDateForSubmit = (dateString) => {
+    if (!dateString) return null;
+    // YYYY-MM-DD 형식을 YYYY-MM-DD 23:59:59 형식으로 변환 (시간대 문제 방지)
+    return `${dateString} 23:59:59`;
+  };
+
+  const formData = {
     goalName: form.goalName,
-    // 숫자로 변환하여 전송
     targetAmount: parseInt(form.targetAmount.toString().replace(/[^\d]/g, '') || 0),
     currentAmount: props.isEdit ? parseInt(form.currentAmount || 0) : 0,
-    goalDate: form.targetDate,
+    goalDate: formatDateForSubmit(form.targetDate), // 직접 포맷팅
     keyword: form.keyword,
     memo: form.memo,
-  });
+  };
 
   const accountData = {
     goalId: props.goalData?.id || null,
@@ -558,7 +568,7 @@ const handleSubmit = () => {
   emit('submit', { ...formData, accountData });
 };
 
-// 폼 유효성 검사 함수 수정
+// 폼 유효성 검사 함수
 const validateForm = () => {
   if (!form.goalName.trim()) {
     alert('목표명을 입력해주세요.');
@@ -575,12 +585,32 @@ const validateForm = () => {
     alert('목표 기간을 설정해주세요.');
     return false;
   }
+  
+  // 날짜 검증 추가
+  if (form.targetDate <= todayString) {
+    alert('목표 날짜는 오늘 이후로 설정해주세요.');
+    return false;
+  }
+  
   if (!form.keyword) {
     alert('목표 키워드를 선택해주세요.');
     return false;
   }
+  
   return true;
 };
+
+// 컴포넌트 마운트 시 실행 (watch 완전 제거)
+onMounted(async () => {
+  await loadAccounts();
+  initializeForm();
+  
+  // props가 변경되면 다시 초기화 (한 번만)
+  if (props.presetData || props.goalData) {
+    await nextTick();
+    initializeForm();
+  }
+});
 
 </script>
 
@@ -687,7 +717,7 @@ const validateForm = () => {
 
 .no-spinner[type=number] {
   -moz-appearance: textfield;
-  appearance: textfield;  /* 표준 속성 추가 */
+  appearance: textfield;
 }
 
 .preset-input {
@@ -720,6 +750,19 @@ const validateForm = () => {
   transform: translateY(-50%);
   color: #666;
   font-size: 14px;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #e74c3c;
+}
+
+.error-message i {
+  color: #e74c3c;
 }
 
 /* 현재 금액 카드 스타일 */
@@ -781,37 +824,35 @@ const validateForm = () => {
 }
 
 .tooltip-icon:hover {
-  color: #2f9b78  !important;    /* !important 추가 */
+  color: #2f9b78  !important;
   opacity: 1;
   background: #d2f5e9;
   transform: scale(1.1);
   box-shadow: 0 2px 6px rgba(47, 155, 120, 0.4);
 }
 
-/* 커스텀 툴팁 스타일 */
 .tooltip-icon:hover::after {
   content: attr(data-tooltip);
   position: absolute;
   top: -40px;
   left: 50%;
   transform: translateX(-50%);
-  background: #f8fffe;     /* 현재 모인 금액 카드 배경색 */
-  color: #2f9b78;         /* 현재 모인 금액 카드 글자색 */
+  background: #f8fffe;
+  color: #2f9b78;
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 11px;
   white-space: nowrap;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(47, 155, 120, 0.2);
-  border: 1px solid #2f9b78;  /* 카드와 같은 테두리 추가 */
+  border: 1px solid #2f9b78;
   animation: tooltipFadeIn 0.2s ease;
 }
 
-/* FontAwesome 아이콘이 제대로 표시되도록 강제 */
 .tooltip-icon::before {
   font-family: "Font Awesome 6 Free" !important;
   font-weight: 900 !important;
-  content: "\f05a" !important;  /* info-circle 아이콘 코드 */
+  content: "\f05a" !important;
   display: inline-block;
   font-style: normal;
   font-variant: normal;
@@ -829,6 +870,7 @@ const validateForm = () => {
     transform: translateX(-50%) translateY(0);
   }
 }
+
 .current-amount-value {
   font-size: 14px;
   font-weight: 700;

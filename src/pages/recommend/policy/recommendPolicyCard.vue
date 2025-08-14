@@ -96,7 +96,6 @@ const emit = defineEmits(['bookmark-changed']);
 const plcyNo = computed(() => String(props.policy?.plcyNo ?? '').trim());
 const bookmarked = ref(!!props.isScrapped);
 
-// ✅ 부모 값 바뀌면 동기화
 watch(
   () => props.isScrapped,
   (v) => {
@@ -104,7 +103,6 @@ watch(
   }
 );
 
-// ✅ 북마크 토글 (옵티미스틱 + 롤백)
 const toggleBookmark = async () => {
   if (!plcyNo.value) return;
   const prev = bookmarked.value;
@@ -113,7 +111,6 @@ const toggleBookmark = async () => {
     if (prev) await cancelScrap(plcyNo.value);
     else await scrapPolicy(plcyNo.value);
 
-    // ✅ 부모 리스트도 즉시 반영
     emit('bookmark-changed', {
       plcyNo: plcyNo.value,
       bookmarked: bookmarked.value,
