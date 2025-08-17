@@ -183,6 +183,31 @@ const selectedTagsWithCategory = computed(() => {
 const filteredList = computed(() => {
   let list = Array.isArray(policyList.value) ? policyList.value : [];
 
+  // 신청 마감된 정책 제외
+  const today = new Date();
+  const todayYMD = Number(
+    today.getFullYear().toString() +
+      String(today.getMonth() + 1).padStart(2, '0') +
+      String(today.getDate()).padStart(2, '0')
+  );
+
+  list = list.filter((policy) => {
+    const raw = String(policy.aplyYmd || '').trim();
+    if (!raw) return true;
+    let end = raw;
+    if (raw.includes('~')) {
+      end = raw.split('~').pop().trim();
+    }
+
+    // yyyyMMdd 형식인지 체크
+    if (/^\d{8}$/.test(end)) {
+      const endYMD = Number(end);
+      return endYMD >= todayYMD; // 오늘 이후만 포함
+    }
+
+    return true;
+  });
+
   const kw = searchKeyword.value.trim().toLowerCase();
   if (kw) {
     list = list.filter((p) => {
@@ -524,9 +549,18 @@ watch(
   { immediate: true }
 );
 
+const CATEGORY_KEY = 'policy.currentCategory';
+
 // 초기 로딩
 onMounted(async () => {
   const saved = sessionStorage.getItem('filterState');
+
+  // 카테고리 탭 복원
+  const savedCategory = sessionStorage.getItem(CATEGORY_KEY);
+  if (savedCategory && categories.includes(savedCategory)) {
+    currentCategory.value = savedCategory;
+  }
+
   if (saved) {
     const EMPTY = {
       region: [],
@@ -606,6 +640,11 @@ onMounted(async () => {
   }
 });
 
+watch(currentCategory, (v) => {
+  if (categories.includes(v)) {
+    sessionStorage.setItem(CATEGORY_KEY, v);
+  }
+});
 // 초기화 후처리
 const onPolicyFilterReset = () => {
   sessionStorage.removeItem('filterState');

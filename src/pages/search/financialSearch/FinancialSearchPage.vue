@@ -5,35 +5,37 @@
       <span class="back-btn" @click="goBack">
         <i class="fa-solid fa-angle-left"></i>
       </span>
-      <div style="font-size: 18px; font-weight: bold; color: #757575">금융 탐색</div>
+      <div style="font-size: 18px; font-weight: bold; color: #757575">
+        금융 탐색
+      </div>
     </div>
 
     <!-- 🔎 검색/필터 툴바 -->
-<!-- 🔍 검색/필터 툴바 -->
-<div class="toolbar mb-2">
-  <input
-    v-model="searchKeyword"
-    type="text"
-    class="search-input"
-    placeholder="상품명 입력"
-  />
-  <button
-    v-if="searchKeyword"
-    class="clear-btn"
-    @click="searchKeyword = ''"
-    aria-label="검색어 지우기"
-  >
-    &times;
-  </button>
+    <!-- 🔍 검색/필터 툴바 -->
+    <div class="toolbar mb-2">
+      <input
+        v-model="searchKeyword"
+        type="text"
+        class="search-input"
+        placeholder="상품명 입력"
+      />
+      <button
+        v-if="searchKeyword"
+        class="clear-btn"
+        @click="searchKeyword = ''"
+        aria-label="검색어 지우기"
+      >
+        &times;
+      </button>
 
-  <button
-    class="btn btn-outline-secondary btn-sm filter-btn"
-    @click="toggleFilterPanel"
-    aria-label="필터 열기"
-  >
-    <i class="fa-solid fa-sliders"></i>
-  </button>
-</div>
+      <button
+        class="btn btn-outline-secondary btn-sm filter-btn"
+        @click="toggleFilterPanel"
+        aria-label="필터 열기"
+      >
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
 
     <FinancialFilter
       v-if="showFilter"
@@ -45,15 +47,15 @@
     <div v-if="hasActiveFilters" class="filter-tags mb-2">
       <div class="filter-tags-container">
         <!-- 기간 필터 태그 -->
-        <span 
-          v-if="selectedFilter.period !== '' && selectedFilter.period != null" 
+        <span
+          v-if="selectedFilter.period !== '' && selectedFilter.period != null"
           class="filter-tag"
         >
           <span class="filter-tag-text">
             {{ getPeriodLabel(selectedFilter.period) }}
           </span>
-          <button 
-            class="filter-tag-remove" 
+          <button
+            class="filter-tag-remove"
             @click="removeFilter('period')"
             aria-label="기간 필터 제거"
           >
@@ -62,15 +64,12 @@
         </span>
 
         <!-- 금리 정렬 필터 태그 -->
-        <span 
-          v-if="selectedFilter.rateSort" 
-          class="filter-tag"
-        >
+        <span v-if="selectedFilter.rateSort" class="filter-tag">
           <span class="filter-tag-text">
             {{ getRateSortLabel(selectedFilter.rateSort) }}
           </span>
-          <button 
-            class="filter-tag-remove" 
+          <button
+            class="filter-tag-remove"
             @click="removeFilter('rateSort')"
             aria-label="금리 정렬 필터 제거"
           >
@@ -79,21 +78,21 @@
         </span>
 
         <!-- 은행 필터 태그들 -->
-        <span 
-          v-for="bankCode in (selectedFilter.banks || [])" 
+        <span
+          v-for="bankCode in selectedFilter.banks || []"
           :key="bankCode"
           class="filter-tag"
         >
           <span class="filter-tag-text">
-            <img 
-              :src="getBankLogoUrl(bankCode)" 
+            <img
+              :src="getBankLogoUrl(bankCode)"
               :alt="getBankName(bankCode)"
               class="filter-tag-bank-logo"
             />
             {{ getBankName(bankCode) }}
           </span>
-          <button 
-            class="filter-tag-remove" 
+          <button
+            class="filter-tag-remove"
             @click="removeBankFilter(bankCode)"
             aria-label="은행 필터 제거"
           >
@@ -102,16 +101,16 @@
         </span>
 
         <!-- 가입 방법 필터 태그들 -->
-        <span 
-          v-for="joinWay in (selectedFilter.joinWays || [])" 
+        <span
+          v-for="joinWay in selectedFilter.joinWays || []"
           :key="joinWay"
           class="filter-tag"
         >
           <span class="filter-tag-text">
-           {{ joinWay }}
+            {{ joinWay }}
           </span>
-          <button 
-            class="filter-tag-remove" 
+          <button
+            class="filter-tag-remove"
             @click="removeJoinWayFilter(joinWay)"
             aria-label="가입 방법 필터 제거"
           >
@@ -141,7 +140,12 @@
         <transition-group name="list-fade" tag="div">
           <FinancialCard
             v-for="(item, index) in currentProductList"
-            :key="item.productCode || item.productId || (item.bankCode + '-' + item.productName) || index"
+            :key="
+              item.productCode ||
+              item.productId ||
+              item.bankCode + '-' + item.productName ||
+              index
+            "
             :deposit="item"
             :productType="currentCategory"
             sourceTab="search"
@@ -165,13 +169,14 @@ const searchInputRef = ref(null);
 const focusSearch = () => searchInputRef.value && searchInputRef.value.focus();
 
 const currentCategory = ref('예금');
+const CATEGORY_KEY = 'finance.currentCategory';
 const showFilter = ref(false);
 
 const selectedFilter = ref({
   period: '',
   rateSort: '',
   banks: [],
-  joinWays: []
+  joinWays: [],
 });
 const goBack = () => {
   router.back();
@@ -305,8 +310,10 @@ const currentProductList = computed(() => {
 // 필터 태그 관련 computed 속성
 const hasActiveFilters = computed(() => {
   return (
-    (selectedFilter.value.period !== '' && selectedFilter.value.period != null) ||
-    (selectedFilter.value.rateSort !== '' && selectedFilter.value.rateSort != null) ||
+    (selectedFilter.value.period !== '' &&
+      selectedFilter.value.period != null) ||
+    (selectedFilter.value.rateSort !== '' &&
+      selectedFilter.value.rateSort != null) ||
     (selectedFilter.value.banks && selectedFilter.value.banks.length > 0) ||
     (selectedFilter.value.joinWays && selectedFilter.value.joinWays.length > 0)
   );
@@ -318,15 +325,15 @@ const getPeriodLabel = (period) => {
     6: '~ 6개월',
     12: '~12개월',
     24: '~24개월',
-    36: '~36개월'
+    36: '~36개월',
   };
   return periodMap[period] || period;
 };
 
 const getRateSortLabel = (rateSort) => {
   const rateSortMap = {
-    'high': '높은 금리순',
-    'base': '기본 금리순'
+    high: '높은 금리순',
+    base: '기본 금리순',
   };
   return rateSortMap[rateSort] || rateSort;
 };
@@ -346,7 +353,7 @@ const getBankName = (bankCode) => {
     '0010016': 'IM뱅크',
     '0014807': 'SH수협',
     '0010019': '광주',
-    '0013175': 'NH농협'
+    '0013175': 'NH농협',
   };
   return bankNameMap[bankCode] || bankCode;
 };
@@ -362,7 +369,7 @@ const removeFilter = (filterType) => {
 const removeBankFilter = (bankCode) => {
   if (selectedFilter.value.banks) {
     selectedFilter.value.banks = selectedFilter.value.banks.filter(
-      code => code !== bankCode
+      (code) => code !== bankCode
     );
   }
 };
@@ -370,7 +377,7 @@ const removeBankFilter = (bankCode) => {
 const removeJoinWayFilter = (joinWay) => {
   if (selectedFilter.value.joinWays) {
     selectedFilter.value.joinWays = selectedFilter.value.joinWays.filter(
-      way => way !== joinWay
+      (way) => way !== joinWay
     );
   }
 };
@@ -380,7 +387,19 @@ watch(currentCategory, (tab) => {
   if (tab === '적금') fetchSavings();
 });
 
+// 새로고침 시 카테고리 유지
+watch(currentCategory, (v) => {
+  if (categories.includes(v)) {
+    sessionStorage.setItem(CATEGORY_KEY, v);
+  }
+});
+
 onMounted(() => {
+  const savedCategory = sessionStorage.getItem(CATEGORY_KEY);
+  if (savedCategory && categories.includes(savedCategory)) {
+    currentCategory.value = savedCategory;
+  }
+
   if (currentCategory.value === '예금') fetchDeposits();
   else fetchSavings();
 });
@@ -406,17 +425,18 @@ onMounted(() => {
   color: #6b7684 !important;
   font-weight: 500;
   padding: 6px 4px;
-  transition: color .18s ease, border-bottom-color .18s ease, background-color .18s ease;
+  transition: color 0.18s ease, border-bottom-color 0.18s ease,
+    background-color 0.18s ease;
 }
 .mozi-tabs .nav-link.active {
-  border-bottom: 2px solid #36C18C !important;
+  border-bottom: 2px solid #36c18c !important;
   color: #6b7684 !important;
 }
 
 /* ✅ 탭 콘텐츠 전환 (슬라이드 + 페이드) */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: opacity .18s ease, transform .18s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 .slide-fade-enter-from,
 .slide-fade-leave-to {
@@ -427,7 +447,7 @@ onMounted(() => {
 /* ✅ 리스트 아이템 전환 (필터/검색 변화 시) */
 .list-fade-enter-active,
 .list-fade-leave-active {
-  transition: opacity .16s ease, transform .16s ease;
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 .list-fade-enter-from,
 .list-fade-leave-to {
@@ -435,7 +455,7 @@ onMounted(() => {
   transform: translateY(6px);
 }
 .list-fade-move {
-  transition: transform .16s ease;
+  transition: transform 0.16s ease;
 }
 
 /* 🔍 검색/필터 툴바 */
@@ -452,11 +472,11 @@ onMounted(() => {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   outline: none;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .search-input:focus {
-  border-color: #36C18C;
-  box-shadow: 0 0 0 3px rgba(54,193,140,.15);
+  border-color: #36c18c;
+  box-shadow: 0 0 0 3px rgba(54, 193, 140, 0.15);
 }
 
 .clear-btn {
@@ -582,12 +602,12 @@ onMounted(() => {
   .filter-tags-container {
     gap: 4px;
   }
-  
+
   .filter-tag {
     font-size: 11px;
     padding: 3px 6px;
   }
-  
+
   .filter-tag-remove {
     width: 14px;
     height: 14px;

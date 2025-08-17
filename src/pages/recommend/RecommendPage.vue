@@ -3,13 +3,27 @@
     <!-- 상단 타이틀 -->
     <div class="position-relative d-flex align-items-center mb-3">
       <!-- 타이틀 가운데 정렬 -->
-      <div style="font-size: 18px; font-weight: bold; color: #757575; flex: 1; text-align: center;">추천</div>
+      <div
+        style="
+          font-size: 18px;
+          font-weight: bold;
+          color: #757575;
+          flex: 1;
+          text-align: center;
+        "
+      >
+        추천
+      </div>
     </div>
 
     <!-- 추천 인트로 -->
     <div class="p-3 rounded bg-light mb-3 text-center">
-      <p class="mb-1 fw-semibold" style="font-size: 14px;">{{ userName }}님을 위한 맞춤 추천</p>
-      <small class="text-muted"style="font-size: 12px;">목표와 프로필을 기반으로 추천을 제공합니다.</small>
+      <p class="mb-1 fw-semibold" style="font-size: 14px">
+        {{ userName }}님을 위한 맞춤 추천
+      </p>
+      <small class="text-muted" style="font-size: 12px"
+        >목표와 프로필을 기반으로 추천을 제공합니다.</small
+      >
     </div>
 
     <!-- 추천 탭 -->
@@ -19,7 +33,7 @@
           href="#"
           class="nav-link"
           :class="{ active: currentTab === tab }"
-          @click.prevent="currentTab = tab"
+          @click.prevent="changeTab(tab)"
         >
           {{ tab }}
         </a>
@@ -30,7 +44,11 @@
     <div class="tab-content-wrapper">
       <transition name="slide-fade" mode="out-in">
         <component
-          :is="currentTab === '금융상품' ? FinancialRecommendTab : policyRecommendTab"
+          :is="
+            currentTab === '금융상품'
+              ? FinancialRecommendTab
+              : policyRecommendTab
+          "
           :user-id="userId"
           :goal-id="goalId"
           :key="currentTab"
@@ -41,25 +59,66 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import policyRecommendTab from './policyRecommendTab.vue';
 import FinancialRecommendTab from './FinancialRecommendTab.vue';
 
 const router = useRouter();
+const route = useRoute();
+
 const goBack = () => router.back();
 
 const userName = '사용자';
-
 const tabs = ['금융상품', '청년정책'];
+
+// 탭 유지
+const ACTIVE_TAB_KEY = 'recommend_active_tab';
+const VALID_TABS = new Set(tabs);
+
 const currentTab = ref('금융상품');
 
+// 탭 변경: 상태 + 세션 + URL 쿼리 동기화
+function changeTab(tab) {
+  if (!VALID_TABS.has(tab)) return;
+  currentTab.value = tab;
+  sessionStorage.setItem(ACTIVE_TAB_KEY, tab);
+  try {
+    router.replace({ query: { ...(route?.query || {}), tab } });
+  } catch (_) {}
+}
+
+// 초기 복원: URL 쿼리 > 세션 > 기본값
+onMounted(() => {
+  const fromQuery =
+    typeof route?.query?.tab === 'string' ? route.query.tab : null;
+  const fromSession = sessionStorage.getItem(ACTIVE_TAB_KEY);
+
+  if (fromQuery && VALID_TABS.has(fromQuery)) {
+    currentTab.value = fromQuery;
+    sessionStorage.setItem(ACTIVE_TAB_KEY, fromQuery);
+  } else if (fromSession && VALID_TABS.has(fromSession)) {
+    currentTab.value = fromSession;
+    try {
+      router.replace({ query: { ...(route?.query || {}), tab: fromSession } });
+    } catch (_) {
+      /* noop */
+    }
+  } else {
+    changeTab(currentTab.value);
+  }
+});
+
+watch(currentTab, (v) => {
+  if (VALID_TABS.has(v)) sessionStorage.setItem(ACTIVE_TAB_KEY, v);
+});
 /* 주의: userId/goalId는 상위에서 내려주거나 라우트에서 가져오세요.
    필요하면 아래처럼 라우트 파라미터로 받을 수도 있음.
    const route = useRoute();
    const userId = computed(() => route.params.userId);
    const goalId = computed(() => route.params.goalId);
 */
+
 const userId = undefined;
 const goalId = undefined;
 </script>
@@ -108,7 +167,7 @@ const goalId = undefined;
   font-weight: 500;
 }
 .recommend-tabs .nav-link.active {
-  border-bottom: 2px solid #36C18C; /* ✅ 활성 탭 하단 border 색상 변경 */
+  border-bottom: 2px solid #36c18c; /* ✅ 활성 탭 하단 border 색상 변경 */
   color: #6b7684; /* 글씨 색상 그대로 유지 */
 }
 
@@ -121,12 +180,14 @@ const goalId = undefined;
 /* ✅ 탭 콘텐츠 전환 (슬라이드 + 페이드) */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: opacity .18s ease, transform .18s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 /* 떠나는 패널을 띄워서 레이아웃 흔들림 방지 */
 .slide-fade-leave-active {
   position: absolute;
-  left: 0; right: 0; top: 0;
+  left: 0;
+  right: 0;
+  top: 0;
 }
 .slide-fade-enter-from,
 .slide-fade-leave-to {
