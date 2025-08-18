@@ -1,122 +1,162 @@
 <template>
-  <header class="form-hero">
-    <h2 class="form-subtitle">퍼스널 정보</h2>
-  </header>
-  <div class="container">
-    <Transition :name="transitionName" mode="out-in">
-      <div class="step-viewport" :key="currentStep">
-        <!-- Step 0: 기본 정보 -->
-        <div v-if="currentStep === 0" class="step">
-          <label>관심지역</label>
-          <select v-model="form.region" class="select-input">
-            <option value="">지역을 선택하세요</option>
-            <option v-for="option in regionOptions" :key="option.code" :value="option.code">
-              {{ option.label }}
-            </option>
-          </select>
+  <div class="page">
+    <header class="form-hero">
+      <h2 class="form-subtitle">퍼스널 정보</h2>
+      <p class="form-description">맞춤 정책 추천을 위한 개인정보를 입력해주세요</p>
+    </header>
+    
+    <div class="container">
+      <Transition :name="transitionName" mode="out-in">
+        <div class="step-viewport" :key="currentStep">
+          <!-- Step 0: 기본 정보 -->
+          <div v-if="currentStep === 0" class="step">
+            <h3 class="step-title">기본 정보</h3>
+            
+            <div class="form-field">
+              <label for="region">관심지역</label>
+              <select id="region" v-model="form.region" class="select-input">
+                <option value="">지역을 선택하세요</option>
+                <option v-for="option in regionOptions" :key="option.code" :value="option.code">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
 
-          <label>연령 (만)</label>
-          <input
-            type="number"
-            v-model.number="form.age"
-            placeholder="예: 24"
-            min="15"
-            max="65"
-            step="1"
-            :class="{ invalid: ageTouched && !!ageError }"
-            @input="ageTouched = true"
-            @blur="ageTouched = true" />
-          <p class="error-text" v-if="ageTouched && ageError">{{ ageError }}</p>
+            <div class="form-field">
+              <label for="age">연령 (만)</label>
+              <input
+                id="age"
+                type="number"
+                v-model.number="form.age"
+                placeholder="예: 24"
+                min="15"
+                max="65"
+                step="1"
+                :class="{ invalid: ageTouched && !!ageError }"
+                @input="ageTouched = true"
+                @blur="ageTouched = true" />
+              <p class="error-text" v-if="ageTouched && ageError">{{ ageError }}</p>
+            </div>
 
-          <label>혼인여부</label>
-          <div class="radio-group">
-            <label><input type="radio" :value="MARITAL_STATUS.SINGLE" v-model="form.maritalStatus" /> 미혼</label>
-            <label><input type="radio" :value="MARITAL_STATUS.MARRIED" v-model="form.maritalStatus" /> 기혼</label>
+            <div class="form-field">
+              <label>혼인여부</label>
+              <div class="marital-buttons">
+                <button 
+                  class="marital-btn" 
+                  :class="{ active: form.maritalStatus === MARITAL_STATUS.SINGLE }"
+                  @click="form.maritalStatus = MARITAL_STATUS.SINGLE">
+                  미혼
+                </button>
+                <button 
+                  class="marital-btn" 
+                  :class="{ active: form.maritalStatus === MARITAL_STATUS.MARRIED }"
+                  @click="form.maritalStatus = MARITAL_STATUS.MARRIED">
+                  기혼
+                </button>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="income">연소득</label>
+              <div class="income">
+                <input
+                  id="income"
+                  type="number"
+                  v-model.number="form.annualIncome"
+                  placeholder="숫자 입력"
+                  min="0"
+                  step="1"
+                  :class="{ invalid: incomeTouched && !!incomeError }"
+                  @input="incomeTouched = true"
+                  @blur="incomeTouched = true" />
+                <span class="unit">만원</span>
+              </div>
+              <p class="error-text" v-if="incomeTouched && incomeError">{{ incomeError }}</p>
+            </div>
           </div>
 
-          <label>연소득</label>
-          <div class="income">
-            <input
-              type="number"
-              v-model.number="form.annualIncome"
-              placeholder="숫자 입력"
-              min="0"
-              step="1"
-              :class="{ invalid: incomeTouched && !!incomeError }"
-              @input="incomeTouched = true"
-              @blur="incomeTouched = true" />
-            <span>만원</span>
+          <!-- Step 1: 학력 -->
+          <div v-else-if="currentStep === 1" class="step">
+            <div class="step-header">
+              <h3 class="step-title">학력</h3>
+              <div class="tooltip-container">
+                <font-awesome-icon 
+                  :icon="['fas', 'circle-exclamation']" 
+                  class="tooltip-icon" 
+                  @click="toggleEducationTooltip"
+                />
+                <Transition name="tooltip">
+                  <div v-if="showEducationTooltip" style="background: #f8f9fa; color: #495057; padding: 6px 10px; border-radius: 6px; margin-top: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); position: absolute; top: 100%; right: 0; z-index: 9999; white-space: nowrap; border: 1px solid #dee2e6; font-size: 12px;">
+                    정책 자격 확인시에만 사용해요!
+                    <div style="position: absolute; top: -6px; right: 10px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 6px solid #f8f9fa;"></div>
+                  </div>
+                </Transition>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button
+                v-for="opt in educationOptions"
+                :key="opt.code"
+                :class="{ active: form.educationLevel === opt.code }"
+                @click="form.educationLevel = opt.code">
+                {{ opt.label }}
+              </button>
+            </div>
           </div>
-          <p class="error-text" v-if="incomeTouched && incomeError">{{ incomeError }}</p>
+
+          <!-- Step 2: 취업 상태 -->
+          <div v-else-if="currentStep === 2" class="step">
+            <h3 class="step-title">취업 상태</h3>
+            <div class="btn-group">
+              <button
+                v-for="opt in employmentOptions"
+                :key="opt.code"
+                :class="{ active: form.employmentStatus === opt.code }"
+                @click="form.employmentStatus = opt.code">
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3: 전공 계열 -->
+          <div v-else-if="currentStep === 3" class="step">
+            <h3 class="step-title">전공 분야</h3>
+            <div class="btn-group">
+              <button
+                v-for="opt in majorOptions"
+                :key="opt.code"
+                :class="{ active: form.major === opt.code }"
+                @click="form.major = opt.code">
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 4: 기타 해당 사항 -->
+          <div v-else-if="currentStep === 4" class="step">
+            <h3 class="step-title">기타 해당 사항</h3>
+            <div class="btn-group">
+              <button
+                v-for="opt in specialtyOptions"
+                :key="opt.code"
+                :class="{ active: form.specialty === opt.code }"
+                @click="form.specialty = opt.code">
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
         </div>
+      </Transition>
 
-        <!-- Step 1: 학력 -->
-        <div v-else-if="currentStep === 1" class="step">
-          <label>학력</label>
-          <div class="btn-group">
-            <button
-              v-for="opt in educationOptions"
-              :key="opt.code"
-              :class="{ active: form.educationLevel === opt.code }"
-              @click="form.educationLevel = opt.code">
-              {{ opt.label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Step 2: 취업 상태 -->
-        <div v-else-if="currentStep === 2" class="step">
-          <label>취업 상태</label>
-          <div class="btn-group">
-            <button
-              v-for="opt in employmentOptions"
-              :key="opt.code"
-              :class="{ active: form.employmentStatus === opt.code }"
-              @click="form.employmentStatus = opt.code">
-              {{ opt.label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Step 3: 전공 계열 -->
-        <div v-else-if="currentStep === 3" class="step">
-          <label>전공 분야</label>
-          <div class="btn-group">
-            <button
-              v-for="opt in majorOptions"
-              :key="opt.code"
-              :class="{ active: form.major === opt.code }"
-              @click="form.major = opt.code">
-              {{ opt.label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Step 4: 특화 분야 -->
-        <div v-else-if="currentStep === 4" class="step">
-          <label>특화 분야</label>
-          <div class="btn-group">
-            <button
-              v-for="opt in specialtyOptions"
-              :key="opt.code"
-              :class="{ active: form.specialty === opt.code }"
-              @click="form.specialty = opt.code">
-              {{ opt.label }}
-            </button>
-          </div>
-        </div>
+      <!-- 버튼 그룹 -->
+      <div class="btns">
+        <button class="btn-cancel" @click="onLeftClick">
+          {{ currentStep === 0 ? '취소' : '이전' }}
+        </button>
+        <button class="btn-next" :disabled="!stepValid" @click="onRightClick">
+          {{ currentStep < 4 ? '다음' : '완료' }}
+        </button>
       </div>
-    </Transition>
-
-    <!-- 왼쪽 버튼 -->
-    <div class="btns">
-      <button class="btn-cancel" @click="onLeftClick">
-        {{ currentStep === 0 ? '취소' : '이전' }}
-      </button>
-      <!-- 오른쪽 버튼 -->
-      <button class="btn-next" :disabled="!stepValid" @click="onRightClick">
-        {{ currentStep < 4 ? '다음' : '완료' }}
-      </button>
     </div>
   </div>
 </template>
@@ -125,6 +165,9 @@
 import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { profileAPI } from '@/api/profile.js';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 import {
   MARITAL_STATUS,
   getRegionOptions,
@@ -134,8 +177,23 @@ import {
   getSpecialtyOptions,
 } from '@/constants/enums.js';
 
+library.add(faCircleExclamation);
+
 const router = useRouter();
 const currentStep = ref(0);
+const showEducationTooltip = ref(false);
+
+// 툴팁 토글 함수 - 3초 후 자동으로 닫힘
+const toggleEducationTooltip = () => {
+  showEducationTooltip.value = !showEducationTooltip.value;
+  
+  if (showEducationTooltip.value) {
+    // 3초 후 자동으로 닫기
+    setTimeout(() => {
+      showEducationTooltip.value = false;
+    }, 3000);
+  }
+};
 
 // enum 옵션들
 const regionOptions = getRegionOptions();
@@ -278,243 +336,476 @@ const incomeError = computed(() => {
 </script>
 
 <style scoped>
+.page {
+  height: calc(100vh - 140px);
+  background: #f5f5f7;
+  padding: 16px 12px;
+  overflow: hidden;
+}
+
 .container {
-  max-width: 360px;
-  margin: 50px auto;
+  max-width: 380px;
+  margin: 0 auto;
   background: #fff;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  height: 100%;
+  overflow-y: auto;
 }
 
-.step label {
-  display: block;
-  font-weight: 500;
-  margin-top: 10px;
-  margin-bottom: 20px;
+.form-hero {
+  text-align: center;
+  margin-bottom: 16px;
 }
-.step > label {
-  display: inline-block;
-  margin: 10px 0 15px;
-  padding: 4px 10px;
-  line-height: 1;
+
+.form-subtitle {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.2;
+}
+
+.form-description {
+  margin: 0;
+  font-size: 13px;
+  color: #718096;
+  line-height: 1.3;
+}
+
+.step-title {
+  margin: 0 0 14px 0;
+  font-size: 15px;
   font-weight: 600;
-  color: #fff;
-  background-color: #36c18c;
-  /*background: rgba(54, 193, 140, 0.1);*/
-  border: 1px solid rgba(54, 193, 140, 0.28);
-  border-radius: 8px;
+  color: #2d3748;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* 기본 정보 입력 스타일 */
-input[type='number'] {
+.step-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.step-header .step-title {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+  flex-shrink: 0;
+}
+
+.tooltip-container {
+  position: absolute;
+  right: 0;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.tooltip-icon {
+  color: #36c18c;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tooltip-icon:hover {
+  color: #2da471;
+  transform: scale(1.1);
+}
+
+.tooltip {
+  position: relative;
+  background: #2d3748;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  margin-top: 8px;
+  display: block;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #2d3748;
+}
+
+.form-field {
+  margin-bottom: 14px;
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #4a5568;
+  font-size: 12px;
+}
+
+.form-field input,
+.form-field select {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
   box-sizing: border-box;
-  margin-bottom: 12px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: #36c18c;
+  box-shadow: 0 0 0 3px rgba(54, 193, 140, 0.15);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.form-field input.invalid {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15);
 }
 
 .select-input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-  margin-bottom: 12px;
-  background: white;
-}
-.select-input:focus,
-input[type='number']:focus {
-  border-color: var(--primary); /* #36c18c */
-  box-shadow: 0 0 0 4px rgba(54, 193, 140, 0.15);
-  outline: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  padding-right: 40px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-input[type='text']:focus,
-textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(54, 193, 140, 0.15);
-  outline: none;
+.marital-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.marital-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 500;
+  min-height: 38px;
+}
+
+.marital-btn:hover {
+  border-color: #36c18c;
+  background-color: #f0fff4;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.15);
+}
+
+.marital-btn.active {
+  background: #36c18c;
+  color: #fff;
+  border-color: #36c18c;
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.3);
+  transform: translateY(-1px);
 }
 
 .radio-group {
-  margin-bottom: 12px;
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
 }
 
-.radio-group label {
-  display: inline-block;
-  margin-right: 16px;
-  font-weight: normal;
+.radio-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.radio-option:hover {
+  border-color: #36c18c;
+  background-color: #f0fff4;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.15);
+}
+
+.radio-option.active {
+  border-color: #36c18c;
+  background-color: #36c18c;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.3);
+}
+
+.radio-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #36c18c;
 }
 
 .income {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 0;
+  margin-top: 4px;
 }
 
 .income input {
   flex: 1;
-  margin-bottom: 0;
 }
 
-.income span {
-  margin-left: 8px;
+.unit {
+  color: #718096;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 14px;
+  background: #f7fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  white-space: nowrap;
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
-/* 버튼 그룹 스타일 */
+.income input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .btn-group {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 8px;
-  margin-bottom: 16px;
+  margin-top: 10px;
 }
 
 .btn-group button {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #fafafa;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.2s ease;
+  min-height: 38px;
+}
+
+.btn-group button:hover {
+  border-color: #36c18c;
+  background-color: #f0fff4;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.15);
 }
 
 .btn-group button.active {
   background: #36c18c;
   color: #fff;
   border-color: #36c18c;
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.3);
+  transform: translateY(-1px);
 }
 
 .btns {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .btn-cancel {
   flex: 1;
-  background: #f2f4f6;
-  padding: 12px;
-  color: #b0b8c1;
-  border: none;
-  border-radius: 10px;
+  background: #f7fafc;
+  padding: 10px 14px;
+  color: #718096;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #edf2f7;
+  color: #4a5568;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-next {
   flex: 1;
-  height: 44px;
   border: none;
-  border-radius: 10px;
-  background: var(--primary, #36c18c);
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.22s ease, filter 0.2s ease;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.actions button:last-child {
-  margin-right: 0;
-}
-.actions button:first-child {
-  background: #a0c4c1;
-}
-.actions button:last-child {
+  border-radius: 8px;
   background: #36c18c;
-  color: #ffffff;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  padding: 10px 14px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(54, 193, 140, 0.3);
 }
-.actions button:disabled {
-  background: #ccc;
+
+.btn-next:hover:not(:disabled) {
+  background: #2da471;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(54, 193, 140, 0.4);
+}
+
+.btn-next:disabled {
+  background: #cbd5e0;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-.title {
-  text-align: center;
-  margin-bottom: 16px;
-  color: #757575;
-}
-/* 잘못된 값일 때 테두리/그림자 */
-input.invalid {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+.step-viewport {
+  min-height: 240px;
 }
 
-/* 에러 텍스트 */
 .error-text {
-  color: #ef4444;
+  color: #e53e3e;
   font-size: 12px;
   margin-top: 6px;
-}
-.form-subtitle {
-  font-size: 20px;
-  font-weight: 700;
-  color: #757575;
-  line-height: 1.2;
-  margin: 0 0 12px;
-}
-.form-hero {
-  width: 100%;
-  max-width: 720px;
-  margin: 16px auto 12px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.form-hero .form-subtitle {
-  margin: 0;
-  font-size: 25px;
-  font-weight: 700;
-  color: #757575;
-  text-align: center;
-  line-height: 1.2;
-}
-.container {
-  margin: 0 auto 50px;
-}
-.step-viewport {
-  min-height: 220px;
+  font-weight: 500;
 }
 
+/* 슬라이드 애니메이션 */
 .slide-left-enter-from {
   opacity: 0;
   transform: translateX(16px);
 }
+
 .slide-left-enter-to {
   opacity: 1;
   transform: translateX(0);
 }
+
 .slide-left-leave-from {
   opacity: 1;
   transform: translateX(0);
 }
+
 .slide-left-leave-to {
   opacity: 0;
   transform: translateX(-16px);
 }
+
 .slide-left-enter-active,
 .slide-left-leave-active {
-  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.28s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
 }
 
 .slide-right-enter-from {
   opacity: 0;
   transform: translateX(-16px);
 }
+
 .slide-right-enter-to {
   opacity: 1;
   transform: translateX(0);
 }
+
 .slide-right-leave-from {
   opacity: 1;
   transform: translateX(0);
 }
+
 .slide-right-leave-to {
   opacity: 0;
   transform: translateX(16px);
 }
+
 .slide-right-enter-active,
 .slide-right-leave-active {
-  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.28s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .page {
+    padding: 12px 10px;
+  }
+  
+  .container {
+    padding: 18px 14px;
+  }
+  
+  .form-subtitle {
+    font-size: 18px;
+  }
+  
+  .form-description {
+    font-size: 13px;
+  }
+  
+  .btn-group {
+    grid-template-columns: 1fr;
+  }
+  
+  .radio-group {
+    flex-direction: column;
+  }
+}
+
+/* 툴팁 애니메이션 */
+.tooltip-enter-active,
+.tooltip-leave-active {
+  transition: all 0.3s ease;
+}
+
+.tooltip-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.9);
+}
+
+.tooltip-enter-to {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tooltip-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tooltip-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.9);
 }
 </style>

@@ -418,7 +418,7 @@ const heroClass = computed(() => {
 
         <div class="actions">
           <button class="btn ghost" @click="onCancel">취소</button>
-          <button class="btn primary" :disabled="!isSubmitEnabled" @click="openConfirmModal">MoZi에서 탈퇴하기</button>
+          <button class="btn primary" :disabled="!isSubmitEnabled" @click="openConfirmModal">탈퇴</button>
         </div>
       </section>
     </main>

@@ -212,6 +212,20 @@ function goToGoalPage() {
   width: 100%;
   position: relative;
 }
+
+/* 왼쪽 선 스타일 */
+.financial-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, #ff9d00 0%, #83fff1 70%);
+  opacity: 0.7;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
 .card-header {
   display: flex;
   align-items: center;

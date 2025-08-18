@@ -36,7 +36,7 @@ const props = defineProps({
 
 <style scoped>
 .carousel-container {
-  padding-bottom: 20px; /* 인디케이터 공간 */
+  padding-bottom: 36px; /* 정책 카드와 페이지네이션 bullets 사이 간격 16px 추가 */
 }
 
 .carousel-slide {
