@@ -85,6 +85,20 @@ const keywordMap = {
 
 onMounted(async () => {
   isLoading.value = true;
+
+  const cacheKey = 'recommend_policy_cache';
+
+  // 캐시 확인
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) {
+    try {
+      goalRecommendations.value = JSON.parse(cached);
+      isLoading.value = false;
+    } catch (e) {
+      console.warn('캐시 파싱 실패, 새로 불러옴');
+    }
+  }
+
   try {
     const [res, scrapped] = await Promise.all([
       recommendPolicyAPI.getAllRecommendedPolicies(),
@@ -92,21 +106,25 @@ onMounted(async () => {
     ]);
     const scrNo = (scrapped ?? []).map((n) => String(n).trim());
 
-    goalRecommendations.value = (res ?? []).map((group) => ({
+    const data = (res ?? []).map((group) => ({
       ...group,
       recommendations: (group.recommendations ?? []).map((p) => {
         const no = String(p.plcyNo ?? '').trim();
         return { ...p, plcyNo: no, bookmarked: scrNo.includes(no) };
       }),
     }));
+
+    goalRecommendations.value = data;
+
+    // 캐싱
+    sessionStorage.setItem(cacheKey, JSON.stringify(data));
   } catch (e) {
     console.error('❌ 전체 추천 로딩 실패:', e);
-    goalRecommendations.value = [];
+    if (!cached) goalRecommendations.value = [];
   } finally {
     isLoading.value = false;
   }
 });
-
 const onBookmarkChanged = (groupIndex, plcyNo, bookmarked) => {
   const gi = groupIndex;
   if (gi < 0 || gi >= goalRecommendations.value.length) return;
