@@ -177,6 +177,7 @@ window.addEventListener('focus', loadGoals);
 .goal-main-container {
   padding: 20px;
   background-color: #ffffff; /* ✅ 배경색 흰색 */
+  /* min-height: 100vh; */
 }
 
 /* 페이지 헤더 - 타이틀 가운데 정렬 */
@@ -300,7 +301,6 @@ window.addEventListener('focus', loadGoals);
 .banner-text {
   flex: 1;
 }
-
 .banner-title {
   font-size: 15px;
   font-weight: 600;

@@ -162,15 +162,17 @@ const loadGoal = async (id) => {
   }
 };
 
-// 날짜 포맷팅
+// 날짜 포맷팅 함수 수정
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  const clean = dateStr.split('T')[0]; // "yyyy-mm-dd"
-  const d = new Date(clean);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}-${String(d.getDate()).padStart(2, '0')}`;
+
+  // "YYYY-MM-DD HH:mm:ss" 형식에서 날짜 부분만 추출
+  const datePart = dateStr.split(' ')[0];
+
+  // 날짜를 로컬 시간대로 파싱 (UTC 변환 방지)
+  const [year, month, day] = datePart.split('-');
+
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
 // 토글
@@ -243,7 +245,7 @@ const maskAccountNumber = (accountNumber) => {
     const middle = s
       .slice(1, -1)
       .split('')
-      .map(ch => (ch === '-' ? '-' : '*'))
+      .map((ch) => (ch === '-' ? '-' : '*'))
       .join('');
     return `${first}${middle}${last}`;
   }
@@ -265,7 +267,6 @@ const maskAccountNumber = (accountNumber) => {
 
   return `${firstPart}${middlePart.join('')}${lastPart}`;
 };
-
 
 // 키워드
 const keywords = [
@@ -552,21 +553,27 @@ const formatCurrency = (amount) => {
   }
 };
 
-// D-Day 계산
+// D-Day 계산 함수도 수정
 function getDDay(dateStr) {
   if (!dateStr) return '';
+
+  // 날짜 부분만 추출
+  const datePart = dateStr.split(' ')[0];
+  const [year, month, day] = datePart.split('-');
+
+  // 로컬 시간대로 날짜 생성
+  const targetDate = new Date(year, month - 1, day);
   const today = new Date();
-  const goalDate = new Date(dateStr.split('T')[0]); // "yyyy-mm-dd"
+  today.setHours(0, 0, 0, 0);
+  targetDate.setHours(0, 0, 0, 0);
 
-  const diff = goalDate.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0);
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const diff = targetDate - today;
+  const dDay = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
-  if (days > 0) return `D-${days}`;
-  else if (days === 0) return 'D-DAY';
-  else return `D+${Math.abs(days)}`;
+  if (dDay === 0) return 'D-Day';
+  if (dDay > 0) return `D-${dDay}`;
+  return `D+${Math.abs(dDay)}`;
 }
-
-
 </script>
 
 <template>
@@ -579,7 +586,7 @@ function getDDay(dateStr) {
       <div style="font-size: 18px; font-weight: bold; color: #757575">
         목표 상세 정보
       </div>
-    </div>  
+    </div>
   </div>
 
   <!-- 로딩 중 -->
@@ -660,10 +667,10 @@ function getDDay(dateStr) {
         <!-- 계좌 총액 / 목표 금액 형식 -->
         <p class="account-sum">
           <!-- {{ safeToLocaleString(currentAmount) }} -->
-            {{ formatCurrency(currentAmount) }}
+          {{ formatCurrency(currentAmount) }}
           /
           <!-- {{ safeToLocaleString(goal.targetAmount || goal.target_amount) }} 원 -->
-            {{ formatCurrency(goal.targetAmount) }}
+          {{ formatCurrency(goal.targetAmount) }}
         </p>
       </div>
 
@@ -726,8 +733,11 @@ function getDDay(dateStr) {
                 <img :src="getBankLogoUrl(acc.bankCode)" class="bank-logo" />
               </div>
               <div style="flex: 1; padding: 0; margin: 0">
-                <span class="account-name">{{ acc.accountName }}</span><br />
-                <span class="account-number">{{ maskAccountNumber(acc.accountNumber)}}</span>
+                <span class="account-name">{{ acc.accountName }}</span
+                ><br />
+                <span class="account-number">{{
+                  maskAccountNumber(acc.accountNumber)
+                }}</span>
               </div>
               <div
                 style="
@@ -821,7 +831,6 @@ function getDDay(dateStr) {
 </template>
 
 <style scoped>
-
 .page-header {
   display: flex;
   align-items: center;
@@ -847,7 +856,6 @@ function getDDay(dateStr) {
   border-bottom: 1px solid #f2f3f5;
 }
 
-
 .loading,
 .error-message {
   display: flex;
@@ -857,10 +865,6 @@ function getDDay(dateStr) {
   font-size: 16px;
   color: #6b7684;
 }
-
-
-
-
 
 /* 중앙 타이틀 */
 .top-title {
@@ -872,7 +876,6 @@ function getDDay(dateStr) {
   color: #2c3e50;
   text-align: center;
 }
-
 
 .top-title > p {
   margin: 0;
@@ -1207,7 +1210,7 @@ function getDDay(dateStr) {
   font-size: 14px;
 }
 
-.txt{
+.txt {
   font-size: 14px;
 }
 
@@ -1225,6 +1228,13 @@ function getDDay(dateStr) {
   transition: all 0.2s ease;
 }
 
+/* 메모 -> 박스 안에 다 들어오도록 설정 */
+.goal-memo .txt {
+  word-wrap: break-word; /* 단어 단위로 줄바꿈 */
+  word-break: break-all; /* 글자 단위로 줄바꿈 */
+  white-space: normal;   /* 공백과 줄바꿈을 정상 처리 */
+}
+
 .goal-date-target:hover,
 .goal-memo:hover,
 .goal-account:hover {
@@ -1236,12 +1246,11 @@ function getDDay(dateStr) {
   margin-left: 8px;
   border-radius: 5px;
   background: linear-gradient(135deg, #2f9b78, #68e8c7); /* 그라데이션 */
-  color: #FFF;
+  color: #fff;
   font-size: 12px;
   padding: 2px 6px;
   display: inline-block;
 }
-
 
 /* 은행 로고 이미지 */
 .bank-logo {
@@ -1415,7 +1424,6 @@ function getDDay(dateStr) {
   .modal-content {
     width: 300px;
   }
-
 }
 
 /* 부드러운 애니메이션 효과 */

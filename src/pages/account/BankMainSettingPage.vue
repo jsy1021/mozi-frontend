@@ -69,7 +69,7 @@ const goBack = () => {
       </div>
     </div>
     <p style="padding-left: 10px; font-size: 15px">
-      주거래 은행을 선택해주세요
+      주거래 은행을 한 개를 선택해주세요
     </p>
 
     <div class="bank-box">

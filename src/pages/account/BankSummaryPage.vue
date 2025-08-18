@@ -163,7 +163,7 @@ onMounted(async () => {
         <p class="no-data-text">
           계좌를 연동하면 더 많은 서비스를 <br />받을 수 있어요!
         </p>
-        <button class="card-btn" @click="goToConnectPage">계좌 연결하기</button>
+        <button class="card-btn" @click="goToConnectPage">계좌 연동하기</button>
       </div>
     </template>
   </div>
@@ -174,6 +174,7 @@ onMounted(async () => {
   position: relative;
   padding: 16px;
   background-color: #fff;
+  height: 732px;
 }
 
 /* 헤더 */
@@ -222,7 +223,6 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 2px 10px 10px;
   margin-bottom: 16px;
-  max-height: 320px;
   overflow-y: auto;
 }
 
@@ -391,7 +391,7 @@ onMounted(async () => {
   text-align: center;
   transform: translate(-50%, -50%);
   user-select: none;
-  margin-top: 280px;
+  margin-top: 70px;
 }
 .no-data-image {
   width: 200px;
