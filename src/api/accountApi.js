@@ -33,7 +33,7 @@ export const deleteAccounts = async (bankCodeList) => {
 // 계좌 최신화
 export const refreshAccounts = async () => {
   try {
-    const result = await api.put('/account/refresh');
+    const result = await api.post('/account/refresh');
     return result;
   } catch (error) {
     console.error('계좌 최신화 실패:', error);
@@ -70,7 +70,7 @@ export const getMainBank = async () => {
 
 export const setMainBank = async (bankCode) => {
   const payload = { bankCode: bankCode === null ? null : bankCode };
-  const response = await api.post('/account/set-mainbank', payload, {
+  const response = await api.put('/account/set-mainbank', payload, {
     headers: { 'Content-Type': 'application/json' },
   });
   return response;
@@ -98,7 +98,7 @@ export const getAccountsByBank = async (bankCode) => {
 //목표 포함계좌 수정
 export const updateAccountsByGoal = async (data) => {
   try {
-    const response = await api.post('/account/update-by-goal', data);
+    const response = await api.put('/account/update-by-goal', data);
     return response;
   } catch (error) {
     console.error('계좌 목표 업데이트 실패:', error);
