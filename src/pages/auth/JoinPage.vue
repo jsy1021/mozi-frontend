@@ -731,7 +731,7 @@ body {
   align-items: center; /* 세로 중앙 */
   width: 100%;
   height: 60px;
-  margin-top: 2rem;
+  margin-top: 5rem;
 }
 
 .backIcon {
@@ -814,6 +814,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 0.5rem;
 }
 .arrow {
   cursor: pointer;
@@ -842,7 +843,6 @@ button {
   font-size: 1rem;
   color: #b0b8c1;
   background-color: #f2f4f6;
-  margin-top: 0;
 }
 
 button.active {

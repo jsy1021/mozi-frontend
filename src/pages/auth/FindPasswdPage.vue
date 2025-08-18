@@ -292,7 +292,7 @@ body {
   align-items: center;
   width: 100%;
   height: 60px;
-  margin-top: 2rem;
+  margin-top: 5rem;
 }
 
 .logo {
