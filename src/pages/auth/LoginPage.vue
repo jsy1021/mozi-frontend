@@ -338,8 +338,12 @@ h1 {
   flex: 1;
   border-bottom: 1px solid #ccc;
 }
-.social-divider::before { margin-right: 12px; }
-.social-divider::after  { margin-left: 12px; }
+.social-divider::before {
+  margin-right: 12px;
+}
+.social-divider::after {
+  margin-left: 12px;
+}
 
 .social-login button {
   display: flex;
@@ -373,5 +377,12 @@ h1 {
   background-color: white;
   border: 1px solid #d9d9d9;
   color: #333;
+}
+
+.login input:focus,
+.passwd-input:focus {
+  outline: none;
+  border-color: #36c18c;
+  box-shadow: 0 0 0 2px rgba(54, 193, 140, 0.2);
 }
 </style>
