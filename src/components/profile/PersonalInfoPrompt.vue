@@ -3,30 +3,30 @@
     <div class="prompt-overlay">
       <div class="prompt-content">
         <div class="prompt-header">
-          <h3>개인정보 입력</h3>
+          <div class="title-section">
+            <h3>퍼스널 정보 입력</h3>
+            <span v-if="props.remainingDays > 0" class="countdown">D-{{ props.remainingDays }}</span>
+          </div>
           <button @click="$emit('dismiss')" class="close-btn">
             <i class="fas fa-times"></i>
           </button>
         </div>
 
         <div class="prompt-body">
-          <p>더 나은 서비스 제공을 위해 개인정보를 입력해주세요.</p>
-          <div v-if="props.remainingDays > 0" class="remaining-days">
-            <span class="countdown">{{ props.remainingDays }}일 남음</span>
+          <p>더 나은 서비스 제공을 위해 퍼스널 정보를 입력해주세요.</p>
+          <div class="info-notice">
+            <i class="fas fa-info-circle notice-icon"></i>
+            <span class="notice-text">입력된 정보는 다음 기능에 활용됩니다</span>
           </div>
-
           <div class="info-items">
             <div class="info-item">
               <i class="fas fa-user-circle"></i>
-              <span>기본 프로필 정보</span>
+              <span>프로필 상세 정보</span>
             </div>
-            <div class="info-item">
-              <i class="fas fa-chart-pie"></i>
-              <span>투자 성향 분석</span>
-            </div>
+
             <div class="info-item">
               <i class="fas fa-bullseye"></i>
-              <span>맞춤형 목표 설정</span>
+              <span>맞춤형 정책 추천 </span>
             </div>
           </div>
         </div>
@@ -144,6 +144,28 @@ const handleNeverShow = () => {
   color: #212529;
 }
 
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.countdown {
+  color: #856404;
+  font-weight: 600;
+  font-size: 12px;
+  background-color: #fff3cd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #ffeaa7;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -168,6 +190,29 @@ const handleNeverShow = () => {
   color: #6c757d;
   margin: 0 0 20px;
   line-height: 1.5;
+}
+
+.info-notice {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notice-icon {
+  color: #856404;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.notice-text {
+  color: #495057;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .info-items {
@@ -196,21 +241,6 @@ const handleNeverShow = () => {
   color: #495057;
   font-size: 14px;
   font-weight: 500;
-}
-
-.remaining-days {
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 6px;
-  padding: 8px 12px;
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.countdown {
-  color: #856404;
-  font-weight: 600;
-  font-size: 14px;
 }
 
 .prompt-footer {

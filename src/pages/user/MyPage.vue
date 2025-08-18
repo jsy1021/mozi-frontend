@@ -1,12 +1,11 @@
 <script setup>
 import axios from 'axios';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faCircleUser } from '@fortawesome/free-regular-svg-icons';
-import { faXmark, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faPen } from '@fortawesome/free-solid-svg-icons';
 import { useRoute, useRouter } from 'vue-router';
-import { computed } from 'vue';
 
 import {
   REGION_LABELS,
@@ -22,9 +21,7 @@ const router = useRouter();
 const personalForm = ref(null);
 const canSubmit = computed(() => passwordInput.value.trim() !== '');
 
-library.add(faCircleUser, faXmark, faPen, faTrash);
-
-console.log('현재 라우트 경로:', route.path);
+library.add(faCircleUser, faXmark, faPen);
 
 // 사용자 정보
 const userInfo = ref({
@@ -96,8 +93,6 @@ onMounted(async () => {
       };
 
       personalForm.value = result.has_personal_info ? result.personal_info : null;
-
-      console.log('📦 personalForm:', personalForm.value);
     } else {
       console.error('마이페이지 조회 실패:', res.data.message);
     }
@@ -106,7 +101,7 @@ onMounted(async () => {
   }
 });
 
-//탈퇴 페이지로 이동
+// 탈퇴 페이지로 이동
 function deleteAccount() {
   router.push({ name: 'DeleteInfo' });
 }
@@ -131,23 +126,13 @@ function deleteAccount() {
     </div>
 
     <!-- 마이페이지 화면 -->
-    <div class="mypage-container">
+    <div class="mypage-content">
       <!-- 기본 정보 카드 -->
       <div class="info-card">
         <div class="info-header">
           <h3>기본 정보</h3>
           <div class="btn-wrapper">
-            <!-- 배경 있는 버전 -->
-            <!-- <button class="edit-btn" @click="openPasswordModal">
-              <font-awesome-icon :icon="['fas', 'pen']" class="edit-icon" />
-            </button>
-            <button class="delete-btn" @click="deleteAccount">
-              <font-awesome-icon :icon="['fas', 'trash']" />
-            </button> -->
-
-            <!-- 배경 없는 버전 -->
             <font-awesome-icon :icon="['fas', 'pen']" class="icon edit-icon" @click="openPasswordModal" />
-            <font-awesome-icon :icon="['fas', 'trash']" class="icon delete-icon" @click="deleteAccount" />
           </div>
         </div>
         <div class="user-info-row">
@@ -186,9 +171,7 @@ function deleteAccount() {
             </div>
             <div class="item">
               <span class="label">혼인여부</span>
-              <span class="value">{{
-                MARITAL_STATUS_LABELS[personalForm.marital_status] || personalForm.marital_status
-              }}</span>
+              <span class="value">{{ MARITAL_STATUS_LABELS[personalForm.marital_status] || personalForm.marital_status }}</span>
             </div>
             <div class="item">
               <span class="label">연소득</span>
@@ -196,22 +179,18 @@ function deleteAccount() {
             </div>
             <div class="item">
               <span class="label">학력</span>
-              <span class="value">{{
-                EDUCATION_LEVEL_LABELS[personalForm.education_level] || personalForm.education_level
-              }}</span>
+              <span class="value">{{ EDUCATION_LEVEL_LABELS[personalForm.education_level] || personalForm.education_level }}</span>
             </div>
             <div class="item">
               <span class="label">취업상태</span>
-              <span class="value">{{
-                EMPLOYMENT_STATUS_LABELS[personalForm.employment_status] || personalForm.employment_status
-              }}</span>
+              <span class="value">{{ EMPLOYMENT_STATUS_LABELS[personalForm.employment_status] || personalForm.employment_status }}</span>
             </div>
             <div class="item">
               <span class="label">전공</span>
               <span class="value">{{ MAJOR_LABELS[personalForm.major] || personalForm.major }}</span>
             </div>
             <div class="item">
-              <span class="label">특화분야</span>
+              <span class="label">기타 해당 사항</span>
               <span class="value">{{ SPECIALTY_LABELS[personalForm.specialty] || personalForm.specialty }}</span>
             </div>
           </div>
@@ -222,6 +201,11 @@ function deleteAccount() {
           <p class="desc">설정하신 개인정보 및 관심사항을 기반으로<br />맞춤 정책을 제공합니다.</p>
           <button class="save-btn" @click="router.push('/user/personal')">퍼스널 정보 입력</button>
         </template>
+      </div>
+
+      <!-- 회원탈퇴 버튼 -->
+      <div class="account-actions">
+        <button type="button" class="danger-btn" @click="deleteAccount">회원탈퇴</button>
       </div>
     </div>
   </div>
@@ -306,58 +290,22 @@ html {
 /* 기본 정보 카드 */
 .info-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 12px 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  border: 1px solid #e9ecef;
+  flex-shrink: 0;
 }
+
 /* 기본 정보 수정 버튼 스타일 */
 .btn-wrapper {
   display: flex;
-  gap: 10px; /* 버튼 간격 */
+  gap: 12px;
   align-items: center;
 }
-.info-card .edit-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 13px;
-  background-color: #36c18c;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
 
-.info-card .delete-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 10px;
-  background-color: #ff4d4f;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.info-card .edit-btn:hover {
-  background-color: #2fa77b;
-}
-
-.info-card .edit-btn:active {
-  transform: scale(0.97);
-}
-
-.info-card .delete-btn:hover {
-  background-color: #d9363e;
-}
-
-.info-card .delete-btn:active {
-  transform: scale(0.97);
-}
 .icon {
   width: 16px;
   height: 16px;
@@ -367,33 +315,55 @@ html {
   font-size: 12px;
   line-height: 1;
   cursor: pointer;
-  color: #111;
+  color: #6c757d;
+  transition: color 0.2s ease;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.icon.edit-icon:hover {
+  color: #36c18c;
+  background-color: #f8f9fa;
+}
+
+.icon.delete-icon:hover {
+  color: #dc3545;
+  background-color: #f8f9fa;
 }
 
 .info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+}
+
+.info-header h3 {
+  margin: 0 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #191f28;
+  line-height: 1.2;
 }
 
 .user-info-row {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 12px;
+  gap: 14px;
+  margin-bottom: 10px;
 }
 
 .avatar {
-  width: 72px;
-  height: 72px;
-  background-color: #f2f4f6;
+  width: 55px;
+  height: 55px;
+  background-color: #f8f9fa;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
-  margin-top: 4px;
+  margin-top: 2px;
+  border: 2px solid #e9ecef;
 }
 
 .user-text-info {
@@ -405,116 +375,178 @@ html {
 .info-line {
   display: flex;
   flex-direction: column;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .label {
-  color: #999;
-  font-size: 13px;
+  color: #6c757d;
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 1px;
 }
 
 .value {
-  color: #333;
-  font-weight: 500;
-  font-size: 14px;
+  color: #191f28;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 /* 퍼스널 카드 */
 .personal-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 24px 20px;
-  border: 1px solid #ddd;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 12px 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  border: 1px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+.personal-card h3 {
+  margin: 12px 0 12px 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #191f28;
+  line-height: 1.2;
 }
 
 /* 퍼스널 정보 미입력 시 */
 .personal-card .desc {
-  font-size: 14px;
-  color: #555;
-  line-height: 1.6;
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.3;
   text-align: center;
-  margin-bottom: 20px;
-  min-height: 100px;
+  margin-bottom: 16px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .save-btn {
   width: 100%;
-  padding: 12px;
-  font-size: 15px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
   background-color: #36c18c;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(54, 193, 140, 0.3);
+}
+
+.save-btn:hover {
+  background-color: #2da471;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(54, 193, 140, 0.4);
 }
 
 /* 퍼스널 정보 입력된 경우 그리드 */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
   width: 100%;
+  margin-bottom: 14px;
 }
 
 .item {
-  background: #f2f4f6;
+  background: #f8f9fa;
   border-radius: 8px;
-  padding: 10px;
+  padding: 12px 10px;
   text-align: center;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: #333;
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 70px;
+  height: 60px;
   box-sizing: border-box;
   justify-content: center;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
 
-  word-wrap: break-word; /* 단어 줄바꿈 허용 */
-  word-break: break-word; /* 긴 단어도 줄바꿈 */
-  white-space: normal; /* 줄바꿈 허용 */
-  text-align: center;
-}
 .item .label {
-  font-size: 12px;
-  color: #777;
+  font-size: 10px;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 3px;
 }
+
 .item .value {
-  font-size: 14px;
-  font-weight: bold;
-  color: #111;
+  font-size: 11px;
+  font-weight: 600;
+  color: #191f28;
 }
 
 /* 퍼스널 정보 수정 버튼 */
 .personal-card .edit-btn {
   width: 100%;
-  padding: 12px;
-  font-size: 15px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
   background-color: #36c18c;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-top: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(54, 193, 140, 0.3);
+}
+
+.personal-card .edit-btn:hover {
+  background-color: #2da471;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(54, 193, 140, 0.4);
 }
 
 /* 전체 마이페이지 박스 */
 .mypage-container {
-  max-width: 400px;
+  max-width: 380px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 16px 12px;
+  background-color: #f8f9fa;
+  height: calc(100vh - 140px);
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.mypage-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  background-color: #f1f1f1;
-  flex: 1;
-  height: auto;
-  box-sizing: border-box;
+  gap: 10px;
+  height: 100%;
   overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.danger-btn {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: #f76c6c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(247, 108, 108, 0.3);
+  flex-shrink: 0;
+}
+
+.danger-btn:hover {
+  background-color: #f04848;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(247, 108, 108, 0.4);
 }
 </style>
