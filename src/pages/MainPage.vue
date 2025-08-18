@@ -510,6 +510,7 @@ watch(
 <style scoped>
 /* 섹션 헤더 통일 스타일 */
 .section-header {
+  margin-top: 5px;
   display: flex;
   align-items: center;
   padding: 8px 20px 8px 20px;
@@ -624,7 +625,7 @@ watch(
 }
 ::v-deep(.policy-swiper .swiper-pagination) {
   position: static !important;
-  margin-top: -14px;
+  margin-top: 0px;
   padding-top: 0px;
 }
 </style>
