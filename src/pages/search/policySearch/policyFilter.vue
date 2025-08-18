@@ -147,9 +147,9 @@
       </div>
     </div>
 
-    <!-- 특화 분야 -->
+    <!-- 기타 해당 사항 -->
     <div class="filter-section">
-      <div class="filter-label">특화 분야</div>
+      <div class="filter-label">기타 해당 사항</div>
       <div class="chip-group" role="group" aria-label="특화 분야">
         <button
           v-for="item in special"
