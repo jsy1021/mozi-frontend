@@ -111,8 +111,8 @@ export default {
         { label: '광주', value: '0010019' },
         { label: '전북', value: '0010022' },
         { label: '제주', value: '0010020' },
-        { label: 'NH농협', value: '0013175' },
-        { label: '신협', value: '0014807' }
+        { label: 'NH농협', value: '0013175' }
+       
       ],
       joinWayOptions: [
         { label: '영업점', value: '영업점' },
