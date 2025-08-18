@@ -345,7 +345,7 @@ watch(
   </div>
 
   <!-- 계좌 정보 -->
-  <div style="display: flex">
+  <div style="display: flex; margin: -23px 0px -3px 0px">
     <p style="margin: 10px 10px 0px 25px; color: #6b7684; font-weight: bolder">
       나의 자산
     </p>
@@ -441,7 +441,7 @@ watch(
   </div>
 
   <!-- 마감임박 정책 -->
-  <div style="display: flex; margin-top: 12px">
+  <div style="display: flex; margin-top: 6px">
     <p
       style="margin: 10px 10px -10px 25px; color: #6b7684; font-weight: bolder"
     >
@@ -618,7 +618,7 @@ watch(
 }
 ::v-deep(.policy-swiper .swiper-pagination) {
   position: static !important;
-  margin-top: -1px;
+  margin-top: -14px;
   padding-top: 0px;
 }
 </style>
