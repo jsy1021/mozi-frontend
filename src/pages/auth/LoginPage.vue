@@ -196,7 +196,7 @@ const loginWithGoogle = () => handleSocialLogin('google');
 
 h1 {
   text-align: center;
-  margin-top: 4rem;
+  margin-top: 5rem;
   font-weight: 800; /* Extra Bold */
   font-size: 48px;
   color: #36c18c;

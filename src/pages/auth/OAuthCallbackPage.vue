@@ -128,23 +128,9 @@ onMounted(async () => {
       <div v-else-if="error" class="status-container">
         <div class="error-section">
           <div class="error-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-              <path
-                d="m15 9-6 6m0-6 6 6"
-                stroke="currentColor"
-                stroke-width="2"
-              />
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+              <path d="m15 9-6 6m0-6 6 6" stroke="currentColor" stroke-width="2" />
             </svg>
           </div>
           <h2 class="status-title error-title">로그인 실패</h2>
@@ -157,18 +143,13 @@ onMounted(async () => {
       <div v-else class="status-container">
         <div class="success-section">
           <div class="success-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M20 6L9 17l-5-5"
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+                stroke-linejoin="round" />
             </svg>
           </div>
           <h2 class="status-title success-title">환영합니다!</h2>
@@ -192,6 +173,7 @@ onMounted(async () => {
   padding: 20px;
   background-color: white;
   border-bottom: 1px solid #e9ecef;
+  margin-top: 5rem;
 }
 
 .logo {
