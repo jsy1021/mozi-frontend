@@ -501,7 +501,6 @@ watch(
           :deposit="item"
           :productType="item.type"
           sourceTab="main"
-          
         />
       </SwiperSlide>
     </Swiper>
@@ -511,6 +510,7 @@ watch(
 <style scoped>
 /* 섹션 헤더 통일 스타일 */
 .section-header {
+  margin-top: 5px;
   display: flex;
   align-items: center;
   padding: 8px 20px 8px 20px;
@@ -605,7 +605,6 @@ watch(
 }
 .financial-swiper {
   width: 100%;
-
 }
 
 .financial-slide {
@@ -620,14 +619,13 @@ watch(
 
 .policy-swiper {
   width: 100%;
- 
 }
 .policy-slide {
   width: 100%;
 }
 ::v-deep(.policy-swiper .swiper-pagination) {
   position: static !important;
-  margin-top: -1px;
+  margin-top: 0px;
   padding-top: 0px;
 }
 </style>
