@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { getMainBankSummary } from '@/api/accountApi';
 import { useBankStore } from '@/stores/bank';
 import { useGoalStore } from '@/stores/goal';
-import FinancialCard from '@/pages/search/financialSearch/financialCard.vue';
+import FinancialCard from '@/pages/search/financialSearch/FinancialCard.vue';
 import GoalCard from '@/components/goal/GoalCard.vue';
 import GoalEmptyCard from '@/components/goal/GoalEmptyCard.vue';
 import goalApi from '@/api/goalApi';

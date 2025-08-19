@@ -95,8 +95,8 @@
 // 기본 import
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import PolicyCard from './policyCard.vue';
-import PolicyFilter from './policyFilter.vue';
+import PolicyCard from './PolicyCard.vue';
+import PolicyFilter from './PolicyFilter.vue';
 import policyApi from '@/api/policyApi';
 import {
   fetchRegionNamesByZipCodes,

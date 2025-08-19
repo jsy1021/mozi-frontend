@@ -11,7 +11,7 @@ export default [
     path: '/policySearch/detail/:id',
     name: 'policyDetail',
     component: () =>
-      import('../pages/search/policySearch/policyDetailPage.vue'),
+      import('../pages/search/policySearch/PolicyDetailPage.vue'),
     meta: { isHeader: true, isFooter: true, requiresAuth: true },
   },
 ];
