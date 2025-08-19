@@ -61,7 +61,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import recommendPolicyAPI from '@/api/recommendPolicyApi';
-import RecommendCarousel from './policy/recommendCarousel.vue';
+import RecommendCarousel from './policy/RecommendCarousel.vue';
 import { getScrappedPolicyIds } from '@/api/scrapApi';
 import { useRouter } from 'vue-router';
 const router = useRouter();
