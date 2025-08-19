@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="['goal-card', { 'billion-goal': isBillionGoal }]"
+    :class="['goal-card', { 'billion-goal': isBillionGoal }, customClass]"
     @click="handleCardClick"
   >
     <!-- 목표 이름과 버튼 -->
@@ -85,6 +85,10 @@ const props = defineProps({
   goal: {
     type: Object,
     required: true,
+  },
+  customClass: {
+    type: String,
+    default: '',
   },
 });
 

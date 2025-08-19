@@ -332,6 +332,7 @@ watch(
         <GoalCard
           v-if="sortedGoals.length > 0"
           :goal="transformGoal(sortedGoals[0])"
+          customClass="my-goal-card"
           @click="goToGoalDetail(sortedGoals[0].goalId)"
           @delete="handleDeleteGoal"
         />
@@ -510,7 +511,7 @@ watch(
 <style scoped>
 /* 섹션 헤더 통일 스타일 */
 .section-header {
-  margin-top: 5px;
+  margin-top: 3px;
   display: flex;
   align-items: center;
   padding: 8px 20px 8px 20px;
@@ -591,7 +592,7 @@ watch(
 
 .goal-main-container {
   padding: 0 20px 0px 20px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .goals-container {
@@ -603,6 +604,26 @@ watch(
   flex-direction: column;
   gap: 12px;
 }
+:deep(.my-goal-card) {
+  margin-top: 0px;
+  padding: 5px 20px 3px 20px;
+}
+
+:deep(.my-goal-card .card-header) {
+  font-size: 18px;
+  font-weight: bold;
+  color: #222;
+  padding: 2px 0px 0px 0px;
+  margin-bottom: 12px;
+}
+:deep(.my-goal-card .goal-name) {
+  padding-top: 7px;
+}
+
+:deep(.my-goal-card .amount-info) {
+  padding-top: -5px;
+}
+
 .financial-swiper {
   width: 100%;
 }
