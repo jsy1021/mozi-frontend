@@ -69,7 +69,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(opt, idx) in saving?.options || []" :key="idx">
+            <tr v-for="(opt, idx) in sortedOptions" :key="idx">
               <td>{{ opt.saveTrm }}개월</td>
               <td>{{ opt.rsrvTypeNm }}</td>
               <td>{{ opt.intrRate }}%</td>
@@ -138,6 +138,39 @@ const bestOption = computed(() => {
   return saving.value.options.reduce((max, cur) =>
     Number(cur.intrRate) > Number(max.intrRate) ? cur : max
   );
+});
+
+// 적립방식별로 그룹화하고 기간 기준으로 오름차순 정렬된 옵션들
+const sortedOptions = computed(() => {
+  if (!saving.value?.options || saving.value.options.length === 0) return [];
+  
+  // 적립방식별로 그룹화
+  const groupedByType = {};
+  saving.value.options.forEach(option => {
+    const type = option.rsrvTypeNm || '기타';
+    if (!groupedByType[type]) {
+      groupedByType[type] = [];
+    }
+    groupedByType[type].push(option);
+  });
+  
+  // 각 그룹 내에서 기간 기준으로 오름차순 정렬
+  Object.keys(groupedByType).forEach(type => {
+    groupedByType[type].sort((a, b) => Number(a.saveTrm) - Number(b.saveTrm));
+  });
+  
+  // 적립방식 순서 정의 (자유적립식 먼저, 정액적립식 나중에)
+  const typeOrder = ['자유적립식', '정액적립식', '기타'];
+  
+  // 정의된 순서대로 옵션들을 합치기
+  const result = [];
+  typeOrder.forEach(type => {
+    if (groupedByType[type]) {
+      result.push(...groupedByType[type]);
+    }
+  });
+  
+  return result;
 });
 
 const goBack = () => {
