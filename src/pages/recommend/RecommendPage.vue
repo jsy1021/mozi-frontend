@@ -61,8 +61,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import policyRecommendTab from './PolicyRecommendTab.vue';
-import FinancialRecommendTab from './FinancialRecommendTab.vue';
+import policyRecommendTab from './policy/PolicyRecommendTab.vue';
+import FinancialRecommendTab from './financial/FinancialRecommendTab.vue';
 
 const router = useRouter();
 const route = useRoute();
