@@ -26,7 +26,7 @@ import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-import RecommendPolicyCard from './recommendPolicyCard.vue';
+import RecommendPolicyCard from './RecommendPolicyCard.vue';
 
 const props = defineProps({
   cards: { type: Array, required: true },

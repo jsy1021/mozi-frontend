@@ -19,7 +19,7 @@ import 'swiper/css/pagination';
 import { useAuthStore } from '@/stores/auth';
 import PersonalInfoPrompt from '@/components/profile/PersonalInfoPrompt.vue';
 
-import RecommendPolicyCard from './recommend/policy/recommendPolicyCard.vue';
+import RecommendPolicyCard from './recommend/policy/RecommendPolicyCard.vue';
 
 const router = useRouter();
 const route = useRoute();
