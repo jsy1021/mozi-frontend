@@ -178,6 +178,23 @@ const selectedFilter = ref({
   banks: [],
   joinWays: [],
 });
+
+// 필터 상태를 sessionStorage에 저장하는 함수
+const saveFilterState = () => {
+  sessionStorage.setItem('finance.selectedFilter', JSON.stringify(selectedFilter.value));
+};
+
+// 필터 상태를 sessionStorage에서 복원하는 함수
+const restoreFilterState = () => {
+  const savedFilter = sessionStorage.getItem('finance.selectedFilter');
+  if (savedFilter) {
+    try {
+      selectedFilter.value = JSON.parse(savedFilter);
+    } catch (e) {
+      console.error('필터 상태 복원 실패:', e);
+    }
+  }
+};
 const goBack = () => {
   router.back();
 };
@@ -242,6 +259,7 @@ const toggleFilterPanel = () => {
 
 function handleFilter(selected) {
   selectedFilter.value = selected;
+  saveFilterState(); // 필터 상태 저장
 }
 
 const currentProductList = computed(() => {
@@ -263,8 +281,10 @@ const currentProductList = computed(() => {
     const selectedPeriod = Number(selectedFilter.value.period);
     list = list.filter((item) => {
       if (!item.options || item.options.length === 0) return false;
-      const lastOption = item.options[item.options.length - 1];
-      return Number(lastOption.saveTrm) <= selectedPeriod;
+      // 선택된 기간 옵션이 정확히 있는 상품만 필터링
+      return item.options.some(option => 
+        Number(option.saveTrm) === selectedPeriod
+      );
     });
   }
 
@@ -364,6 +384,7 @@ const removeFilter = (filterType) => {
   } else if (filterType === 'rateSort') {
     selectedFilter.value.rateSort = '';
   }
+  saveFilterState(); // 필터 상태 저장
 };
 
 const removeBankFilter = (bankCode) => {
@@ -372,6 +393,7 @@ const removeBankFilter = (bankCode) => {
       (code) => code !== bankCode
     );
   }
+  saveFilterState(); // 필터 상태 저장
 };
 
 const removeJoinWayFilter = (joinWay) => {
@@ -380,6 +402,7 @@ const removeJoinWayFilter = (joinWay) => {
       (way) => way !== joinWay
     );
   }
+  saveFilterState(); // 필터 상태 저장
 };
 
 watch(currentCategory, (tab) => {
@@ -399,6 +422,9 @@ onMounted(() => {
   if (savedCategory && categories.includes(savedCategory)) {
     currentCategory.value = savedCategory;
   }
+
+  // 저장된 필터 상태 복원
+  restoreFilterState();
 
   if (currentCategory.value === '예금') fetchDeposits();
   else fetchSavings();
