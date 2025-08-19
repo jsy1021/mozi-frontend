@@ -118,7 +118,7 @@ export default {
         { label: '영업점', value: '영업점' },
         { label: '인터넷', value: '인터넷' },
         { label: '스마트폰', value: '스마트폰' },
-        { label: '전화', value: '전화' }
+        { label: '전화(텔레뱅킹)', value: '전화(텔레뱅킹)' }
       ],
       selectedPeriod: '',
       selectedRateSort: '',
