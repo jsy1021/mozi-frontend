@@ -5,7 +5,7 @@ import RecommendSection from '@/components/goal/RecommendSection.vue';
 import GoalCompletePopup from '@/components/goal/GoalCompletePopup.vue';
 import ProgressBar from '@/components/goal/ProgressBar.vue';
 
-import { useGoalStore } from '@/stores/goalStore';
+import { useGoalStore } from '@/stores/goal';
 import goalApi from '@/api/goalApi';
 import { getAccountsByGoal, getAccountList } from '@/api/accountApi';
 
@@ -1232,7 +1232,7 @@ function getDDay(dateStr) {
 .goal-memo .txt {
   word-wrap: break-word; /* 단어 단위로 줄바꿈 */
   word-break: break-all; /* 글자 단위로 줄바꿈 */
-  white-space: normal;   /* 공백과 줄바꿈을 정상 처리 */
+  white-space: normal; /* 공백과 줄바꿈을 정상 처리 */
 }
 
 .goal-date-target:hover,

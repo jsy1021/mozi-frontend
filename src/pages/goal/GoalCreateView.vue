@@ -15,7 +15,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useGoalStore } from '@/stores/goalStore';
+import { useGoalStore } from '@/stores/goal';
 import { updateAccountsByGoal } from '@/api/accountApi';
 import GoalForm from '../../components/goal/GoalForm.vue';
 
