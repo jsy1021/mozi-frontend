@@ -69,7 +69,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useGoalStore } from '@/stores/goalStore';
+import { useGoalStore } from '@/stores/goal';
 import GoalCard from '../../components/goal/GoalCard.vue';
 import goalApi from '@/api/goalApi';
 

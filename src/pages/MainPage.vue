@@ -3,8 +3,8 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { getMainBankSummary } from '@/api/accountApi';
 import { useBankStore } from '@/stores/bank';
-import { useGoalStore } from '@/stores/goalStore';
-import FinancialCard from '@/pages/search/financialSearch/financialCard.vue';
+import { useGoalStore } from '@/stores/goal';
+import FinancialCard from '@/pages/search/financialSearch/FinancialCard.vue';
 import GoalCard from '@/components/goal/GoalCard.vue';
 import GoalEmptyCard from '@/components/goal/GoalEmptyCard.vue';
 import goalApi from '@/api/goalApi';
@@ -19,7 +19,7 @@ import 'swiper/css/pagination';
 import { useAuthStore } from '@/stores/auth';
 import PersonalInfoPrompt from '@/components/profile/PersonalInfoPrompt.vue';
 
-import RecommendPolicyCard from './recommend/policy/recommendPolicyCard.vue';
+import RecommendPolicyCard from './recommend/policy/RecommendPolicyCard.vue';
 
 const router = useRouter();
 const route = useRoute();

@@ -1,6 +1,16 @@
 <template>
   <div class="container py-3">
-    <div style="font-size: 18px; font-weight: bold; color: #757575; margin-bottom: 1rem; text-align: center;">내 스크랩</div>
+    <div
+      style="
+        font-size: 18px;
+        font-weight: bold;
+        color: #757575;
+        margin-bottom: 1rem;
+        text-align: center;
+      "
+    >
+      내 스크랩
+    </div>
 
     <!-- 카테고리 탭 (mozi-tabs 적용) -->
     <ul class="nav mozi-tabs mb-2 small">
@@ -9,7 +19,7 @@
           type="button"
           class="nav-link"
           :class="{
-            active: activeTab === (tab === '정책' ? 'policy' : 'finance')
+            active: activeTab === (tab === '정책' ? 'policy' : 'finance'),
           }"
           @click="changeTab(tab === '정책' ? 'policy' : 'finance')"
         >
@@ -59,8 +69,8 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
-import policyCard from '../search/policySearch/policyCard.vue';
-import financialCard from '../search/financialSearch/financialCard.vue';
+import policyCard from '../search/policySearch/PolicyCard.vue';
+import financialCard from '../search/financialSearch/FinancialCard.vue';
 import { getScrappedPolicies } from '@/api/scrapApi';
 import api from '@/api';
 
@@ -92,12 +102,20 @@ const fetchFinanceScraps = async () => {
     });
     scrapDetails.sort((a, b) => {
       const dateA = new Date(
-        a.createdAt[0], a.createdAt[1] - 1, a.createdAt[2],
-        a.createdAt[3], a.createdAt[4], a.createdAt[5]
+        a.createdAt[0],
+        a.createdAt[1] - 1,
+        a.createdAt[2],
+        a.createdAt[3],
+        a.createdAt[4],
+        a.createdAt[5]
       );
       const dateB = new Date(
-        b.createdAt[0], b.createdAt[1] - 1, b.createdAt[2],
-        b.createdAt[3], b.createdAt[4], b.createdAt[5]
+        b.createdAt[0],
+        b.createdAt[1] - 1,
+        b.createdAt[2],
+        b.createdAt[3],
+        b.createdAt[4],
+        b.createdAt[5]
       );
       return dateB - dateA;
     });
@@ -126,7 +144,6 @@ const changeTab = async (tab) => {
 </script>
 
 <style scoped>
-
 h4.fw-bold {
   text-align: center;
 }
@@ -149,18 +166,19 @@ h4.fw-bold {
   color: #6b7684 !important;
   font-weight: 500;
   padding: 6px 4px;
-  transition: color .18s ease, border-bottom-color .18s ease, background-color .18s ease;
+  transition: color 0.18s ease, border-bottom-color 0.18s ease,
+    background-color 0.18s ease;
   cursor: pointer;
 }
 .mozi-tabs .nav-link.active {
-  border-bottom: 2px solid #36C18C !important;
+  border-bottom: 2px solid #36c18c !important;
   color: #6b7684 !important;
 }
 
 /* 탭 콘텐츠 전환 */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: opacity .18s ease, transform .18s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 .slide-fade-enter-from,
 .slide-fade-leave-to {

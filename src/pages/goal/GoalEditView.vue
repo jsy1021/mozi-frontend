@@ -20,7 +20,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useGoalStore } from '@/stores/goalStore';
+import { useGoalStore } from '@/stores/goal';
 import { getAccountsByGoal, updateAccountsByGoal } from '@/api/accountApi';
 import GoalForm from '../../components/goal/GoalForm.vue';
 

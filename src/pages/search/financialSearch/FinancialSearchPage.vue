@@ -160,8 +160,8 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import FinancialCard from './financialCard.vue';
-import FinancialFilter from './financialFilter.vue';
+import FinancialCard from './FinancialCard.vue';
+import FinancialFilter from './FinancialFilter.vue';
 
 const router = useRouter();
 const searchKeyword = ref('');

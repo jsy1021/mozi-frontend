@@ -1,6 +1,5 @@
 <template>
   <div class="recommendations">
-
     <!-- 목표가 있는 경우 -->
     <div v-if="recommendations && recommendations.length">
       <div
@@ -35,27 +34,34 @@
                   alt="은행로고"
                 />
                 <span class="product-title">{{ product.productName }}</span>
-                <i 
+                <i
                   class="fa-regular fa-bookmark bookmark"
-                  :class="{ 'scraped': isScraped(product) }"
+                  :class="{ scraped: isScraped(product) }"
                   @click="toggleScrap(product)"
-                  style="margin-left: auto; cursor: pointer;"
+                  style="margin-left: auto; cursor: pointer"
                 ></i>
               </div>
 
               <div class="card-body">
                 <div class="rate small-text">
-                  <span style="color:#888;">가입 </span>
-                  <span style="color:#444;">{{ product.bankName }}</span><br />
-                  <span style="color:#888;">금리 </span>
-                  <span class="main-rate">{{ product.intRate }}%({{ product.saveTrm }}개월)</span>,
-                  <span class="max-rate" style="color:#e74c3c;">최고 {{ product.intRate2 }}%</span>
+                  <span style="color: #888">가입 </span>
+                  <span style="color: #444">{{ product.bankName }}</span
+                  ><br />
+                  <span style="color: #888">금리 </span>
+                  <span class="main-rate"
+                    >{{ product.intRate }}%({{ product.saveTrm }}개월)</span
+                  >,
+                  <span class="max-rate" style="color: #e74c3c"
+                    >최고 {{ product.intRate2 }}%</span
+                  >
                   ({{ product.saveTrm }}개월)
                 </div>
               </div>
 
               <div class="button-container">
-                <button class="detail-btn" @click="goToDetail(product)">자세히보기</button>
+                <button class="detail-btn" @click="goToDetail(product)">
+                  자세히보기
+                </button>
               </div>
             </div>
           </SwiperSlide>
@@ -73,12 +79,13 @@
 
     <!-- 목표가 없는 경우 -->
     <div v-else class="text-center text-muted py-4">
-      <img src="../../../public/images/noGoal.png" alt="추천 없음" class="empty-image" />
+      <img src="/images/noGoal.png" alt="추천 없음" class="empty-image" />
       <p><b>아직 목표가 없어요</b></p>
       <p>목표를 세우면 더 정교한 추천을<br />받을 수 있어요!</p>
-      <button class="set-goal-btn" @click="goToGoalPage">목표 세우러 가기</button>
+      <button class="set-goal-btn" @click="goToGoalPage">
+        목표 세우러 가기
+      </button>
     </div>
-
   </div>
 </template>
 
@@ -86,7 +93,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import { getBankLogoUrl } from '../search/financialSearch/util/bankLogo.js';
+import { getBankLogoUrl } from '../../search/financialSearch/util/bankLogo.js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -124,8 +131,10 @@ const fetchScrapStatus = async () => {
     const scraps = Array.isArray(response.data) ? response.data : [];
 
     scrapedProducts.value = scraps
-      .map(scrap =>
-        scrap.productType === 'SAVING' ? scrap.product?.savingId : scrap.product?.depositId
+      .map((scrap) =>
+        scrap.productType === 'SAVING'
+          ? scrap.product?.savingId
+          : scrap.product?.depositId
       )
       .filter(Boolean);
   } catch (error) {
@@ -139,14 +148,17 @@ onMounted(async () => {
   await fetchScrapStatus();
 });
 
-const isScraped = (product) => scrapedProducts.value.includes(product.productId);
+const isScraped = (product) =>
+  scrapedProducts.value.includes(product.productId);
 
 const toggleScrap = async (product) => {
   const productId = product.productId;
   const productType =
-    product.productType === 'SAVINGS' ? 'SAVING'
-    : product.productType === 'DEPOSITS' ? 'DEPOSIT'
-    : product.productType;
+    product.productType === 'SAVINGS'
+      ? 'SAVING'
+      : product.productType === 'DEPOSITS'
+      ? 'DEPOSIT'
+      : product.productType;
 
   if (!productId || !productType) {
     console.error('상품 ID 또는 타입이 유효하지 않습니다.');
@@ -167,7 +179,10 @@ const toggleScrap = async (product) => {
     }
     await fetchScrapStatus();
   } catch (error) {
-    console.error('스크랩 토글 중 오류 발생:', error.response?.data || error.message);
+    console.error(
+      '스크랩 토글 중 오류 발생:',
+      error.response?.data || error.message
+    );
     alert('스크랩 처리 중 오류가 발생했습니다.');
   }
 };
@@ -249,12 +264,12 @@ function goToGoalPage() {
   transition: all 0.2s ease;
 }
 .bookmark.scraped {
-  color: #569FFF;
+  color: #569fff;
 }
 .bookmark.scraped::before {
-  font-family: "Font Awesome 6 Free";
+  font-family: 'Font Awesome 6 Free';
   font-weight: 900;
-  content: "\f02e";
+  content: '\f02e';
 }
 .card-body {
   font-size: 0.97rem;

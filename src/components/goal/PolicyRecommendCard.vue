@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue';
 import recommendPolicyAPI from '@/api/recommendPolicyApi';
-import RecommendCarousel from '@/pages/recommend/policy/recommendCarousel.vue';
+import RecommendCarousel from '@/pages/recommend/policy/RecommendCarousel.vue';
 
 const props = defineProps({
   goalId: {
