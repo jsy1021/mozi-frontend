@@ -5,7 +5,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 // faEye/faEyeSlash는 안 쓰면 삭제해도 됨
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-import { authAPI } from '@/api/auth';
+import { authAPI } from '@/api/authApi';
 
 library.add(faChevronLeft);
 
@@ -13,7 +13,11 @@ const router = useRouter();
 
 const userId = ref('');
 const email = ref('');
-const errors = reactive<{ userId: string; email: string; verificationCode: string }>({
+const errors = reactive<{
+  userId: string;
+  email: string;
+  verificationCode: string;
+}>({
   userId: '',
   email: '',
   verificationCode: '',
@@ -71,11 +75,15 @@ function goBack() {
 }
 
 function validateUserId() {
-  errors.userId = userId.value.trim() ? '' : '가입 시 등록한 아이디를 입력해주세요';
+  errors.userId = userId.value.trim()
+    ? ''
+    : '가입 시 등록한 아이디를 입력해주세요';
 }
 function validateEmail() {
-  if (!email.value.trim()) errors.email = '가입 시 등록한 이메일을 입력해 주세요';
-  else if (!emailRe.test(email.value)) errors.email = '유효하지 않은 이메일입니다';
+  if (!email.value.trim())
+    errors.email = '가입 시 등록한 이메일을 입력해 주세요';
+  else if (!emailRe.test(email.value))
+    errors.email = '유효하지 않은 이메일입니다';
   else errors.email = '';
 }
 
@@ -99,11 +107,15 @@ async function sendVerificationCode() {
       lastSentEmail.value = email.value;
       startCooldown(300);
     } else {
-      errors.email = response?.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.';
+      errors.email =
+        response?.message ||
+        '인증 코드 발송에 실패했습니다. 다시 시도해주세요.';
     }
   } catch (err: any) {
     console.error('이메일 발송 실패:', err);
-    errors.email = err?.response?.data?.message || '인증 코드 발송에 실패했습니다. 다시 시도해주세요.';
+    errors.email =
+      err?.response?.data?.message ||
+      '인증 코드 발송에 실패했습니다. 다시 시도해주세요.';
     sentCode.value = false;
     isEmailVerified.value = false;
   } finally {
@@ -134,23 +146,31 @@ async function verifyCode() {
       const token = verifyRes.result ?? null;
       if (!token) {
         isEmailVerified.value = false;
-        submitError.value = verifyRes.message || '아이디/이메일이 일치하지 않습니다.';
+        submitError.value =
+          verifyRes.message || '아이디/이메일이 일치하지 않습니다.';
         return;
       }
       await router.push({ name: 'ResetPasswdPage', query: { token } });
     } else {
       isEmailVerified.value = false;
-      errors.verificationCode = response.message || '인증 코드가 일치하지 않습니다.';
+      errors.verificationCode =
+        response.message || '인증 코드가 일치하지 않습니다.';
     }
   } catch (err: any) {
     console.error('이메일 인증 실패:', err);
     isEmailVerified.value = false;
-    errors.verificationCode = err?.response?.data?.message || '인증 코드가 일치하지 않습니다.';
+    errors.verificationCode =
+      err?.response?.data?.message || '인증 코드가 일치하지 않습니다.';
   }
 }
 
 const canSubmit = computed(
-  () => userId.value.trim() && email.value.trim() && !errors.userId && !errors.email && isEmailVerified.value
+  () =>
+    userId.value.trim() &&
+    email.value.trim() &&
+    !errors.userId &&
+    !errors.email &&
+    isEmailVerified.value
 );
 
 async function handleSubmit() {
@@ -161,20 +181,27 @@ async function handleSubmit() {
 
   loading.value = true;
   try {
-    const response = await authAPI.verifyAccount({ loginId: userId.value, email: email.value });
+    const response = await authAPI.verifyAccount({
+      loginId: userId.value,
+      email: email.value,
+    });
     if (response.isSuccess || response.code === 200 || response.result) {
       const token = response.result;
       if (!token) {
-        submitError.value = response.message || '아이디 또는 이메일이 일치하지 않습니다';
+        submitError.value =
+          response.message || '아이디 또는 이메일이 일치하지 않습니다';
         return;
       }
       await router.push({ name: 'ResetPasswdPage', query: { token } });
     } else {
-      submitError.value = response.message || '아이디 또는 이메일이 일치하지 않습니다';
+      submitError.value =
+        response.message || '아이디 또는 이메일이 일치하지 않습니다';
     }
   } catch (err: any) {
     console.error('계정 확인 실패:', err);
-    submitError.value = err?.response?.data?.message || '요청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    submitError.value =
+      err?.response?.data?.message ||
+      '요청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
   } finally {
     loading.value = false;
   }
@@ -183,7 +210,11 @@ async function handleSubmit() {
 
 <template>
   <div class="header">
-    <FontAwesomeIcon :icon="['fas', 'chevron-left']" class="backIcon" @click="goBack" />
+    <FontAwesomeIcon
+      :icon="['fas', 'chevron-left']"
+      class="backIcon"
+      @click="goBack"
+    />
     <h1 class="logo">MoZi</h1>
   </div>
   <div class="title">비밀번호 찾기</div>
@@ -192,7 +223,13 @@ async function handleSubmit() {
     <form @submit.prevent="handleSubmit" class="form-container">
       <section class="writeID section-field">
         <label> 아이디</label>
-        <input name="userId" type="text" v-model="userId" placeholder="아이디를 입력하세요" @blur="validateUserId" />
+        <input
+          name="userId"
+          type="text"
+          v-model="userId"
+          placeholder="아이디를 입력하세요"
+          @blur="validateUserId"
+        />
         <span v-if="errors.userId" class="error">{{ errors.userId }}</span>
       </section>
 
@@ -214,22 +251,44 @@ async function handleSubmit() {
               "
               placeholder="이메일을 입력하세요"
               @blur="validateEmail"
-              :readonly="isEmailVerified" />
+              :readonly="isEmailVerified"
+            />
             <button
               type="button"
               class="btn"
               @click="sendVerificationCode"
-              :disabled="loading || !userId.trim() || !isEmailValid || isEmailVerified || cooldownSeconds > 0">
+              :disabled="
+                loading ||
+                !userId.trim() ||
+                !isEmailValid ||
+                isEmailVerified ||
+                cooldownSeconds > 0
+              "
+            >
               {{ sentCode ? '재전송' : '인증' }}
             </button>
           </div>
 
-          <div class="verify-row" v-if="errors.email || sentCode || cooldownSeconds > 0">
-            <p class="msg" :class="{ error: !!errors.email, success: !errors.email && sentCode }">
-              {{ errors.email || (sentCode ? '인증 코드가 이메일로 전송되었습니다.' : '') }}
+          <div
+            class="verify-row"
+            v-if="errors.email || sentCode || cooldownSeconds > 0"
+          >
+            <p
+              class="msg"
+              :class="{
+                error: !!errors.email,
+                success: !errors.email && sentCode,
+              }"
+            >
+              {{
+                errors.email ||
+                (sentCode ? '인증 코드가 이메일로 전송되었습니다.' : '')
+              }}
             </p>
 
-            <span v-if="cooldownSeconds > 0" class="cooldown"> {{ cooldownText }} 후 재전송 </span>
+            <span v-if="cooldownSeconds > 0" class="cooldown">
+              {{ cooldownText }} 후 재전송
+            </span>
           </div>
         </section>
 
@@ -243,13 +302,23 @@ async function handleSubmit() {
               type="text"
               v-model="verificationCode"
               placeholder="인증 코드를 입력하세요"
-              maxlength="6" />
-            <button type="button" class="btn" @click="verifyCode" :disabled="verificationCode.length !== 6">
+              maxlength="6"
+            />
+            <button
+              type="button"
+              class="btn"
+              @click="verifyCode"
+              :disabled="verificationCode.length !== 6"
+            >
               확인
             </button>
           </div>
-          <p v-if="errors.verificationCode" class="msg error">{{ errors.verificationCode }}</p>
-          <p v-if="isEmailVerified" class="msg success">✔ 이메일 인증이 완료되었습니다.</p>
+          <p v-if="errors.verificationCode" class="msg error">
+            {{ errors.verificationCode }}
+          </p>
+          <p v-if="isEmailVerified" class="msg success">
+            ✔ 이메일 인증이 완료되었습니다.
+          </p>
         </section>
       </div>
 
@@ -259,7 +328,8 @@ async function handleSubmit() {
         :class="{
           'active-btn': canSubmit && !loading,
           'inactive-btn': !canSubmit || loading,
-        }">
+        }"
+      >
         {{ loading ? '처리중...' : '확인' }}
       </button>
 

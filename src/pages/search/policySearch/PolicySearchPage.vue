@@ -111,7 +111,7 @@ import {
   MajorEnum,
   SpecialtyEnum,
 } from './util/policyEnums';
-import { profileAPI } from '@/api/profile';
+import { profileAPI } from '@/api/profileApi';
 import { getScrappedPolicyIds } from '@/api/scrapApi';
 
 // 상태 변수

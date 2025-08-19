@@ -2,21 +2,27 @@
   <div class="page">
     <header class="form-hero">
       <h2 class="form-subtitle">퍼스널 정보</h2>
-      <p class="form-description">맞춤 정책 추천을 위한 개인정보를 입력해주세요</p>
+      <p class="form-description">
+        맞춤 정책 추천을 위한 개인정보를 입력해주세요
+      </p>
     </header>
-    
+
     <div class="container">
       <Transition :name="transitionName" mode="out-in">
         <div class="step-viewport" :key="currentStep">
           <!-- Step 0: 기본 정보 -->
           <div v-if="currentStep === 0" class="step">
             <h3 class="step-title">기본 정보</h3>
-            
+
             <div class="form-field">
               <label for="region">관심지역</label>
               <select id="region" v-model="form.region" class="select-input">
                 <option value="">지역을 선택하세요</option>
-                <option v-for="option in regionOptions" :key="option.code" :value="option.code">
+                <option
+                  v-for="option in regionOptions"
+                  :key="option.code"
+                  :value="option.code"
+                >
                   {{ option.label }}
                 </option>
               </select>
@@ -34,23 +40,32 @@
                 step="1"
                 :class="{ invalid: ageTouched && !!ageError }"
                 @input="ageTouched = true"
-                @blur="ageTouched = true" />
-              <p class="error-text" v-if="ageTouched && ageError">{{ ageError }}</p>
+                @blur="ageTouched = true"
+              />
+              <p class="error-text" v-if="ageTouched && ageError">
+                {{ ageError }}
+              </p>
             </div>
 
             <div class="form-field">
               <label>혼인여부</label>
               <div class="marital-buttons">
-                <button 
-                  class="marital-btn" 
-                  :class="{ active: form.maritalStatus === MARITAL_STATUS.SINGLE }"
-                  @click="form.maritalStatus = MARITAL_STATUS.SINGLE">
+                <button
+                  class="marital-btn"
+                  :class="{
+                    active: form.maritalStatus === MARITAL_STATUS.SINGLE,
+                  }"
+                  @click="form.maritalStatus = MARITAL_STATUS.SINGLE"
+                >
                   미혼
                 </button>
-                <button 
-                  class="marital-btn" 
-                  :class="{ active: form.maritalStatus === MARITAL_STATUS.MARRIED }"
-                  @click="form.maritalStatus = MARITAL_STATUS.MARRIED">
+                <button
+                  class="marital-btn"
+                  :class="{
+                    active: form.maritalStatus === MARITAL_STATUS.MARRIED,
+                  }"
+                  @click="form.maritalStatus = MARITAL_STATUS.MARRIED"
+                >
                   기혼
                 </button>
               </div>
@@ -68,10 +83,13 @@
                   step="1"
                   :class="{ invalid: incomeTouched && !!incomeError }"
                   @input="incomeTouched = true"
-                  @blur="incomeTouched = true" />
+                  @blur="incomeTouched = true"
+                />
                 <span class="unit">만원</span>
               </div>
-              <p class="error-text" v-if="incomeTouched && incomeError">{{ incomeError }}</p>
+              <p class="error-text" v-if="incomeTouched && incomeError">
+                {{ incomeError }}
+              </p>
             </div>
           </div>
 
@@ -80,15 +98,43 @@
             <div class="step-header">
               <h3 class="step-title">학력</h3>
               <div class="tooltip-container">
-                <font-awesome-icon 
-                  :icon="['fas', 'circle-exclamation']" 
-                  class="tooltip-icon" 
+                <font-awesome-icon
+                  :icon="['fas', 'circle-exclamation']"
+                  class="tooltip-icon"
                   @click="toggleEducationTooltip"
                 />
                 <Transition name="tooltip">
-                  <div v-if="showEducationTooltip" style="background: #f8f9fa; color: #495057; padding: 6px 10px; border-radius: 6px; margin-top: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); position: absolute; top: 100%; right: 0; z-index: 9999; white-space: nowrap; border: 1px solid #dee2e6; font-size: 12px;">
+                  <div
+                    v-if="showEducationTooltip"
+                    style="
+                      background: #f8f9fa;
+                      color: #495057;
+                      padding: 6px 10px;
+                      border-radius: 6px;
+                      margin-top: 8px;
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                      position: absolute;
+                      top: 100%;
+                      right: 0;
+                      z-index: 9999;
+                      white-space: nowrap;
+                      border: 1px solid #dee2e6;
+                      font-size: 12px;
+                    "
+                  >
                     정책 자격 확인시에만 사용해요!
-                    <div style="position: absolute; top: -6px; right: 10px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 6px solid #f8f9fa;"></div>
+                    <div
+                      style="
+                        position: absolute;
+                        top: -6px;
+                        right: 10px;
+                        width: 0;
+                        height: 0;
+                        border-left: 6px solid transparent;
+                        border-right: 6px solid transparent;
+                        border-bottom: 6px solid #f8f9fa;
+                      "
+                    ></div>
                   </div>
                 </Transition>
               </div>
@@ -98,7 +144,8 @@
                 v-for="opt in educationOptions"
                 :key="opt.code"
                 :class="{ active: form.educationLevel === opt.code }"
-                @click="form.educationLevel = opt.code">
+                @click="form.educationLevel = opt.code"
+              >
                 {{ opt.label }}
               </button>
             </div>
@@ -112,7 +159,8 @@
                 v-for="opt in employmentOptions"
                 :key="opt.code"
                 :class="{ active: form.employmentStatus === opt.code }"
-                @click="form.employmentStatus = opt.code">
+                @click="form.employmentStatus = opt.code"
+              >
                 {{ opt.label }}
               </button>
             </div>
@@ -126,7 +174,8 @@
                 v-for="opt in majorOptions"
                 :key="opt.code"
                 :class="{ active: form.major === opt.code }"
-                @click="form.major = opt.code">
+                @click="form.major = opt.code"
+              >
                 {{ opt.label }}
               </button>
             </div>
@@ -140,7 +189,8 @@
                 v-for="opt in specialtyOptions"
                 :key="opt.code"
                 :class="{ active: form.specialty === opt.code }"
-                @click="form.specialty = opt.code">
+                @click="form.specialty = opt.code"
+              >
                 {{ opt.label }}
               </button>
             </div>
@@ -164,7 +214,7 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { profileAPI } from '@/api/profile.js';
+import { profileAPI } from '@/api/profileApi.js';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
@@ -186,7 +236,7 @@ const showEducationTooltip = ref(false);
 // 툴팁 토글 함수 - 3초 후 자동으로 닫힘
 const toggleEducationTooltip = () => {
   showEducationTooltip.value = !showEducationTooltip.value;
-  
+
   if (showEducationTooltip.value) {
     // 3초 후 자동으로 닫기
     setTimeout(() => {
@@ -241,7 +291,8 @@ onMounted(async () => {
         maritalStatus: profile.marital_status || profile.maritalStatus || '',
         annualIncome: profile.annual_income || profile.annualIncome || null,
         educationLevel: profile.education_level || profile.educationLevel || '',
-        employmentStatus: profile.employment_status || profile.employmentStatus || '',
+        employmentStatus:
+          profile.employment_status || profile.employmentStatus || '',
         major: profile.major || '',
         specialty: profile.specialty || '',
       });
@@ -253,7 +304,12 @@ onMounted(async () => {
 
 const stepValid = computed(() => {
   if (currentStep.value === 0) {
-    return !!form.region && !!form.maritalStatus && !ageError.value && !incomeError.value;
+    return (
+      !!form.region &&
+      !!form.maritalStatus &&
+      !ageError.value &&
+      !incomeError.value
+    );
   }
   if (currentStep.value === 1) return !!form.educationLevel;
   if (currentStep.value === 2) return !!form.employmentStatus;
@@ -263,7 +319,9 @@ const stepValid = computed(() => {
 });
 
 const navDir = ref('forward');
-const transitionName = computed(() => (navDir.value === 'forward' ? 'slide-left' : 'slide-right'));
+const transitionName = computed(() =>
+  navDir.value === 'forward' ? 'slide-left' : 'slide-right'
+);
 
 function onLeftClick() {
   if (currentStep.value === 0) {
@@ -310,7 +368,9 @@ async function saveProfile() {
     await router.push({ name: 'myPage' });
   } catch (err) {
     console.error('저장 실패:', err.response?.data);
-    alert('저장에 실패했습니다: ' + (err.response?.data?.message || err.message));
+    alert(
+      '저장에 실패했습니다: ' + (err.response?.data?.message || err.message)
+    );
   }
 }
 // 에러 표시용 터치 상태
@@ -328,7 +388,8 @@ const ageError = computed(() => {
 
 const incomeError = computed(() => {
   const v = form.annualIncome;
-  if (v === null || v === undefined || v === '') return '연소득을 입력해주세요.';
+  if (v === null || v === undefined || v === '')
+    return '연소득을 입력해주세요.';
   if (!Number.isFinite(v)) return '숫자만 입력해주세요.';
   if (v < 0) return '연소득은 0 이상만 입력 가능합니다.';
   return '';
@@ -568,7 +629,7 @@ const incomeError = computed(() => {
   box-shadow: 0 2px 8px rgba(54, 193, 140, 0.3);
 }
 
-.radio-option input[type="radio"] {
+.radio-option input[type='radio'] {
   width: 16px;
   height: 16px;
   margin: 0;
@@ -761,23 +822,23 @@ const incomeError = computed(() => {
   .page {
     padding: 12px 10px;
   }
-  
+
   .container {
     padding: 18px 14px;
   }
-  
+
   .form-subtitle {
     font-size: 18px;
   }
-  
+
   .form-description {
     font-size: 13px;
   }
-  
+
   .btn-group {
     grid-template-columns: 1fr;
   }
-  
+
   .radio-group {
     flex-direction: column;
   }

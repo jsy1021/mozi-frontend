@@ -5,13 +5,24 @@
       <div class="personal-info-toggle" :class="{ active: usePersonalInfo }">
         <div class="toggle-content">
           <div class="toggle-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                fill="currentColor"
+              />
             </svg>
           </div>
           <div class="toggle-text">
             <span class="toggle-label">퍼스널 정보 자동 적용</span>
-            <span class="toggle-description">저장된 프로필 정보로 필터를 자동 설정합니다</span>
+            <span class="toggle-description"
+              >저장된 프로필 정보로 필터를 자동 설정합니다</span
+            >
           </div>
         </div>
         <label class="toggle-switch">
@@ -36,7 +47,12 @@
           readonly
           style="max-width: 250px"
         />
-        <button class="btn btn-sm btn-outline-dark" @click="showRegionModal = true">선택</button>
+        <button
+          class="btn btn-sm btn-outline-dark"
+          @click="showRegionModal = true"
+        >
+          선택
+        </button>
       </div>
     </div>
 
@@ -65,7 +81,7 @@
             <span class="input-suffix">세</span>
           </div>
         </div>
-        
+
         <div class="filter-item">
           <div class="filter-label">연소득</div>
           <div class="input-row">
@@ -90,7 +106,10 @@
         <button
           v-for="item in maritalStatus"
           :key="item.value"
-          :class="['chip', { active: filterState.maritalStatus?.includes(item.value) }]"
+          :class="[
+            'chip',
+            { active: filterState.maritalStatus?.includes(item.value) },
+          ]"
           :aria-pressed="filterState.maritalStatus?.includes(item.value)"
           @click="handleMaritalStatusClick(item)"
         >
@@ -106,7 +125,10 @@
         <button
           v-for="item in education"
           :key="item.value"
-          :class="['chip', { active: filterState.education?.includes(item.value) }]"
+          :class="[
+            'chip',
+            { active: filterState.education?.includes(item.value) },
+          ]"
           :aria-pressed="filterState.education?.includes(item.value)"
           @click="handleEducationClick(item)"
         >
@@ -122,7 +144,10 @@
         <button
           v-for="item in employment"
           :key="item.value"
-          :class="['chip', { active: filterState.employment?.includes(item.value) }]"
+          :class="[
+            'chip',
+            { active: filterState.employment?.includes(item.value) },
+          ]"
           :aria-pressed="filterState.employment?.includes(item.value)"
           @click="handleEmploymentClick(item)"
         >
@@ -154,7 +179,10 @@
         <button
           v-for="item in special"
           :key="item.value"
-          :class="['chip', { active: filterState.special?.includes(item.value) }]"
+          :class="[
+            'chip',
+            { active: filterState.special?.includes(item.value) },
+          ]"
           :aria-pressed="filterState.special?.includes(item.value)"
           @click="handleSpecialClick(item)"
         >
@@ -180,7 +208,7 @@ import {
   fetchZipCodesBySido,
 } from '@/api/regionApi';
 import { getCodeFromEnum } from './util/policyMapping';
-import { profileAPI } from '@/api/profile';
+import { profileAPI } from '@/api/profileApi';
 import {
   EducationLevelEnum,
   EmploymentStatusEnum,
@@ -256,11 +284,19 @@ const applyUserProfile = async () => {
     serverProfile.value = profile;
     if (!profile) return;
 
-    props.filterState.education = [getCodeFromEnum(EducationLevelEnum, profile.education_level)];
-    props.filterState.employment = [getCodeFromEnum(EmploymentStatusEnum, profile.employment_status)];
-    props.filterState.maritalStatus = [getCodeFromEnum(MaritalStatusEnum, profile.marital_status)];
+    props.filterState.education = [
+      getCodeFromEnum(EducationLevelEnum, profile.education_level),
+    ];
+    props.filterState.employment = [
+      getCodeFromEnum(EmploymentStatusEnum, profile.employment_status),
+    ];
+    props.filterState.maritalStatus = [
+      getCodeFromEnum(MaritalStatusEnum, profile.marital_status),
+    ];
     props.filterState.major = [getCodeFromEnum(MajorEnum, profile.major)];
-    props.filterState.special = [getCodeFromEnum(SpecialtyEnum, profile.specialty)];
+    props.filterState.special = [
+      getCodeFromEnum(SpecialtyEnum, profile.specialty),
+    ];
 
     customAge.value = profile.age ?? null;
     customIncome.value = profile.annual_income ?? null;
@@ -289,20 +325,24 @@ const handleEducationClick = (item) => {
   if (!props.filterState.education) {
     props.filterState.education = [];
   }
-  
+
   const isLimitless = item.label === '제한없음';
   if (isLimitless) {
     props.filterState.education = [item.value];
   } else {
-    const limitlessValue = props.filterState.education.find(v => 
-      education.find(i => i.label === '제한없음')?.value === v
+    const limitlessValue = props.filterState.education.find(
+      (v) => education.find((i) => i.label === '제한없음')?.value === v
     );
     if (limitlessValue) {
-      props.filterState.education = props.filterState.education.filter(v => v !== limitlessValue);
+      props.filterState.education = props.filterState.education.filter(
+        (v) => v !== limitlessValue
+      );
     }
-    
+
     if (props.filterState.education.includes(item.value)) {
-      props.filterState.education = props.filterState.education.filter(v => v !== item.value);
+      props.filterState.education = props.filterState.education.filter(
+        (v) => v !== item.value
+      );
     } else {
       props.filterState.education.push(item.value);
     }
@@ -313,20 +353,24 @@ const handleEmploymentClick = (item) => {
   if (!props.filterState.employment) {
     props.filterState.employment = [];
   }
-  
+
   const isLimitless = item.label === '제한없음';
   if (isLimitless) {
     props.filterState.employment = [item.value];
   } else {
-    const limitlessValue = props.filterState.employment.find(v => 
-      employment.find(i => i.label === '제한없음')?.value === v
+    const limitlessValue = props.filterState.employment.find(
+      (v) => employment.find((i) => i.label === '제한없음')?.value === v
     );
     if (limitlessValue) {
-      props.filterState.employment = props.filterState.employment.filter(v => v !== limitlessValue);
+      props.filterState.employment = props.filterState.employment.filter(
+        (v) => v !== limitlessValue
+      );
     }
-    
+
     if (props.filterState.employment.includes(item.value)) {
-      props.filterState.employment = props.filterState.employment.filter(v => v !== item.value);
+      props.filterState.employment = props.filterState.employment.filter(
+        (v) => v !== item.value
+      );
     } else {
       props.filterState.employment.push(item.value);
     }
@@ -337,20 +381,24 @@ const handleMajorClick = (item) => {
   if (!props.filterState.major) {
     props.filterState.major = [];
   }
-  
+
   const isLimitless = item.label === '제한없음';
   if (isLimitless) {
     props.filterState.major = [item.value];
   } else {
-    const limitlessValue = props.filterState.major.find(v => 
-      major.find(i => i.label === '제한없음')?.value === v
+    const limitlessValue = props.filterState.major.find(
+      (v) => major.find((i) => i.label === '제한없음')?.value === v
     );
     if (limitlessValue) {
-      props.filterState.major = props.filterState.major.filter(v => v !== limitlessValue);
+      props.filterState.major = props.filterState.major.filter(
+        (v) => v !== limitlessValue
+      );
     }
-    
+
     if (props.filterState.major.includes(item.value)) {
-      props.filterState.major = props.filterState.major.filter(v => v !== item.value);
+      props.filterState.major = props.filterState.major.filter(
+        (v) => v !== item.value
+      );
     } else {
       props.filterState.major.push(item.value);
     }
@@ -361,20 +409,24 @@ const handleSpecialClick = (item) => {
   if (!props.filterState.special) {
     props.filterState.special = [];
   }
-  
+
   const isLimitless = item.label === '제한없음';
   if (isLimitless) {
     props.filterState.special = [item.value];
   } else {
-    const limitlessValue = props.filterState.special.find(v => 
-      special.find(i => i.label === '제한없음')?.value === v
+    const limitlessValue = props.filterState.special.find(
+      (v) => special.find((i) => i.label === '제한없음')?.value === v
     );
     if (limitlessValue) {
-      props.filterState.special = props.filterState.special.filter(v => v !== limitlessValue);
+      props.filterState.special = props.filterState.special.filter(
+        (v) => v !== limitlessValue
+      );
     }
-    
+
     if (props.filterState.special.includes(item.value)) {
-      props.filterState.special = props.filterState.special.filter(v => v !== item.value);
+      props.filterState.special = props.filterState.special.filter(
+        (v) => v !== item.value
+      );
     } else {
       props.filterState.special.push(item.value);
     }
@@ -406,14 +458,27 @@ watch(
     if (!serverProfile.value || !usePersonalInfo.value) return;
 
     const p = serverProfile.value;
-    const zipCodes = p.region ? await fetchZipCodesBySido(RegionEnum[p.region]?.label) : [];
+    const zipCodes = p.region
+      ? await fetchZipCodesBySido(RegionEnum[p.region]?.label)
+      : [];
 
     const isMatch =
-      JSON.stringify(props.filterState.education) === JSON.stringify([getCodeFromEnum(EducationLevelEnum, p.education_level)]) &&
-      JSON.stringify(props.filterState.employment) === JSON.stringify([getCodeFromEnum(EmploymentStatusEnum, p.employment_status)]) &&
-      JSON.stringify(props.filterState.maritalStatus) === JSON.stringify([getCodeFromEnum(MaritalStatusEnum, p.marital_status)]) &&
-      JSON.stringify(props.filterState.major) === JSON.stringify([getCodeFromEnum(MajorEnum, p.major)]) &&
-      JSON.stringify(props.filterState.special) === JSON.stringify([getCodeFromEnum(SpecialtyEnum, p.specialty)]) &&
+      JSON.stringify(props.filterState.education) ===
+        JSON.stringify([
+          getCodeFromEnum(EducationLevelEnum, p.education_level),
+        ]) &&
+      JSON.stringify(props.filterState.employment) ===
+        JSON.stringify([
+          getCodeFromEnum(EmploymentStatusEnum, p.employment_status),
+        ]) &&
+      JSON.stringify(props.filterState.maritalStatus) ===
+        JSON.stringify([
+          getCodeFromEnum(MaritalStatusEnum, p.marital_status),
+        ]) &&
+      JSON.stringify(props.filterState.major) ===
+        JSON.stringify([getCodeFromEnum(MajorEnum, p.major)]) &&
+      JSON.stringify(props.filterState.special) ===
+        JSON.stringify([getCodeFromEnum(SpecialtyEnum, p.specialty)]) &&
       JSON.stringify(props.filterState.region) === JSON.stringify(zipCodes) &&
       customAge.value === p.age &&
       customIncome.value === p.annual_income;
@@ -520,7 +585,7 @@ const special = [
   --text-muted: #6b7684;
 }
 
-.filter-section { 
+.filter-section {
   margin-bottom: 12px; /* 16px에서 12px로 줄임 */
 }
 
@@ -557,7 +622,8 @@ const special = [
   font-size: 13px;
   line-height: 1.2;
   cursor: pointer;
-  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .05s ease;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.05s ease;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -573,8 +639,8 @@ const special = [
   border-color: #dfe3e8;
 }
 
-.chip:active { 
-  transform: translateY(1px); 
+.chip:active {
+  transform: translateY(1px);
 }
 
 .chip.active {
@@ -582,27 +648,27 @@ const special = [
   border-color: var(--accent);
   color: var(--text);
   font-weight: 600;
-  box-shadow: 0 0 0 3px rgba(49,130,246,0.12);
+  box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
 }
 
 /* 특정 카테고리별 그리드 최적화 */
-.chip-group[aria-label="학력"] {
+.chip-group[aria-label='학력'] {
   grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
 }
 
-.chip-group[aria-label="취업 상태"] {
+.chip-group[aria-label='취업 상태'] {
   grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
 }
 
-.chip-group[aria-label="전공 분야"] {
+.chip-group[aria-label='전공 분야'] {
   grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
 }
 
-.chip-group[aria-label="특화 분야"] {
+.chip-group[aria-label='특화 분야'] {
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
 }
 
-.chip-group[aria-label="혼인 여부"] {
+.chip-group[aria-label='혼인 여부'] {
   grid-template-columns: repeat(3, 1fr);
   max-width: 200px;
 }
@@ -612,55 +678,55 @@ const special = [
   .filter-section {
     margin-bottom: 10px; /* 모바일에서 더 줄임 */
   }
-  
+
   .filter-label {
     margin-bottom: 5px; /* 모바일에서 더 줄임 */
   }
-  
+
   .chip-group {
     grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
     gap: 5px;
   }
-  
+
   .chip {
     padding: 5px 10px;
     font-size: 12px;
     min-height: 28px;
   }
-  
+
   .personal-info-toggle {
     padding: 10px 12px;
   }
-  
+
   .toggle-content {
     gap: 8px;
   }
-  
+
   .toggle-icon {
     width: 28px;
     height: 28px;
   }
-  
+
   .toggle-label {
     font-size: 13px;
   }
-  
+
   .toggle-description {
     font-size: 11px;
   }
-  
+
   .toggle-switch {
     width: 44px;
     height: 22px;
   }
-  
+
   .toggle-slider:before {
     height: 16px;
     width: 16px;
     left: 3px;
     bottom: 3px;
   }
-  
+
   .toggle-switch input:checked + .toggle-slider:before {
     transform: translateX(22px);
   }
@@ -670,16 +736,16 @@ const special = [
   .filter-section {
     margin-bottom: 8px; /* 작은 모바일에서 더 줄임 */
   }
-  
+
   .filter-label {
     margin-bottom: 4px; /* 작은 모바일에서 더 줄임 */
   }
-  
+
   .chip-group {
     grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
     gap: 4px;
   }
-  
+
   .chip {
     padding: 4px 8px;
     font-size: 11px;
@@ -775,7 +841,7 @@ const special = [
 
 .toggle-slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 18px;
   width: 18px;
   left: 3px;
@@ -813,36 +879,36 @@ const special = [
   .personal-info-toggle {
     padding: 10px 12px;
   }
-  
+
   .toggle-content {
     gap: 8px;
   }
-  
+
   .toggle-icon {
     width: 28px;
     height: 28px;
   }
-  
+
   .toggle-label {
     font-size: 13px;
   }
-  
+
   .toggle-description {
     font-size: 11px;
   }
-  
+
   .toggle-switch {
     width: 44px;
     height: 22px;
   }
-  
+
   .toggle-slider:before {
     height: 16px;
     width: 16px;
     left: 3px;
     bottom: 3px;
   }
-  
+
   .toggle-switch input:checked + .toggle-slider:before {
     transform: translateX(22px);
   }
