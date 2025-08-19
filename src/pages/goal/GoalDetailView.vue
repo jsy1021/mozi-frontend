@@ -5,11 +5,16 @@ import RecommendSection from '@/components/goal/RecommendSection.vue';
 import GoalCompletePopup from '@/components/goal/GoalCompletePopup.vue';
 import ProgressBar from '@/components/goal/ProgressBar.vue';
 
-import { useGoalStore } from '@/stores/goal';
+import {
+  useGoalStore,
+  formatCurrency,
+  getDDay,
+  maskAccountNumber,
+  formatDate,
+  keywordToKorean,
+} from '@/stores/goal';
 import goalApi from '@/api/goalApi';
 import { getAccountsByGoal, getAccountList } from '@/api/accountApi';
-
-import { getBankSummary } from '@/api/accountApi';
 import { useBankStore } from '@/stores/bank';
 
 const bankStore = useBankStore();
@@ -21,27 +26,16 @@ const getBankLogoUrl = (bankCode) => {
   return bank?.logo || '/images/financial/default.png';
 };
 
-//
 const route = useRoute();
 const router = useRouter();
+const goalId = route.params.goalId; // route에서 goalId 가져오기
 
-// route에서 goalId 가져오기
-const goalId = route.params.goalId;
+const goalStore = useGoalStore(); // pinia store
+const goal = computed(() => goalStore.selectedGoal); // store의 selectedGoal을 computed로 가져옴
 
-// pinia store
-const goalStore = useGoalStore();
-
-// store의 selectedGoal을 computed로 가져옴
-const goal = computed(() => goalStore.selectedGoal);
-
-// 로딩 상태 추가
-const loading = ref(true);
-
-// 삭제 모달
-const showDeleteModal = ref(false);
-
-// 목표 달성시 팝업
-const showCompletePopup = ref(false);
+const loading = ref(true); // 로딩 상태 추가
+const showDeleteModal = ref(false); // 삭제 모달
+const showCompletePopup = ref(false); // 목표 달성시 팝업
 
 // 목표 달성 여부 (goal_status === false가 '달성 완료')
 // computed로 목표 달성 여부도 수정
@@ -51,17 +45,10 @@ const goalAchieved = computed(() => {
   return currentAmount.value >= targetAmount && targetAmount > 0;
 });
 
-// 예상 달성일
-const expectedDate = ref(null);
-
-// 연결된 계좌 리스트
-const linkedAccounts = ref([]);
-
-// 전체 계좌 리스트
-const allAccounts = ref([]);
-
-// 계좌 총합
-const currentAmount = ref(0);
+const expectedDate = ref(null); // 예상 달성일
+const linkedAccounts = ref([]); // 연결된 계좌 리스트
+const allAccounts = ref([]); // 전체 계좌 리스트
+const currentAmount = ref(0); // 계좌 총합
 
 // 계좌 목록 로드 (에러 처리 강화)
 const loadAccounts = async (goalId) => {
@@ -70,7 +57,6 @@ const loadAccounts = async (goalId) => {
     const linkedData = await getAccountsByGoal(goalId);
     linkedAccounts.value = linkedData.accountList || [];
   } catch (error) {
-    console.error('연결된 계좌 조회 실패:', error);
     linkedAccounts.value = [];
   }
 
@@ -79,34 +65,24 @@ const loadAccounts = async (goalId) => {
     const allData = await getAccountList();
     allAccounts.value = allData || [];
   } catch (error) {
-    console.error('전체 계좌 조회 실패:', error);
     allAccounts.value = [];
   }
 };
 
 // goalId가 변경될 때마다 API에서 goal 가져오기 (에러 처리 강화)
 const loadGoal = async (id) => {
+  loading.value = true;
   try {
-    loading.value = true;
     const numericId = Number(id);
-
     await goalStore.getGoal(numericId);
     if (!goal.value) return;
 
-    // if (!goal.value) {
-    //   console.error('목표 데이터가 없습니다');
-    //   return;
-    // }
-
     // 예상 달성일 (에러가 발생해도 계속 진행)
     try {
-      const monthlyAmount = 1000000;
-      const data = await goalApi.getExpectedDate(numericId, monthlyAmount);
-      console.log('예상 달성일 API 응답:', data);
       expectedDate.value =
-        typeof data === 'string' ? data : data?.expectedDate || null;
+        (await goalApi.getExpectedDate(numericId, 1000000))?.expectedDate ||
+        null;
     } catch (error) {
-      console.error('예상 달성일 조회 실패:', error);
       expectedDate.value = null;
     }
 
@@ -116,43 +92,21 @@ const loadGoal = async (id) => {
     try {
       currentAmount.value = await goalApi.getCurrentAmountByGoal(numericId);
     } catch (error) {
-      console.error('현재 금액 조회 실패:', error);
       currentAmount.value = 0;
     }
 
-    const targetAmount =
-      goal.value.targetAmount || goal.value.target_amount || 0;
-    const currentGoalStatus = goal.value.goalStatus;
-    const shouldBeCompleted =
-      currentAmount.value >= targetAmount && targetAmount > 0;
+    // 목표 상태 업데이트
+    const target = goal.value.targetAmount || goal.value.target_amount || 0;
+    const status = goal.value.goalStatus;
 
-    // Case 1: 목표 달성했는데 아직 미완료 상태 → 완료로 변경
-    if (shouldBeCompleted && currentGoalStatus === true) {
-      try {
-        console.log('🎯 목표 달성! false로 변경');
-        await goalStore.updateGoalStatus(numericId, false);
-        goal.value.goalStatus = false;
-
-        // 매번 팝업 표시 (localStorage 체크 제거)
-        showCompletePopup.value = true;
-      } catch (error) {
-        console.error('목표 상태 업데이트 실패:', error);
-      }
-    }
-
-    // Case 2: 목표 미달성인데 완료 상태 → 미완료로 변경
-    else if (!shouldBeCompleted && currentGoalStatus === false) {
-      try {
-        console.log('📉 목표 미달성! true로 변경');
-        await goalStore.updateGoalStatus(numericId, true);
-        goal.value.goalStatus = true;
-      } catch (error) {
-        console.error('목표 상태 업데이트 실패:', error);
-      }
-    }
-
-    // Case 3: 이미 달성된 목표 - 매번 팝업 표시
-    else if (shouldBeCompleted && currentGoalStatus === false) {
+    if (currentAmount.value >= target && target > 0 && status) {
+      await goalStore.updateGoalStatus(numericId, false);
+      goal.value.goalStatus = false;
+      showCompletePopup.value = true;
+    } else if (currentAmount.value < target && !status) {
+      await goalStore.updateGoalStatus(numericId, true);
+      goal.value.goalStatus = true;
+    } else if (currentAmount.value >= target && !status) {
       showCompletePopup.value = true;
     }
   } catch (error) {
@@ -162,28 +116,10 @@ const loadGoal = async (id) => {
   }
 };
 
-// 날짜 포맷팅 함수 수정
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-
-  // "YYYY-MM-DD HH:mm:ss" 형식에서 날짜 부분만 추출
-  const datePart = dateStr.split(' ')[0];
-
-  // 날짜를 로컬 시간대로 파싱 (UTC 변환 방지)
-  const [year, month, day] = datePart.split('-');
-
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-}
-
 // 토글
 const isExpanded = ref(false);
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
-
-  // nextTick(() => {
-  //   // 강제 리플로우: scrollTop 읽기 같은 방법으로
-  //   document.body.scrollTop = document.body.scrollTop;
-  // });
 };
 
 // 삭제
@@ -217,7 +153,6 @@ const linkAccount = async (accountId) => {
     await goalApi.linkAccountsToGoal(goalId, [accountId]);
     await loadAccounts(goalId);
   } catch (error) {
-    console.error('계좌 연결 실패:', error);
     alert('계좌 연결에 실패했습니다.');
   }
 };
@@ -227,61 +162,6 @@ const safeToLocaleString = (value) => {
   const num = Number(value);
   return isNaN(num) ? '0' : num.toLocaleString();
 };
-
-// 계좌 번호 *표시
-const maskAccountNumber = (accountNumber) => {
-  if (accountNumber == null) return '';
-  const s = String(accountNumber).trim(); // 숫자나 null 방어, 공백 제거
-  const length = s.length;
-  if (length <= 4) return s;
-
-  const visible = 4;
-
-  // 길이가 짧아서 앞/뒤 4글자 확보가 안 되는 경우(5..8)
-  // => 앞1, 뒤1만 노출하고 가운데는 '-'은 유지하고 나머지는 '*' 처리
-  if (length <= visible * 2) {
-    const first = s[0];
-    const last = s[length - 1];
-    const middle = s
-      .slice(1, -1)
-      .split('')
-      .map((ch) => (ch === '-' ? '-' : '*'))
-      .join('');
-    return `${first}${middle}${last}`;
-  }
-
-  // 일반적인 경우: 앞 4 / 뒤 4 고정
-  const firstPart = s.slice(0, visible);
-  const lastPart = s.slice(-visible);
-  const middleLength = Math.max(0, length - visible * 2);
-
-  // 이 부분은 원하신 대로 '*.repeat(...)' 구조 사용
-  let middlePart = '*'.repeat(middleLength).split('');
-
-  // 원본 문자열의 해당 위치가 '-'이면 그대로 '-'로 덮어쓰기
-  for (let i = 0; i < middleLength; i++) {
-    if (s[visible + i] === '-') {
-      middlePart[i] = '-';
-    }
-  }
-
-  return `${firstPart}${middlePart.join('')}${lastPart}`;
-};
-
-// 키워드
-const keywords = [
-  { key: 'MARRIAGE', label: '결혼' },
-  { key: 'EMPLOYMENT', label: '취업' },
-  { key: 'HOME_PURCHASE', label: '내집마련' },
-  { key: 'TRAVEL', label: '여행' },
-  { key: 'EDUCATION_FUND', label: '학자금' },
-  { key: 'HOBBY', label: '취미' },
-];
-
-function keywordToKorean(keyword) {
-  const match = keywords.find((k) => k.key === keyword);
-  return match ? match.label : keyword;
-}
 
 // 목표 달성 가이드
 const achievementRate = computed(() => {
@@ -298,16 +178,12 @@ const guideMessage = computed(() => {
   return '시작이 반! 꾸준히 해봐요';
 });
 
-// 🎯 개선 1: 뒤로가기 로직 개선
+// 뒤로가기
 const goBack = () => {
-  // 쿼리 파라미터에서 from 값을 확인
   const from = route.query.from;
-
   if (from === 'main') {
-    // 메인페이지에서 온 경우 메인페이지로
     router.push('/');
   } else {
-    // 그 외의 경우는 목표 페이지로 (기본값)
     router.push('/goal');
   }
 };
@@ -326,16 +202,6 @@ watch(
     loadGoal(newId);
   }
 );
-
-// watch(() => showDeleteModal, (val) => {
-//   if (val) {
-//     document.body.style.overflow = 'hidden';
-//   } else {
-//     document.body.style.overflow = '';
-//   }
-// });
-
-// 1. <script setup> 섹션에 추가할 코드
 
 // 은행별 자산관리 정보 (기존 은행 관련 코드 아래에 추가)
 const bankAssetManagement = {
@@ -447,11 +313,6 @@ const bankAssetManagement = {
   },
 };
 
-// 줄바꿈 처리
-function formatName(name) {
-  return name.replace(/\n/g, '<br>');
-}
-
 // 주거래 은행 판단 함수 (기존 openAssetManagement 함수 위에 추가)
 const getPrimaryBank = (linkedAccounts) => {
   if (!linkedAccounts || linkedAccounts.length === 0) {
@@ -530,50 +391,6 @@ const openPrimaryBankHomepage = () => {
     window.open(data.primaryBankHomepage, '_blank');
   }
 };
-
-// 금액 포맷팅 함수
-const formatCurrency = (amount) => {
-  // amount가 undefined나 null인 경우 처리
-  if (amount == null || amount === undefined) {
-    return '0원';
-  }
-
-  // 숫자가 아닌 경우 처리
-  const numAmount = Number(amount);
-  if (isNaN(numAmount)) {
-    return '0원';
-  }
-
-  if (numAmount >= 100000000) {
-    return `${(numAmount / 100000000).toFixed(1)}억원`;
-  } else if (numAmount >= 10000) {
-    return `${(numAmount / 10000).toFixed(0)}만원`;
-  } else {
-    return `${numAmount.toLocaleString()}원`;
-  }
-};
-
-// D-Day 계산 함수도 수정
-function getDDay(dateStr) {
-  if (!dateStr) return '';
-
-  // 날짜 부분만 추출
-  const datePart = dateStr.split(' ')[0];
-  const [year, month, day] = datePart.split('-');
-
-  // 로컬 시간대로 날짜 생성
-  const targetDate = new Date(year, month - 1, day);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  targetDate.setHours(0, 0, 0, 0);
-
-  const diff = targetDate - today;
-  const dDay = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-  if (dDay === 0) return 'D-Day';
-  if (dDay > 0) return `D-${dDay}`;
-  return `D+${Math.abs(dDay)}`;
-}
 </script>
 
 <template>

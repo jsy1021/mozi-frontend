@@ -117,3 +117,63 @@ export const useGoalStore = defineStore('goal', {
     },
   },
 });
+
+export function formatCurrency(amount) {
+  if (amount == null || isNaN(Number(amount))) return '0원';
+  const num = Number(amount);
+  if (num >= 100000000) return `${(num / 100000000).toFixed(1)}억원`;
+  if (num >= 10000) return `${(num / 10000).toFixed(0)}만원`;
+  return `${num.toLocaleString()}원`;
+}
+
+export function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split(' ')[0].split('-');
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+export function maskAccountNumber(accountNumber) {
+  if (!accountNumber) return '';
+  const s = String(accountNumber).trim();
+  if (s.length <= 4) return s;
+  const visible = 4;
+  const first = s.slice(0, visible);
+  const last = s.slice(-visible);
+  const middleLength = s.length - visible * 2;
+  let middlePart = '*'.repeat(middleLength).split('');
+  for (let i = 0; i < middleLength; i++) {
+    if (s[visible + i] === '-') middlePart[i] = '-';
+  }
+  return `${first}${middlePart.join('')}${last}`;
+}
+
+export function getDDay(dateStr) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split(' ')[0].split('-');
+  const target = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return 'D-Day';
+  if (diff > 0) return `D-${diff}`;
+  return `D+${Math.abs(diff)}`;
+}
+
+export function formatName(name) {
+  return name ? name.replace(/\n/g, '<br>') : '';
+}
+
+export const keywords = [
+  { key: 'MARRIAGE', label: '결혼' },
+  { key: 'EMPLOYMENT', label: '취업' },
+  { key: 'HOME_PURCHASE', label: '내집마련' },
+  { key: 'TRAVEL', label: '여행' },
+  { key: 'EDUCATION_FUND', label: '학자금' },
+  { key: 'HOBBY', label: '취미' },
+];
+
+export function keywordToKorean(keyword) {
+  const match = keywords.find((k) => k.key === keyword);
+  return match ? match.label : keyword;
+}
