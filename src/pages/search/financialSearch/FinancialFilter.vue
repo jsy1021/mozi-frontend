@@ -171,10 +171,17 @@ export default {
       }
     },
     applyFilter() {
+      // 은행 코드를 은행명으로 변환
+      const bankNames = this.selectedBanks.map(code => {
+        const bankOption = this.bankOptions.find(option => option.value === code);
+        return bankOption ? bankOption.label : code;
+      });
+
       this.$emit('filter-applied', {
         period: this.selectedPeriod,
         rateSort: this.selectedRateSort,
-        banks: this.selectedBanks,
+        banks: this.selectedBanks, // 원본 코드는 그대로 유지 (필터링용)
+        bankNames: bankNames, // 은행명 추가 (표시용)
         joinWays: this.selectedJoinWays
       });
        this.$emit('close-filter'); // ✅ 필터 닫기 신호
@@ -184,6 +191,9 @@ export default {
       this.selectedRateSort = '';
       this.selectedBanks = [];
       this.selectedJoinWays = [];
+      
+      // 부모 컴포넌트에 필터 초기화 이벤트 발생
+      this.$emit('filter-reset');
     }
   }
 }
