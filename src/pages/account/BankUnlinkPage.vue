@@ -87,7 +87,7 @@ onMounted(() => {
       <!-- 은행 목록 없을때 -->
       <div class="no-bank" v-if="bankList.length === 0">
         <img
-          src="/images/unlinkAccountEmpty.png"
+          src="/images/account/unlinkAccountEmpty.png"
           style="height: 100px; margin-right: 0.5rem"
         />
         <div>해지할 은행이 없습니다.</div>
