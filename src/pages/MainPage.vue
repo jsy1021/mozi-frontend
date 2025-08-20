@@ -514,7 +514,7 @@ watch(
   margin-top: 3px;
   display: flex;
   align-items: center;
-  padding: 8px 20px 8px 20px;
+  padding: 7px 20px 8px 20px;
   gap: 8px;
 }
 
