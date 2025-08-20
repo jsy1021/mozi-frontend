@@ -40,6 +40,7 @@
     <FinancialFilter
       v-if="showFilter"
       @filter-applied="handleFilter"
+      @filter-reset="resetAllFilters"
       @close-filter="showFilter = false"
     />
 
@@ -79,21 +80,21 @@
 
         <!-- 은행 필터 태그들 -->
         <span
-          v-for="bankCode in selectedFilter.banks || []"
-          :key="bankCode"
+          v-for="(bankName, index) in selectedFilter.bankNames"
+          :key="index"
           class="filter-tag"
         >
           <span class="filter-tag-text">
             <img
-              :src="getBankLogoUrl(bankCode)"
-              :alt="getBankName(bankCode)"
+              :src="getBankLogoUrl(selectedFilter.banks[index])"
+              :alt="bankName"
               class="filter-tag-bank-logo"
             />
-            {{ getBankName(bankCode) }}
+            {{ bankName }}
           </span>
           <button
             class="filter-tag-remove"
-            @click="removeBankFilter(bankCode)"
+            @click="removeBankFilter(selectedFilter.banks[index])"
             aria-label="은행 필터 제거"
           >
             ×
@@ -176,6 +177,7 @@ const selectedFilter = ref({
   period: '',
   rateSort: '',
   banks: [],
+  bankNames: [], // 은행명 추가
   joinWays: [],
 });
 
@@ -392,6 +394,9 @@ const removeBankFilter = (bankCode) => {
     selectedFilter.value.banks = selectedFilter.value.banks.filter(
       (code) => code !== bankCode
     );
+    selectedFilter.value.bankNames = selectedFilter.value.bankNames.filter(
+      (name) => getBankName(bankCode) !== name
+    );
   }
   saveFilterState(); // 필터 상태 저장
 };
@@ -403,6 +408,18 @@ const removeJoinWayFilter = (joinWay) => {
     );
   }
   saveFilterState(); // 필터 상태 저장
+};
+
+// 필터 초기화 함수 추가
+const resetAllFilters = () => {
+  selectedFilter.value = {
+    period: '',
+    rateSort: '',
+    banks: [],
+    bankNames: [],
+    joinWays: [],
+  };
+  saveFilterState();
 };
 
 watch(currentCategory, (tab) => {
