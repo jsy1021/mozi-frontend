@@ -44,7 +44,7 @@
       v-else-if="!isLoading && !goalRecommendations.length"
       class="text-center text-muted py-4"
     >
-      <img src="/images/noGoal.png" alt="추천 없음" class="empty-image" />
+      <img src="/images/recommend/noGoal.png" alt="추천 없음" class="empty-image" />
       <p><b>아직 목표가 없어요</b></p>
       <p>목표를 세우면 더 정교한 추천을<br />받을 수 있어요!</p>
       <button class="set-goal-btn" @click="goToGoalPage">

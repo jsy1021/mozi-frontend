@@ -155,7 +155,7 @@ onMounted(async () => {
     <template v-else>
       <div class="fixed-center-box">
         <img
-          src="/images/accountEmpty.png"
+          src="/images/account/accountEmpty.png"
           alt="데이터 없음"
           class="no-data-image"
         />
