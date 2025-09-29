@@ -1,36 +1,31 @@
 import { fileURLToPath, URL } from 'node:url';
 
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [vue(), vueDevTools()],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    plugins: [vue(), vueDevTools()],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
-  },
-  build: {
-    outDir:
-      //'/Users/soohyun/Documents/mozi/src/main/webapp/resources',
-      //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
-      'C:/KB_Fullstack/10_finalProject/mozi-backend/src/main/webapp/resources',
-    //'C:/dev/projects/mozi-backend/src/main/webapp/resources',
-    //'C:/KB-PJT/goal/mozi-backend/src/main/webapp/resources',
-    //"D:/KB_6th/final_project/Mozi/mozi-backend/src/main/webapp/resources",
-    // 'C:/KB_fullstack/final_project/backend/0731/mozi-backend/src/main/webapp/resources',
-    //'C:/KB_Fullstack/accountConnect/mozi_4_backend/src/main/webapp/resources',
-    //'C:/Users/user/Documents/mozi/mozi-bakcend/src/main/webapp/resources',
-  },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
+    build: {
+      outDir: env.VITE_BUILD_OUT_DIR || 'dist',
+    },
+  };
 });
